@@ -1,0 +1,2 @@
+flask-restx==1.0.6
+redis==4.5.1
