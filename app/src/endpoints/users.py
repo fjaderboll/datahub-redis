@@ -2,7 +2,8 @@ from flask_restx import Resource, fields
 import json
 
 from api import api
-from db import db
+from db import db, Keys
+import util
 
 ns = api.namespace('users', description='Login and get user information')
 
@@ -27,11 +28,22 @@ class UsersList(Resource):
     @ns.response(400, 'Bad request')
     def post(self):
         input = api.payload
+
+        util.verifyValidName(input['username'], "Username")
+        util.verifyNoneEmpty(input['password'], 'Password')
+
+        salt = util.createPasswordSalt()
+        hash = util.createPasswordHash(input['password'], salt)
+        userCount = db.llen(Keys.USERS)
+
         user = {
             'username': input['username'],
-            'password': input['password']
+            'passwordHash': hash,
+            'passwordSalt': salt,
+            'email': None,
+            'isAdmin': (userCount == 0)
         }
-        db.lpush('users', json.dumps(user))
+        db.lpush(Keys.USERS, json.dumps(user))
         return user
 
 @ns.route('/<string:username>')
