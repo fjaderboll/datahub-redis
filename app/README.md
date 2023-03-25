@@ -1,5 +1,11 @@
 # App - backend
 
+## Doc
+
+* https://redis.io/docs/getting-started/
+* https://redis.io/docs/stack/timeseries/
+
+
 ## Setup
 
 ```shell

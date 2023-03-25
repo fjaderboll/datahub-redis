@@ -92,6 +92,7 @@ class UsersGet(Resource):
 @ns.route('/<string:username>/login')
 @ns.param('username', 'Username')
 class UsersLogin(Resource):
+	@api.doc(security=None)
 	@ns.response(200, 'Success')
 	@ns.response(404, 'Unknown user')
 	def post(self, username):
