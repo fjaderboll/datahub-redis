@@ -36,8 +36,8 @@ source .venv/bin/activate
 ### Add new dependency
 
 ```shell
-pip3 install flask
-pip3 freeze > requirements.txt
+pip3 install flask-restx
+pip3 freeze | grep flask-restx== >> requirements.txt
 ```
 
 ### Test
