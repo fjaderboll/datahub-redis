@@ -1,1 +1,132 @@
-/* You can add global styles to this file, and also import other style files */
+
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+.mat-table .mat-header-cell,
+.mat-table .mat-cell {
+	padding: 1em;
+}
+.mat-tab-body {
+	padding: 1em;
+}
+
+.mat-button-base .mat-icon {
+	margin-right: 0.25em;
+}
+
+.align-center {
+	text-align: center;
+}
+.align-right {
+	text-align: right;
+}
+.align-vertically {
+	align-items: center;
+}
+
+.margin-top {
+	margin-top: 1.5em;
+}
+.margin-bottom {
+	margin-bottom: 1.5em;
+}
+.margin-left {
+	margin-left: 1.5em;
+}
+
+.row {
+	display: flex;
+	flex-wrap: nowrap;
+}
+.col > * {
+	display: block;
+}
+.col.align-center > * {
+	margin: auto;
+}
+
+.not-set {
+	font-style: italic;
+	color: gray;
+}
+
+.relative-time {
+	padding-left: 5px;
+	padding-right: 5px;
+	font-style: italic;
+	color: gray;
+}
+
+a {
+	color: blue;
+	text-decoration: none;
+}
+a:hover {
+	text-decoration: underline;
+}
+
+dl.list {
+	display: grid;
+	grid-template-columns: max-content auto;
+	grid-column-gap: 15px;
+}
+dl.list > dt {
+	font-weight: 500;
+}
+dl.list > dt::after {
+	content: ":"
+}
+dl.list dt.sub {
+	margin-left: 5px;
+}
+dl.list dt.sub:before {
+	color: #999;
+	content: '\2937\0020';
+}
+dl.list > dd {
+	font-weight: normal;
+}
+dl.list > dd:empty::after {
+	content: "-";
+}
+
+.mat-icon.small {
+	width: 32px;
+	height: 32px;
+	font-size: 32px;
+}
+.mat-icon.medium {
+	width: 48px;
+	height: 48px;
+	font-size: 48px;
+}
+.mat-icon.large {
+	width: 64px;
+	height: 64px;
+	font-size: 64px;
+}
+.mat-icon.success {
+	color: #268132;
+}
+
+.animate-new-item {
+	animation: fade-out-bg 10s;
+}
+@keyframes fade-out-bg {
+    from { background-color: #8ba0d8; }
+    to   { background-color: white; }
+}
+
+pre.shell {
+	background-color: #444;
+	color: white;
+	padding: 5px;
+	border-radius: 4px;
+}
+pre.shell .fail {
+	color: #ec7c7c;
+}
+
+.mat-elevation-z8 {
+	display: inline-block;
+}
