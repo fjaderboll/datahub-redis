@@ -8,6 +8,7 @@ import { HeaderComponent } from './components/header/header.component';
 import { FooterComponent } from './components/footer/footer.component';
 import { HttpClientModule } from '@angular/common/http';
 import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatDialogModule } from '@angular/material/dialog';
 import { ToastrModule } from 'ngx-toastr';
@@ -27,6 +28,7 @@ import { DashboardComponent } from './pages/dashboard/dashboard.component';
     BrowserAnimationsModule,
     AppRoutingModule,
     HttpClientModule,
+    MatButtonModule,
     MatDialogModule,
     MatIconModule,
     MatToolbarModule,

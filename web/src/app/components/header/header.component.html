@@ -1,38 +1,38 @@
 <mat-toolbar class="toolbar">
 	<a mat-button routerLink="/">
-		<img class="logo" src="assets/img/logo/logo-white.min.svg" />
-		<span class="title">Datahub</span>
+		<mat-icon class="logo" svgIcon="datahub"></mat-icon>
+        <span class="title">Datahub</span>
 	</a>
 
 	<a mat-button routerLink="/nodes" *ngIf="auth.isLoggedIn()">
-    	<mat-icon>router</mat-icon>
+    	<mat-icon fontIcon="router"></mat-icon>
 		<span>Nodes</span>
 	</a>
 
 	<a mat-button routerLink="/tokens" *ngIf="auth.isLoggedIn()">
-    	<mat-icon>key</mat-icon>
+    	<mat-icon fontIcon="key"></mat-icon>
 		<span>Tokens</span>
 	</a>
 
 	<a mat-button routerLink="/exports" *ngIf="auth.isLoggedIn()">
-    	<mat-icon>forward_to_inbox</mat-icon>
+    	<mat-icon fontIcon="forward_to_inbox"></mat-icon>
 		<span>Exports</span>
 	</a>
 
 	<a mat-button routerLink="/users" *ngIf="auth.isAdmin()">
-    	<mat-icon>people</mat-icon>
+    	<mat-icon fontIcon="people"></mat-icon>
 		<span>Users</span>
 	</a>
 
 	<span class="spacer"></span>
 
 	<a mat-button routerLink="/users/{{ auth.getUsername() }}" *ngIf="auth.isLoggedIn()">
-    	<mat-icon>person</mat-icon>
+    	<mat-icon fontIcon="person"></mat-icon>
 		<span>{{ auth.getUsername() }}</span>
 	</a>
 
 	<button mat-button *ngIf="auth.isLoggedIn()" (click)="logout()">
-    	<mat-icon>lock_open</mat-icon>
+    	<mat-icon fontIcon="lock_open"></mat-icon>
 		<span>Sign out</span>
   	</button>
 
