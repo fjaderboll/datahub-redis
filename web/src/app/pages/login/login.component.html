@@ -1,1 +1,55 @@
-<p>login works!</p>
+<div class="login-container error" *ngIf="setupError">
+	Cannot access backend at <a href="{{ apiUrl }}">{{ apiUrl }}</a><br/>
+	Setup error?
+</div>
+
+<div class="login-container" *ngIf="!setupError">
+	<div *ngIf="createFirstUserRequired" class="row align-vertically">
+		<div>
+			<mat-icon class="medium">warning_amber</mat-icon>
+		</div>
+		<div class="margin-left">
+			The Datahub is blank and you need to register a new user.<br/>
+			This first user will automatically become an administrator.
+		</div>
+	</div>
+
+	<div *ngIf="!createFirstUserRequired" class="form">
+		<div>
+			<mat-form-field appearance="outline">
+				<mat-label>Username</mat-label>
+				<input type="text" matInput required [(ngModel)]="username" placeholder="Username">
+			</mat-form-field>
+		</div>
+
+		<div>
+			<mat-form-field appearance="outline">
+				<mat-label>Password</mat-label>
+				<input [type]="showPassword ? 'text' : 'password'" matInput required [(ngModel)]="password" placeholder="Password">
+				<mat-icon matSuffix (click)="showPassword = !showPassword">{{ showPassword ? 'visibility' : 'visibility_off' }}</mat-icon>
+			</mat-form-field>
+		</div>
+
+		<div>
+			<button mat-raised-button color="primary" (click)="login()" [disabled]="username.length * password.length == 0">
+				<mat-icon>lock</mat-icon>
+				<span>Sign in</span>
+			</button>
+		</div>
+	</div>
+
+	<div *ngIf="createUserAllowed" class="margin-top">
+		<button mat-button color="primary" (click)="register()">
+			<mat-icon>person_add</mat-icon>
+			<span>Register</span>
+		</button>
+	</div>
+</div>
+
+<div class="github row align-vertically">
+	<img src="/assets/img/icons/github.png" />
+	<span>
+		Source code and documentation on<br/>
+		<a href="https://github.com/fjaderboll/datahub">github.com/fjaderboll/datahub</a>
+	</span>
+</div>

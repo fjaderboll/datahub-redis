@@ -11,9 +11,13 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatDialogModule } from '@angular/material/dialog';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { FormsModule } from '@angular/forms';
 import { ToastrModule } from 'ngx-toastr';
 import { LoginComponent } from './pages/login/login.component';
 import { DashboardComponent } from './pages/dashboard/dashboard.component';
+import { CreateUserDialogComponent } from './dialogs/create-user-dialog/create-user-dialog.component';
 
 @NgModule({
   declarations: [
@@ -21,7 +25,8 @@ import { DashboardComponent } from './pages/dashboard/dashboard.component';
     HeaderComponent,
     FooterComponent,
     LoginComponent,
-    DashboardComponent
+    DashboardComponent,
+    CreateUserDialogComponent
   ],
   imports: [
     BrowserModule,
@@ -32,6 +37,9 @@ import { DashboardComponent } from './pages/dashboard/dashboard.component';
     MatDialogModule,
     MatIconModule,
     MatToolbarModule,
+    MatFormFieldModule,
+    MatInputModule,
+    FormsModule,
     ToastrModule.forRoot()
   ],
   providers: [],
