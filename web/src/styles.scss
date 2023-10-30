@@ -108,6 +108,12 @@ dl.list > dd:empty::after {
 .mat-icon.success {
 	color: #268132;
 }
+.mat-icon.warn {
+	color: #ee9c05;
+}
+.mat-icon.error {
+	color: #da2929;
+}
 
 .animate-new-item {
 	animation: fade-out-bg 10s;

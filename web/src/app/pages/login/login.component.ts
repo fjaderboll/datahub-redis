@@ -35,7 +35,7 @@ export class LoginComponent {
 	}
 
 	public loadState() {
-		this.server.getState().subscribe({
+		this.server.getStateUsers().subscribe({
 			next: (v: any) => {
 				this.createFirstUserRequired = v.createFirstUserRequired;
 				this.createUserAllowed = v.createUserAllowed;

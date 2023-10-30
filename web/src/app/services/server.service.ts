@@ -42,8 +42,8 @@ export class ServerService {
 		}
 	}
 
-    public getState() {
-		const url = this.apiUrl + "state/";
+    public getStateUsers() {
+		const url = this.apiUrl + "state/users";
 		return this.http.get(url, this.httpOptionsJson);
 	}
 
