@@ -136,3 +136,11 @@ pre.shell .fail {
 .mat-elevation-z8 {
 	display: inline-block;
 }
+
+.mat-mdc-dialog-container .mat-mdc-dialog-title.mdc-dialog__title {
+    background-color: #303f9f;
+    color: white;
+}
+.mat-mdc-dialog-content.mdc-dialog__content > :first-child {
+    margin-top: 1em;
+}

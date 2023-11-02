@@ -36,8 +36,17 @@ export class ServerService {
 	public showHttpError(error: any) {
 		console.log(error);
 		if(error.error && (typeof error.error === 'string' || error.error instanceof String)) {
+            try {
+                const data = JSON.parse(error.error);
+                if(data.message) {
+                    this.utils.toastError(data.message);
+                    return;
+                }
+            } catch (e) {}
 			this.utils.toastError(error.error);
-		} else {
+        } else if(error.error?.message) {
+            this.utils.toastError(error.error.message);
+        } else {
 			this.utils.toastError(error.message);
 		}
 	}
@@ -56,4 +65,30 @@ export class ServerService {
 		const url = this.apiUrl + "users/" + username + "/impersonate";
 		return this.http.get(url, this.httpOptionsJson);
 	}
+
+    public getUsers() {
+		const url = this.apiUrl + "users/";
+		return this.http.get(url, this.httpOptionsJson);
+	}
+
+	public getUser(username: string) {
+		const url = this.apiUrl + "users/" + username;
+		return this.http.get(url, this.httpOptionsJson);
+	}
+
+	public updateUser(username: string, property: string, value: any) {
+		const url = this.apiUrl + "users/" + username;
+		return this.http.put(url, { [property]: value }, this.httpOptionsText);
+	}
+
+	public createUser(username: string, password: string) {
+		const url = this.apiUrl + "users/";
+		return this.http.post(url, { username, password }, this.httpOptionsJson);
+	}
+
+	public deleteUser(username: string) {
+		const url = this.apiUrl + "users/" + username;
+		return this.http.delete(url, this.httpOptionsText);
+	}
+
 }

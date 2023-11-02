@@ -30,7 +30,7 @@ source .venv/bin/activate
 
 ### Run
 ```shell
-./app.py 2070    # start server at http://localhost:2070/
+cd ./src/app.py 2070    # start server at http://localhost:2070/
 ```
 
 ### Add new dependency
