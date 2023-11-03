@@ -1,6 +1,6 @@
 from flask_restx import Resource, fields, abort
 
-from api import api
+from api import api, auth_required
 from db import db, Keys
 import util
 import service
@@ -15,7 +15,10 @@ class UsersList(Resource):
 	})
 
 	@ns.response(200, 'Success')
-	def get(self):
+	@auth_required
+	def get(auth, self):
+		util.verifyAdmin(auth)
+
 		usernames = db.smembers(Keys.USERS)
 		users = []
 		for username in usernames:
@@ -58,18 +61,19 @@ class UsersList(Resource):
 class UsersGet(Resource):
 	@ns.response(200, 'Success')
 	@ns.response(404, 'Unknown user')
-	def get(self, username):
+	@auth_required
+	def get(auth, self, username):
+		util.verifyAdminOrUser(auth, username)
 		return service.findUser(username)
 
 	@ns.response(200, 'Success')
 	@ns.response(404, 'Unknown user')
-	def put(self, username):
+	@auth_required
+	def put(auth, self, username):
+		util.verifyAdminOrUser(auth, username)
+		service.findUser(username)
+
 		input = api.payload
-
-		dbUser = service.findUser(username, dbObj=True)
-
-		# TODO verify user is current user or isAdmin
-
 		if 'email' in input:
 			db.hset(Keys.getUserKey(username), 'email', input['email'])
 
@@ -85,13 +89,17 @@ class UsersGet(Resource):
 
 	@ns.response(200, 'Success')
 	@ns.response(404, 'Unknown user')
-	def delete(self, username):
+	@auth_required
+	def delete(auth, self, username):
+		util.verifyAdminOrUser(auth, username)
 		service.findUser(username)
 
-		db.delete(Keys.getUserKey(username))
-		db.lrem(Keys.USERS, 0, username)
+		# TODO stop if only user for connected datasets
 
-		return username
+		db.delete(Keys.getUserKey(username))
+		db.srem(Keys.USERS, 0, username)
+
+		return "Removed '" + username + "'"
 
 @ns.route('/<string:username>/login')
 @ns.param('username', 'Username')
@@ -121,19 +129,23 @@ class UsersLogin(Resource):
 
 @ns.route('/<string:username>/logout')
 @ns.param('username', 'Username')
-class UsersLogin(Resource):
+class UsersLogout(Resource):
 	@ns.response(200, 'Success')
 	@ns.response(404, 'Unknown user')
-	def post(self, username):
-		service.findUser(username)
-		# TODO delete token
-		return "Logged out"
+	@auth_required
+	def post(auth, self, username):
+		util.verifyAdminOrUser(auth, username)
+		tKey = Keys.getTokenKey(auth['token'])
+		db.delete(tKey)
+		return "Token invalidated"
 
 @ns.route('/<string:username>/impersonate')
 @ns.param('username', 'Username')
 class UsersImpersonate(Resource):
 	@ns.response(200, 'Success')
 	@ns.response(404, 'Unknown user')
-	def get(self, username):
+	@auth_required
+	def post(auth, self, username):
+		util.verifyAdmin(auth)
 		dbUser = service.findUser(username, dbObj=True)
 		return service.createToken(username, str(dbUser['isAdmin']) == "1", ttl=1200)

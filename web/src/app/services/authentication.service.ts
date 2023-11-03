@@ -87,7 +87,7 @@ export class AuthenticationService {
 		} else {
 			this.token = null;
 			localStorage.removeItem('token');
-			this.server.setToken("");
+			this.server.setToken(null);
 		}
 	}
 

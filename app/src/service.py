@@ -21,7 +21,7 @@ def findUser(username, dbObj=False):
 def createToken(username, isAdmin, name=None, ttl=None):
 	while True:
 		token = util.getRandomString(32)
-		tKey = Keys.getTokenKey(token, username)
+		tKey = Keys.getTokenKey(token)
 		if not db.exists(tKey):
 			tokenInfo = {
 				'token': token,

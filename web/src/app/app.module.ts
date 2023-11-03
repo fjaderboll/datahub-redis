@@ -58,7 +58,10 @@ import { BreadcrumbComponent } from './components/breadcrumb/breadcrumb.componen
     MatPaginatorModule,
     MatSortModule,
     FormsModule,
-    ToastrModule.forRoot()
+    ToastrModule.forRoot({
+		positionClass: 'toast-bottom-right',
+		preventDuplicates: true
+	})
   ],
   providers: [],
   bootstrap: [AppComponent]

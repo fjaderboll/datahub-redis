@@ -54,9 +54,9 @@ export class UserViewComponent implements OnInit {
 	public deleteUser() {
 		let text = "This will remove user '" + this.user.username + "'";
 		if(this.auth.getUsername() == this.user.username) {
-			text += " (yourself!!!)"
+			text += " (yourself!)"
 		}
-		text += " and all nodes, sensors, readings and tokens related to this user. This action is not reversible. Are you really sure?";
+		text += ". This action is not reversible. Are you really sure?";
 
 		const dialog = this.dialog.open(ConfirmDialogComponent, {
 			data: {

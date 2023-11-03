@@ -4,6 +4,14 @@ import string
 import hashlib
 from flask_restx import abort
 
+def verifyAdmin(auth):
+	if not auth['isAdmin']:
+		abort(403, "Forbidden")
+
+def verifyAdminOrUser(auth, username):
+	if not auth['isAdmin'] and auth['username'] != username:
+		abort(403, "Forbidden")
+
 def verifyValidName(name, attributeName="Attribute", fail=True):
 	regex = "^[a-z][a-z0-9_\-@.]*[a-z0-9]$"
 	if re.search(regex, name) is None:

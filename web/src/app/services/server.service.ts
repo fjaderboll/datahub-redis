@@ -18,11 +18,13 @@ export class ServerService {
 		this.apiUrl = environment.apiUrl;
 	}
 
-	public setToken(token: string) {
+	public setToken(token: string | null) {
 		let headers = new HttpHeaders({
-			'Content-Type': 'application/json',
-			'Authorization': ' Bearer ' + token
+			'Content-Type': 'application/json'
 		});
+        if(token) {
+            headers = headers.set('Authorization', ' Bearer ' + token)
+        }
 		this.httpOptionsJson = {
 			headers,
 			responseType: 'json'
@@ -58,17 +60,17 @@ export class ServerService {
 
 	public login(username: string, password: string) {
 		const url = this.apiUrl + "users/" + username + "/login";
-		return this.http.post(url, { password });
+		return this.http.post(url, { password }, this.httpOptionsJson);
 	}
 
     public logout(username: string) {
 		const url = this.apiUrl + "users/" + username + "/logout";
-		return this.http.post(url, {});
+		return this.http.post(url, {}, this.httpOptionsText);
 	}
 
 	public impersonate(username: string) {
 		const url = this.apiUrl + "users/" + username + "/impersonate";
-		return this.http.get(url, this.httpOptionsJson);
+		return this.http.post(url, {}, this.httpOptionsJson);
 	}
 
     public getUsers() {
