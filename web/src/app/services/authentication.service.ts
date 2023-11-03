@@ -10,7 +10,7 @@ import { MatDialog } from '@angular/material/dialog';
 })
 export class AuthenticationService {
 	private token: string | null = null;
-	private username: string | null = null;
+	private username!: string;
 	private admin: boolean = false;
 	private expireTimer: any;
 
@@ -100,11 +100,26 @@ export class AuthenticationService {
 	}
 
 	public logout() {
-		this.setToken(null, this.username, this.admin, null);
-		if(this.expireTimer) {
-			clearTimeout(this.expireTimer);
-			this.expireTimer = null;
-		}
+        return new Observable(
+			observer => {
+				this.server.logout(this.username).subscribe({
+					next: (v: any) => {
+						this.setToken(null, this.username, this.admin, null);
+                        if(this.expireTimer) {
+                            clearTimeout(this.expireTimer);
+                            this.expireTimer = null;
+                        }
+						observer.next(v);
+					},
+					error: (e) => {
+						observer.error(e);
+					},
+					complete: () => {
+						observer.complete();
+					}
+				});
+			}
+		);
 	}
 
 	public isAdmin() {

@@ -4,10 +4,13 @@ import string
 import hashlib
 from flask_restx import abort
 
-def verifyValidName(name, attributeName):
+def verifyValidName(name, attributeName="Attribute", fail=True):
 	regex = "^[a-z][a-z0-9_\-@.]*[a-z0-9]$"
 	if re.search(regex, name) is None:
-		abort(400, attributeName + " '" + name + "' does not match pattern " + regex)
+		if fail:
+			abort(400, attributeName + " '" + name + "' does not match pattern " + regex)
+		return False
+	return True
 
 def verifyNoneEmpty(value, attributeName):
 	if value is None or len(value) == 0:

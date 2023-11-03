@@ -19,7 +19,7 @@ class UsersList(Resource):
 		usernames = db.smembers(Keys.USERS)
 		users = []
 		for username in usernames:
-			user = service.findUser(username, verifyUsername=False)
+			user = service.findUser(username)
 			if user:
 				users.append(user)
 		return users
@@ -98,9 +98,13 @@ class UsersGet(Resource):
 class UsersLogin(Resource):
 	@api.doc(security=None)
 	@ns.response(200, 'Success')
-	@ns.response(404, 'Unknown user')
+	@ns.response(400, 'Bad parameters')
+	@ns.response(401, 'Invalid credentials')
 	def post(self, username):
-		util.verifyValidName(username, "Username")
+		validName = util.verifyValidName(username, "Username", fail=False)
+		if not validName:
+			abort(401, "Invalid credentials")
+
 		dbUser = db.hgetall(Keys.getUserKey(username))
 		if len(dbUser) == 0:
 			abort(401, "Invalid credentials")
@@ -109,11 +113,21 @@ class UsersLogin(Resource):
 		if 'password' in input and input['password'] is not None:
 			hash = util.createPasswordHash(input['password'], dbUser['passwordSalt'])
 			if hash == dbUser['passwordHash']:
-				return service.createToken(username, str(dbUser['isAdmin']) == "1", ttl=1200)
+				return service.createToken(username, str(dbUser['isAdmin']) == "1", ttl=3600)
 			else:
 				abort(401, "Invalid credentials")
 		else:
 			abort(400, "Missing password")
+
+@ns.route('/<string:username>/logout')
+@ns.param('username', 'Username')
+class UsersLogin(Resource):
+	@ns.response(200, 'Success')
+	@ns.response(404, 'Unknown user')
+	def post(self, username):
+		service.findUser(username)
+		# TODO delete token
+		return "Logged out"
 
 @ns.route('/<string:username>/impersonate')
 @ns.param('username', 'Username')
@@ -122,4 +136,4 @@ class UsersImpersonate(Resource):
 	@ns.response(404, 'Unknown user')
 	def get(self, username):
 		dbUser = service.findUser(username, dbObj=True)
-		return service.createToken(username, str(dbUser['isAdmin']) == "1", ttl=600)
+		return service.createToken(username, str(dbUser['isAdmin']) == "1", ttl=1200)

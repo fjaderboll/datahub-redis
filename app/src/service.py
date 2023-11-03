@@ -4,9 +4,10 @@ from flask_restx import abort
 from db import db, Keys
 import util
 
-def findUser(username, verifyUsername=True, dbObj=False):
-	if verifyUsername:
-		util.verifyValidName(username, "Username")
+def findUser(username, dbObj=False):
+	validName = util.verifyValidName(username, "Username", fail=False)
+	if not validName:
+		abort(404, "Unknown user '" + username + "'")
 
 	dbUser = db.hgetall(Keys.getUserKey(str(username)))
 	if len(dbUser) == 0:
