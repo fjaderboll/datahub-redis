@@ -1,0 +1,33 @@
+<app-breadcrumb *ngIf="auth.isAdmin()" [links]="['/users', '/users/' + user?.username]" [names]="['Users', user?.username]"></app-breadcrumb>
+<app-breadcrumb *ngIf="!auth.isAdmin()" [links]="['/users/' + user?.username]" [names]="[user?.username]"></app-breadcrumb>
+
+<dl class="list">
+	<dt>Username</dt>
+	<dd>{{ user?.username }}</dd>
+
+	<dt>E-mail</dt>
+	<dd>
+		<app-inline-edit type="text" [value]="user?.email" (onChange)="changedValue('email', $event)"></app-inline-edit>
+	</dd>
+
+	<dt>Administrator</dt>
+	<dd>
+		<app-inline-edit type="boolean" [value]="user?.isAdmin" (onChange)="changedValue('isAdmin', $event)" [disabled]="!auth.isAdmin()"></app-inline-edit>
+	</dd>
+</dl>
+
+<div class="row margin-top">
+	<div>
+		<button mat-raised-button color="warn" (click)="deleteUser()">
+			<mat-icon>delete</mat-icon>
+			<span>Delete User</span>
+		</button>
+	</div>
+
+	<div *ngIf="auth.isAdmin() && auth.getUsername() !== user?.username" class="margin-left">
+		<button mat-raised-button color="primary" (click)="impersonate()">
+			<mat-icon>person</mat-icon>
+			<span>Impersonate</span>
+		</button>
+	</div>
+</div>

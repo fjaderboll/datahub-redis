@@ -13,11 +13,17 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatRadioModule } from '@angular/material/radio';
 import { FormsModule } from '@angular/forms';
 import { ToastrModule } from 'ngx-toastr';
 import { LoginComponent } from './pages/login/login.component';
 import { DashboardComponent } from './pages/dashboard/dashboard.component';
 import { CreateUserDialogComponent } from './dialogs/create-user-dialog/create-user-dialog.component';
+import { UserViewComponent } from './pages/user-view/user-view.component';
+import { UserListComponent } from './pages/user-list/user-list.component';
+import { ConfirmDialogComponent } from './dialogs/confirm-dialog/confirm-dialog.component';
+import { InlineEditComponent } from './components/inline-edit/inline-edit.component';
+import { BreadcrumbComponent } from './components/breadcrumb/breadcrumb.component';
 
 @NgModule({
   declarations: [
@@ -26,7 +32,12 @@ import { CreateUserDialogComponent } from './dialogs/create-user-dialog/create-u
     FooterComponent,
     LoginComponent,
     DashboardComponent,
-    CreateUserDialogComponent
+    CreateUserDialogComponent,
+    UserViewComponent,
+    UserListComponent,
+    ConfirmDialogComponent,
+    InlineEditComponent,
+    BreadcrumbComponent
   ],
   imports: [
     BrowserModule,
@@ -39,6 +50,7 @@ import { CreateUserDialogComponent } from './dialogs/create-user-dialog/create-u
     MatToolbarModule,
     MatFormFieldModule,
     MatInputModule,
+    MatRadioModule,
     FormsModule,
     ToastrModule.forRoot()
   ],

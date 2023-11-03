@@ -1,0 +1,16 @@
+<h1 mat-dialog-title>{{ inputData.title }}</h1>
+<div mat-dialog-content>
+	<div>
+		{{ inputData.text }}
+	</div>
+</div>
+<div mat-dialog-actions>
+	<button mat-stroked-button color="primary" [mat-dialog-close]="false">
+		<mat-icon>close</mat-icon>
+		<span>Cancel</span>
+	</button>
+	<button mat-flat-button color="warn" (click)="apply()">
+		<mat-icon>check</mat-icon>
+		<span>Procceed</span>
+	</button>
+</div>

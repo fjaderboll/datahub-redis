@@ -33,7 +33,7 @@ export class AuthenticationService {
 			observer => {
 				this.server.login(username, password).subscribe({
 					next: (v: any) => {
-						this.setToken(v.token, v.username, v.admin, v.expire);
+						this.setToken(v.token, v.username, v.isAdmin, v.expire);
 						observer.next(v);
 					},
 					error: (e) => {
@@ -52,7 +52,7 @@ export class AuthenticationService {
 			observer => {
 				this.server.impersonate(username).subscribe({
 					next: (v: any) => {
-						this.setToken(v.token, v.username, v.admin, v.expire);
+						this.setToken(v.token, v.username, v.isAdmin, v.expire);
 						observer.next(v);
 					},
 					error: (e) => {
@@ -66,11 +66,11 @@ export class AuthenticationService {
 		);
 	}
 
-	public setToken(token: string | null, username: string | null, admin: boolean, expire: string | null) {
+	public setToken(token: string | null, username: string | null, isAdmin: boolean, expire: string | null) {
 		if(token && token.length > 0 && username && username.length > 0) {
 			this.token = token;
 			this.username = username;
-			this.admin = admin;
+			this.admin = isAdmin;
 			localStorage.setItem('token', this.token);
 			localStorage.setItem('username', this.username);
 			localStorage.setItem('admin', this.admin + "");

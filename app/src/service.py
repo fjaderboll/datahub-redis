@@ -17,14 +17,15 @@ def findUser(username, verifyUsername=True, dbObj=False):
 	else:
 		return util.copy(dbUser, ['username', 'email', 'isAdmin'])
 
-def createToken(username, name=None, ttl=None):
+def createToken(username, isAdmin, name=None, ttl=None):
 	while True:
 		token = util.getRandomString(32)
 		tKey = Keys.getTokenKey(token, username)
 		if not db.exists(tKey):
 			tokenInfo = {
 				'token': token,
-				'username': username
+				'username': username,
+				'isAdmin': int(isAdmin)     # need to store as int
 			}
 			if name:
 				tokenInfo['name'] = name
@@ -35,4 +36,5 @@ def createToken(username, name=None, ttl=None):
 			if ttl:
 				db.expire(tKey, ttl)
 
+			tokenInfo['isAdmin'] = isAdmin  # return as bool
 			return tokenInfo

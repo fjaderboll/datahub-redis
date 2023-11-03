@@ -1,0 +1,11 @@
+<div class="breadcrumb row">
+	<span class="breadcrumb-link row align-vertically">
+		<mat-icon>home</mat-icon>
+		<a routerLink="/">Start</a>
+	</span>
+
+	<span class="breadcrumb-link row align-vertically" *ngFor="let link of links; index as i">
+		<mat-icon>navigate_next</mat-icon>
+		<a [routerLink]="link">{{ names[i] }}</a>
+	</span>
+</div>

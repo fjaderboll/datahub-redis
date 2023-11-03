@@ -66,16 +66,20 @@ class UsersGet(Resource):
 	def put(self, username):
 		input = api.payload
 
-		user = service.findUser(username)
+		dbUser = service.findUser(username, dbObj=True)
+
+		# TODO verify user is current user or isAdmin
 
 		if 'email' in input:
 			db.hset(Keys.getUserKey(username), 'email', input['email'])
 
 		if 'isAdmin' in input:
-			db.hset(Keys.getUserKey(username), 'isAdmin', input['isAdmin'])
+			db.hset(Keys.getUserKey(username), 'isAdmin', int(input['isAdmin'] == 1))
 
-		if 'password' in input:
-			db.hset(Keys.getUserKey(username), 'password', input['isAdmin'])
+		if 'password' in input and input['password'] is not None and input['password'] != "":
+			salt = util.createPasswordSalt()
+			hash = util.createPasswordHash(input['password'], salt)
+			db.hset(Keys.getUserKey(username), 'passwordHash', hash, 'passwordSalt', salt)
 
 		return service.findUser(username)
 
@@ -105,7 +109,7 @@ class UsersLogin(Resource):
 		if 'password' in input and input['password'] is not None:
 			hash = util.createPasswordHash(input['password'], dbUser['passwordSalt'])
 			if hash == dbUser['passwordHash']:
-				return service.createToken(username, ttl=30)
+				return service.createToken(username, str(dbUser['isAdmin']) == "1", ttl=1200)
 			else:
 				abort(401, "Invalid credentials")
 		else:
@@ -117,5 +121,5 @@ class UsersImpersonate(Resource):
 	@ns.response(200, 'Success')
 	@ns.response(404, 'Unknown user')
 	def get(self, username):
-		service.findUser(username)
-		return service.createToken(username, ttl=30)
+		dbUser = service.findUser(username, dbObj=True)
+		return service.createToken(username, str(dbUser['isAdmin']) == "1", ttl=600)

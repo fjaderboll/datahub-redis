@@ -1,0 +1,45 @@
+
+.view {
+	border: 2px dashed transparent;
+}
+.view.editable {
+	color: #831783;
+}
+.view.editable:hover {
+	cursor: pointer;
+	text-decoration: underline;
+}
+
+.edit-container {
+	position: relative;
+	z-index: 2;
+}
+.edit-container:before{
+    content: "";
+    position: absolute;
+    top: -10px;
+    left: 10px;
+    z-index: 1;
+    border: solid 10px transparent;
+    border-bottom-color: #ff4081;
+}
+.edit {
+	position: absolute;
+	top: 10px;
+	left: 5px;
+	border: 1px solid #ff4081;
+	padding: 0 10px 0 10px;
+	box-shadow: 5px 5px 4px #888;
+	border-radius: 3px;
+	background-color: white;
+}
+.edit .type-boolean {
+	padding: 10px;
+}
+.edit .type-boolean .mat-radio-group {
+	white-space: nowrap;
+}
+
+.not-set {
+	color: unset;
+}

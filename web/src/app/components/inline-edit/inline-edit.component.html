@@ -1,0 +1,37 @@
+<span (click)="startEdit()" class="view" [class.editable]="!disabled">
+	<ng-container *ngIf="type == 'text' || type == 'number'">
+		<span [class.not-set]="!value">{{ value || 'Not set' }}</span>
+	</ng-container>
+	<ng-container *ngIf="type == 'boolean'">
+		<span *ngIf="value === true">Yes</span>
+		<span *ngIf="value === false">No</span>
+		<span *ngIf="value === undefined || value === null" class="not-set">Not set</span>
+	</ng-container>
+</span>
+
+<div *ngIf="editMode" class="edit-container">
+	<div class="edit">
+		<ng-container *ngIf="type == 'text' || type == 'number'">
+			<mat-form-field>
+				<input
+					#input
+					matInput
+					(focusout)="stopEdit(true)"
+					(keydown.enter)="stopEdit(true)"
+					(keydown.escape)="stopEdit(false)"
+					[(ngModel)]="newValue"
+					[autofocus]="true"
+					[type]="type"
+				/>
+			</mat-form-field>
+		</ng-container>
+
+		<div class="type-boolean" *ngIf="type == 'boolean'">
+			<mat-radio-group [(ngModel)]="newValue">
+				<mat-radio-button (click)="newValue=true; stopEdit(true)" [value]="true">Yes</mat-radio-button>
+				&nbsp;
+				<mat-radio-button (click)="newValue=false; stopEdit(true)" [value]="false">No</mat-radio-button>
+			</mat-radio-group>
+		</div>
+	</div>
+</div>
