@@ -19,7 +19,7 @@ class UsersList(Resource):
 	def get(auth, self):
 		util.verifyAdmin(auth)
 
-		usernames = db.smembers(Keys.USERS)
+		usernames = db.smembers(Keys.getUsers())
 		users = []
 		for username in usernames:
 			user = service.findUser(username)
@@ -38,12 +38,12 @@ class UsersList(Resource):
 		util.verifyNoneEmpty(input['password'], 'Password')
 
 		username = input['username']
-		if db.sismember(Keys.USERS, username):
+		if db.sismember(Keys.getUsers(), username):
 			abort(400, "Username '" + username + "' already exists")
 
 		salt = util.createPasswordSalt()
 		hash = util.createPasswordHash(input['password'], salt)
-		userCount = db.scard(Keys.USERS)
+		userCount = db.scard(Keys.getUsers())
 
 		user = {
 			'username': username,
@@ -52,8 +52,8 @@ class UsersList(Resource):
 			'email': "",
 			'isAdmin': int(userCount == 0)
 		}
-		db.hset(Keys.getUserKey(username), mapping=user)
-		db.sadd(Keys.USERS, username)
+		db.hset(Keys.getUser(username), mapping=user)
+		db.sadd(Keys.getUsers(), username)
 		return service.findUser(username)
 
 @ns.route('/<string:username>')
@@ -75,15 +75,15 @@ class UsersGet(Resource):
 
 		input = api.payload
 		if 'email' in input:
-			db.hset(Keys.getUserKey(username), 'email', input['email'])
+			db.hset(Keys.getUser(username), 'email', input['email'])
 
 		if 'isAdmin' in input:
-			db.hset(Keys.getUserKey(username), 'isAdmin', int(input['isAdmin'] == 1))
+			db.hset(Keys.getUser(username), 'isAdmin', int(input['isAdmin'] == 1))
 
 		if 'password' in input and input['password'] is not None and input['password'] != "":
 			salt = util.createPasswordSalt()
 			hash = util.createPasswordHash(input['password'], salt)
-			db.hset(Keys.getUserKey(username), 'passwordHash', hash, 'passwordSalt', salt)
+			db.hset(Keys.getUser(username), 'passwordHash', hash, 'passwordSalt', salt)
 
 		return service.findUser(username)
 
@@ -96,8 +96,8 @@ class UsersGet(Resource):
 
 		# TODO stop if only user for connected datasets
 
-		db.delete(Keys.getUserKey(username))
-		db.srem(Keys.USERS, 0, username)
+		db.delete(Keys.getUser(username))
+		db.srem(Keys.getUsers(), 0, username)
 
 		return "Removed '" + username + "'"
 
@@ -113,7 +113,7 @@ class UsersLogin(Resource):
 		if not validName:
 			abort(401, "Invalid credentials")
 
-		dbUser = db.hgetall(Keys.getUserKey(username))
+		dbUser = db.hgetall(Keys.getUser(username))
 		if len(dbUser) == 0:
 			abort(401, "Invalid credentials")
 
@@ -135,7 +135,7 @@ class UsersLogout(Resource):
 	@auth_required
 	def post(auth, self, username):
 		util.verifyAdminOrUser(auth, username)
-		tKey = Keys.getTokenKey(auth['token'])
+		tKey = Keys.getToken(auth['token'])
 		db.delete(tKey)
 		return "Token invalidated"
 

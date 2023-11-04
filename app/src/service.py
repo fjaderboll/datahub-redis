@@ -9,7 +9,7 @@ def findUser(username, dbObj=False):
 	if not validName:
 		abort(404, "Unknown user '" + username + "'")
 
-	dbUser = db.hgetall(Keys.getUserKey(str(username)))
+	dbUser = db.hgetall(Keys.getUser(str(username)))
 	if len(dbUser) == 0:
 		abort(404, "Unknown user '" + username + "'")
 
@@ -21,7 +21,7 @@ def findUser(username, dbObj=False):
 def createToken(username, isAdmin, name=None, ttl=None):
 	while True:
 		token = util.getRandomString(32)
-		tKey = Keys.getTokenKey(token)
+		tKey = Keys.getToken(token)
 		if not db.exists(tKey):
 			tokenInfo = {
 				'token': token,

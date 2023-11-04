@@ -12,7 +12,7 @@ class StateLogin(Resource):
 	@api.doc(security=None)
 	@ns.response(200, 'Success')
 	def get(self):
-		userCount = db.scard(Keys.USERS)
+		userCount = db.scard(Keys.getUsers())
 		return {
 			'createFirstUserRequired': (userCount == 0),
 			'createUserAllowed': True

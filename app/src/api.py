@@ -31,7 +31,7 @@ def auth_required(f):
 			parts = request.headers["Authorization"].split(" ")
 			if len(parts) == 2:
 				token = parts[1]
-				tKey = Keys.getTokenKey(token)
+				tKey = Keys.getToken(token)
 				user = db.hgetall(tKey)
 				if user:
 					auth = user

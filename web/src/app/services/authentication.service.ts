@@ -78,9 +78,8 @@ export class AuthenticationService {
 			if(expire) {
 				localStorage.setItem('expire', expire);
 				this.expireTimer = setTimeout(() => {
-					this.logout();
+					this.logout(false);
 					this.dialog.closeAll();
-					this.router.navigate(['/login']);
 					this.utils.toastWarn("You session has expired, please sign in again.");
 				}, new Date(expire).getTime() - new Date().getTime());
 			}
@@ -99,27 +98,24 @@ export class AuthenticationService {
 		return !!this.token;
 	}
 
-	public logout() {
-        return new Observable(
-			observer => {
-				this.server.logout(this.username).subscribe({
-					next: (v: any) => {
-						this.setToken(null, this.username, this.admin, null);
-                        if(this.expireTimer) {
-                            clearTimeout(this.expireTimer);
-                            this.expireTimer = null;
-                        }
-						observer.next(v);
-					},
-					error: (e) => {
-						observer.error(e);
-					},
-					complete: () => {
-						observer.complete();
-					}
-				});
-			}
-		);
+	public logout(signout: boolean) {
+        this.setToken(null, this.username, this.admin, null);
+        if(this.expireTimer) {
+            clearTimeout(this.expireTimer);
+            this.expireTimer = null;
+        }
+        this.router.navigate(['/login']);
+
+        if(signout) {
+            this.server.logout(this.username).subscribe({
+                next: (v: any) => {
+                    this.utils.toastSuccess("Signed out");
+                },
+                error: (e) => {
+                    this.server.showHttpError(e);
+                }
+            });
+        }
 	}
 
 	public isAdmin() {

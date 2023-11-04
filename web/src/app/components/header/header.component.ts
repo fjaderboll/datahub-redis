@@ -26,15 +26,7 @@ export class HeaderComponent implements OnInit {
 	}*/
 
 	public logout() {
-        this.auth.logout().subscribe({
-			next: (v) => {
-				this.router.navigate(['/login']);
-		        this.utils.toastSuccess("Signed out");
-			},
-			error: (e) => {
-				this.server.showHttpError(e);
-			}
-		});
+        this.auth.logout(true);
 	}
 
 }
