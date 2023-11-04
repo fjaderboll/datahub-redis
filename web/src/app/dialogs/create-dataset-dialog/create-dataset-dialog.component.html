@@ -1,0 +1,26 @@
+<h1 mat-dialog-title>Create Dataset</h1>
+<div mat-dialog-content>
+	<div>
+		<mat-form-field appearance="outline">
+			<mat-label>Name</mat-label>
+			<input type="text" matInput required [(ngModel)]="name" placeholder="Name">
+		</mat-form-field>
+	</div>
+
+	<div>
+		<mat-form-field appearance="outline">
+			<mat-label>Description</mat-label>
+			<input type="text" matInput [(ngModel)]="description" placeholder="Description">
+		</mat-form-field>
+	</div>
+</div>
+<div mat-dialog-actions>
+	<button mat-stroked-button color="primary" [mat-dialog-close]="false">
+		<mat-icon>close</mat-icon>
+		<span>Cancel</span>
+	</button>
+	<button mat-flat-button color="accent" (click)="create()" [disabled]="!isFormValid()">
+		<mat-icon>add</mat-icon>
+		<span>Create</span>
+	</button>
+</div>

@@ -5,8 +5,9 @@ from flask import Flask, Blueprint
 from flask_cors import CORS
 
 from api import api
-from endpoints.users import ns as namespace_users
 from endpoints.state import ns as namespace_state
+from endpoints.users import ns as namespace_users
+from endpoints.datasets import ns as namespace_datasets
 
 app = Flask(__name__)
 cors = CORS(app, resources={r"/*": {"origins": "http://localhost:4200"}})
@@ -14,8 +15,9 @@ cors = CORS(app, resources={r"/*": {"origins": "http://localhost:4200"}})
 def main(port, debug):
 	blueprint = Blueprint('api', __name__, url_prefix='')
 	api.init_app(blueprint)
-	api.add_namespace(namespace_users)
 	api.add_namespace(namespace_state)
+	api.add_namespace(namespace_users)
+	api.add_namespace(namespace_datasets)
 	app.register_blueprint(blueprint)
 	app.run(host="0.0.0.0", port=port, debug=debug)
 

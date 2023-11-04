@@ -27,6 +27,14 @@ import { UserListComponent } from './pages/user-list/user-list.component';
 import { ConfirmDialogComponent } from './dialogs/confirm-dialog/confirm-dialog.component';
 import { InlineEditComponent } from './components/inline-edit/inline-edit.component';
 import { BreadcrumbComponent } from './components/breadcrumb/breadcrumb.component';
+import { DatasetViewComponent } from './pages/dataset-view/dataset-view.component';
+import { DatasetListComponent } from './pages/dataset-list/dataset-list.component';
+import { ExportListComponent } from './pages/export-list/export-list.component';
+import { TokenListComponent } from './pages/token-list/token-list.component';
+import { NodeListComponent } from './pages/node-list/node-list.component';
+import { NodeViewComponent } from './pages/node-view/node-view.component';
+import { CreateDatasetDialogComponent } from './dialogs/create-dataset-dialog/create-dataset-dialog.component';
+import { CreateNodeDialogComponent } from './dialogs/create-node-dialog/create-node-dialog.component';
 
 @NgModule({
   declarations: [
@@ -40,7 +48,15 @@ import { BreadcrumbComponent } from './components/breadcrumb/breadcrumb.componen
     UserListComponent,
     ConfirmDialogComponent,
     InlineEditComponent,
-    BreadcrumbComponent
+    BreadcrumbComponent,
+    DatasetViewComponent,
+    DatasetListComponent,
+    ExportListComponent,
+    TokenListComponent,
+    NodeListComponent,
+    NodeViewComponent,
+    CreateDatasetDialogComponent,
+    CreateNodeDialogComponent
   ],
   imports: [
     BrowserModule,

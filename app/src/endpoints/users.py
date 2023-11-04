@@ -99,7 +99,7 @@ class UsersGet(Resource):
 		db.delete(Keys.getUser(username))
 		db.srem(Keys.getUsers(), 0, username)
 
-		return "Removed '" + username + "'"
+		return "Removed user '" + username + "'"
 
 @ns.route('/<string:username>/login')
 @ns.param('username', 'Username')

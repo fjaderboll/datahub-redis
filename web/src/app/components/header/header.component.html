@@ -4,19 +4,9 @@
         <span class="title">Datahub</span>
 	</a>
 
-	<a mat-button routerLink="/nodes" *ngIf="auth.isLoggedIn()">
-    	<mat-icon fontIcon="router"></mat-icon>
-		<span>Nodes</span>
-	</a>
-
-	<a mat-button routerLink="/tokens" *ngIf="auth.isLoggedIn()">
-    	<mat-icon fontIcon="key"></mat-icon>
-		<span>Tokens</span>
-	</a>
-
-	<a mat-button routerLink="/exports" *ngIf="auth.isLoggedIn()">
-    	<mat-icon fontIcon="forward_to_inbox"></mat-icon>
-		<span>Exports</span>
+	<a mat-button routerLink="/datasets" *ngIf="auth.isLoggedIn()">
+    	<mat-icon fontIcon="dataset"></mat-icon>
+		<span>Datasets</span>
 	</a>
 
 	<a mat-button routerLink="/users" *ngIf="auth.isAdmin()">

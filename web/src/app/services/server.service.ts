@@ -98,4 +98,29 @@ export class ServerService {
 		return this.http.delete(url, this.httpOptionsText);
 	}
 
+    public getDatasets() {
+		const url = this.apiUrl + "datasets/";
+		return this.http.get(url, this.httpOptionsJson);
+	}
+
+	public getDataset(name: string) {
+		const url = this.apiUrl + "datasets/" + name;
+		return this.http.get(url, this.httpOptionsJson);
+	}
+
+	public updateDataset(name: string, property: string, value: any) {
+		const url = this.apiUrl + "datasets/" + name;
+		return this.http.put(url, { [property]: value }, this.httpOptionsText);
+	}
+
+	public createDataset(name: string, description: string) {
+		const url = this.apiUrl + "datasets/";
+		return this.http.post(url, { name, desc: description }, this.httpOptionsJson);
+	}
+
+	public deleteDataset(name: string) {
+		const url = this.apiUrl + "datasets/" + name;
+		return this.http.delete(url, this.httpOptionsText);
+	}
+
 }

@@ -18,6 +18,15 @@ def findUser(username, dbObj=False):
 	else:
 		return util.copy(dbUser, ['username', 'email', 'isAdmin'])
 
+def findDataset(auth, datasetName):
+	validName = util.verifyValidName(datasetName, "Dataset name", fail=False)
+	if validName:
+		if db.sismember(Keys.getUserDatasets(auth['username']), datasetName):
+			dataset = db.hgetall(Keys.getDataset(datasetName))
+			return dataset
+
+	abort(404, "Unknown dataset '" + datasetName + "'")
+
 def createToken(username, isAdmin, name=None, ttl=None):
 	while True:
 		token = util.getRandomString(32)

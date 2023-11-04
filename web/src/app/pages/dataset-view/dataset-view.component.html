@@ -1,0 +1,55 @@
+<app-breadcrumb [links]="['/datasets', '/datasets/' + dataset?.name]" [names]="['Datasets', dataset?.name]"></app-breadcrumb>
+
+<dl class="list">
+    <dt>Name</dt>
+    <dd>
+        <app-inline-edit type="text" [value]="dataset?.name" (onChange)="changedValue('name', $event)"></app-inline-edit>
+    </dd>
+
+    <dt>Description</dt>
+    <dd>
+        <app-inline-edit type="text" [value]="dataset?.desc" (onChange)="changedValue('desc', $event)"></app-inline-edit>
+    </dd>
+</dl>
+
+<div class="row margin-top align-right">
+	<div>
+		<button mat-raised-button color="warn" (click)="deleteDataset()">
+			<mat-icon>delete</mat-icon>
+			<span>Delete Dataset</span>
+		</button>
+	</div>
+
+	<div class="margin-left">
+		<button mat-raised-button color="primary" (click)="createNode()">
+			<mat-icon>add</mat-icon>
+			<span>Create Node</span>
+		</button>
+	</div>
+</div>
+
+<div class="mat-elevation-z8 margin-top">
+	<table mat-table [dataSource]="dataSource" matSort matSortActive="name" matSortDisableClear matSortDirection="asc">
+
+		<ng-container matColumnDef="name">
+			<th mat-header-cell *matHeaderCellDef mat-sort-header>Name</th>
+			<td mat-cell *matCellDef="let node">
+				<a routerLink="/datasets/{{ dataset?.name }}/nodes/{{ node.name }}">
+					{{ node.name }}
+				</a>
+			</td>
+		</ng-container>
+
+		<ng-container matColumnDef="desc">
+			<th mat-header-cell *matHeaderCellDef mat-sort-header>Description</th>
+			<td mat-cell *matCellDef="let node" [class.not-set]="!node.desc">{{ node.desc || 'Not set' }}</td>
+		</ng-container>
+
+		<tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+		<tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+	</table>
+
+	<div [hidden]="dataSource.data.length <= 10">
+		<mat-paginator [pageSizeOptions]="[10, 100]"></mat-paginator>
+	</div>
+</div>
