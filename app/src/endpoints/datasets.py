@@ -12,12 +12,11 @@ class DatasetsList(Resource):
 	@ns.response(200, 'Success')
 	@auth_required
 	def get(auth, self):
-		util.verifyAdmin(auth)
-
-		datasetNames = db.smembers(Keys.getUserDatasets(auth['username']))
+		datasetIds = db.smembers(Keys.getUserDatasetIds(auth['username']))
 		datasets = []
-		for datasetName in datasetNames:
-			dataset = db.hgetall(Keys.getDataset(datasetName))
+		for datasetId in datasetIds:
+			dataset = db.hgetall(Keys.getDatasetById(datasetId))
+			dataset = service.cleanObject(dataset, ['name', 'desc'])
 			datasets.append(dataset)
 		return datasets
 
@@ -32,17 +31,22 @@ class DatasetsList(Resource):
 
 		util.verifyValidName(input['name'], "Name")
 
-		dKey = Keys.getDataset(name)
-		if db.exists(dKey):
+		keyName = Keys.getDatasetByName(input['name'])
+		datasetId = db.get(keyName)
+		if datasetId:
 			abort(400, "Dataset '" + name + "' already exists")
 
+		datasetId = db.incr(Keys.getDatasetIdCounter())
 		dataset = {
+			'id': datasetId,
 			'name': name,
 			'desc': desc
 		}
-		db.hset(dKey, mapping=dataset)
-		db.sadd(Keys.getUserDatasets(auth['username']), name)
-		return dataset
+		db.set(keyName, datasetId)
+		db.hset(Keys.getDatasetById(datasetId), mapping=dataset)
+		db.sadd(Keys.getUserDatasetIds(auth['username']), datasetId)
+
+		return service.cleanObject(dataset, ['name', 'desc'])
 
 @ns.route('/<string:datasetName>')
 @ns.param('datasetName', 'Dataset name')
@@ -57,30 +61,31 @@ class DatasetsView(Resource):
 	@ns.response(404, 'Unknown dataset')
 	@auth_required
 	def put(auth, self, datasetName):
-		service.findDataset(auth, datasetName)
+		dataset = service.findDataset(auth, datasetName)
+		dKey = Keys.getDatasetById(dataset['id'])
 
 		input = api.payload
-		#if 'name' in input:
-		#	db.srem(Keys.getUserDatasets(auth['username']), datasetName)
-		#	db.sadd(Keys.getUserDatasets(auth['username']), input['name'])
-		#	db.hset(Keys.getDataset(datasetName), 'name', input['name'])
-		#	db.rename(Keys.getDataset(datasetName), Keys.getDataset(input['name']))
-		#	datasetName = input['name']
+		if 'name' in input:
+			db.hset(dKey, 'name', input['name'])
+			db.rename(Keys.getDatasetByName(datasetName), Keys.getDatasetByName(input['name']))
 
 		if 'desc' in input:
-			db.hset(Keys.getDataset(datasetName), 'desc', input['desc'])
+			db.hset(dKey, 'desc', input['desc'])
 
-		return service.findDataset(auth, datasetName)
+		dataset = db.hgetall(dKey)
+		dataset = service.cleanObject(dataset, ['name', 'desc'])
+		return dataset
 
 	@ns.response(200, 'Success')
 	@ns.response(404, 'Unknown dataset')
 	@auth_required
 	def delete(auth, self, datasetName):
-		service.findDataset(auth, datasetName)
+		dataset = service.findDataset(auth, datasetName)
 
 		for username in db.smembers(Keys.getUsers()):
-			db.srem(Keys.getUserDatasets(username), datasetName)
-		db.delete(Keys.getDataset(datasetName))
+			db.srem(Keys.getUserDatasetIds(username), dataset['id'])
+		db.delete(Keys.getDatasetByName(datasetName))
+		db.delete(Keys.getDatasetById(dataset['id']))
 
 		# TODO remove nodes/sensors/readings/tokens/exports
 

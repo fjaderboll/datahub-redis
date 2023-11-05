@@ -4,7 +4,7 @@
 
 * https://redis.io/docs/getting-started/
 * https://redis.io/docs/stack/timeseries/
-
+* https://redis-py.readthedocs.io/en/stable/examples/timeseries_examples.html
 
 ## Setup
 

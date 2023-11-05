@@ -12,11 +12,20 @@ class Keys():
 	def getUser(username):
 		return 'user:' + username
 
-	def getUserDatasets(username):
-		return 'user-datasets:' + username
+	def getDatasetIdCounter():
+		return 'id-counter-dataset'
 
-	def getDataset(dataset):
-		return 'dataset:' + dataset
+	def getDatasets():
+		return 'datasets'
+
+	def getUserDatasetIds(username):
+		return 'user-dataset-ids:' + username
+
+	def getDatasetByName(datasetName):
+		return 'dataset-name:' + datasetName
+
+	def getDatasetById(datasetId):
+		return 'dataset-id:' + str(datasetId)
 
 	def getDatasetNodes(dataset):
 		return 'dataset-nodes:' + dataset

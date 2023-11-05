@@ -19,13 +19,22 @@ def findUser(username, dbObj=False):
 		return util.copy(dbUser, ['username', 'email', 'isAdmin'])
 
 def findDataset(auth, datasetName):
-	validName = util.verifyValidName(datasetName, "Dataset name", fail=False)
+	validName = util.verifyValidName(datasetName, fail=False)
 	if validName:
-		if db.sismember(Keys.getUserDatasets(auth['username']), datasetName):
-			dataset = db.hgetall(Keys.getDataset(datasetName))
-			return dataset
+		datasetId = db.get(Keys.getDatasetByName(datasetName))
+		if datasetId:
+			if db.sismember(Keys.getUserDatasetIds(auth['username']), datasetId):
+				dataset = db.hgetall(Keys.getDatasetById(datasetId))
+				return dataset
 
 	abort(404, "Unknown dataset '" + datasetName + "'")
+
+def cleanObject(obj, fieldsToKeep):
+	newObj = {}
+	for field in fieldsToKeep:
+		if field in obj:
+			newObj[field] = obj[field]
+	return newObj
 
 def createToken(username, isAdmin, name=None, ttl=None):
 	while True:
