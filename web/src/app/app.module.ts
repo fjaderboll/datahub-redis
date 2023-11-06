@@ -35,6 +35,7 @@ import { NodeListComponent } from './pages/node-list/node-list.component';
 import { NodeViewComponent } from './pages/node-view/node-view.component';
 import { CreateDatasetDialogComponent } from './dialogs/create-dataset-dialog/create-dataset-dialog.component';
 import { CreateNodeDialogComponent } from './dialogs/create-node-dialog/create-node-dialog.component';
+import { CreateTokenDialogComponent } from './dialogs/create-token-dialog/create-token-dialog.component';
 
 @NgModule({
   declarations: [
@@ -56,7 +57,8 @@ import { CreateNodeDialogComponent } from './dialogs/create-node-dialog/create-n
     NodeListComponent,
     NodeViewComponent,
     CreateDatasetDialogComponent,
-    CreateNodeDialogComponent
+    CreateNodeDialogComponent,
+    CreateTokenDialogComponent
   ],
   imports: [
     BrowserModule,

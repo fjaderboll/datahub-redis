@@ -73,6 +73,8 @@ export class ServerService {
 		return this.http.post(url, {}, this.httpOptionsJson);
 	}
 
+    // ----- Users -----
+
     public getUsers() {
 		const url = this.apiUrl + "users/";
 		return this.http.get(url, this.httpOptionsJson);
@@ -97,6 +99,30 @@ export class ServerService {
 		const url = this.apiUrl + "users/" + username;
 		return this.http.delete(url, this.httpOptionsText);
 	}
+
+    // ----- Token -----
+
+    public getTokens() {
+		const url = this.apiUrl + "tokens/";
+		return this.http.get(url, this.httpOptionsJson);
+	}
+
+    public createToken(description: string, ttl: number | null) {
+		const url = this.apiUrl + "tokens/";
+		return this.http.post(url, { desc: description, ttl }, this.httpOptionsJson);
+	}
+
+	public updateToken(id: string, property: string, value: any) {
+		const url = this.apiUrl + "tokens/" + id;
+		return this.http.put(url, { [property]: value }, this.httpOptionsText);
+	}
+
+	public deleteToken(id: string) {
+		const url = this.apiUrl + "tokens/" + id;
+		return this.http.delete(url, this.httpOptionsText);
+	}
+
+    // ----- Datasets -----
 
     public getDatasets() {
 		const url = this.apiUrl + "datasets/";

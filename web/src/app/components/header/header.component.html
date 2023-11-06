@@ -9,6 +9,16 @@
 		<span>Datasets</span>
 	</a>
 
+	<a mat-button routerLink="/tokens" *ngIf="auth.isLoggedIn()">
+    	<mat-icon fontIcon="key"></mat-icon>
+		<span>Tokens</span>
+	</a>
+
+	<a mat-button routerLink="/exports" *ngIf="auth.isLoggedIn()">
+    	<mat-icon fontIcon="forward_to_inbox"></mat-icon>
+		<span>Exports</span>
+	</a>
+
 	<a mat-button routerLink="/users" *ngIf="auth.isAdmin()">
     	<mat-icon fontIcon="people"></mat-icon>
 		<span>Users</span>

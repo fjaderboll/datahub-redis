@@ -31,10 +31,14 @@ def auth_required(f):
 			parts = request.headers["Authorization"].split(" ")
 			if len(parts) == 2:
 				token = parts[1]
-				tKey = Keys.getToken(token)
-				user = db.hgetall(tKey)
-				if user:
-					auth = user
+				tokenInfo = db.hgetall(Keys.getToken(token))
+				if tokenInfo and int(tokenInfo['enabled']):
+					isAdmin = db.hget(Keys.getUser(tokenInfo['username']), 'isAdmin')
+					auth = {
+						'username': tokenInfo['username'],
+						'token': tokenInfo['token'],
+						'isAdmin': bool(int(isAdmin))
+					}
 					return f(auth, *args, **kwargs)
 
 		abort(401, "Unauthorized")

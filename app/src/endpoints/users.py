@@ -121,7 +121,14 @@ class UsersLogin(Resource):
 		if 'password' in input and input['password'] is not None:
 			hash = util.createPasswordHash(input['password'], dbUser['passwordSalt'])
 			if hash == dbUser['passwordHash']:
-				return service.createToken(username, str(dbUser['isAdmin']) == "1", ttl=3600)
+				tokenInfo = service.createToken(username, ttl=3600, desc='Login')
+				return {
+					'token': tokenInfo['token'],
+					'isAdmin': bool(int(dbUser['isAdmin'])),
+					'username': username,
+					'expire': tokenInfo['expire'],
+					'id': tokenInfo['id']
+				}
 			else:
 				abort(401, "Invalid credentials")
 		else:
@@ -135,6 +142,7 @@ class UsersLogout(Resource):
 	@auth_required
 	def post(auth, self, username):
 		util.verifyAdminOrUser(auth, username)
+		print('hej')
 		tKey = Keys.getToken(auth['token'])
 		db.delete(tKey)
 		return "Token invalidated"

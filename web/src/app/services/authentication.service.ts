@@ -99,7 +99,6 @@ export class AuthenticationService {
 	}
 
 	public logout(signout: boolean) {
-        this.setToken(null, this.username, this.admin, null);
         if(this.expireTimer) {
             clearTimeout(this.expireTimer);
             this.expireTimer = null;
@@ -109,9 +108,11 @@ export class AuthenticationService {
         if(signout) {
             this.server.logout(this.username).subscribe({
                 next: (v: any) => {
+                    this.setToken(null, this.username, this.admin, null);
                     this.utils.toastSuccess("Signed out");
                 },
                 error: (e) => {
+                    this.setToken(null, this.username, this.admin, null);
                     this.server.showHttpError(e);
                 }
             });

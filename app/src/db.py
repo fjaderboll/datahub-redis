@@ -12,6 +12,9 @@ class Keys():
 	def getUser(username):
 		return 'user:' + username
 
+	def getTokenIdCounter():
+		return 'id-counter-token'
+
 	def getDatasetIdCounter():
 		return 'id-counter-dataset'
 

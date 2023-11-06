@@ -7,6 +7,7 @@ from flask_cors import CORS
 from api import api
 from endpoints.state import ns as namespace_state
 from endpoints.users import ns as namespace_users
+from endpoints.tokens import ns as namespace_tokens
 from endpoints.datasets import ns as namespace_datasets
 
 app = Flask(__name__)
@@ -17,6 +18,7 @@ def main(port, debug):
 	api.init_app(blueprint)
 	api.add_namespace(namespace_state)
 	api.add_namespace(namespace_users)
+	api.add_namespace(namespace_tokens)
 	api.add_namespace(namespace_datasets)
 	app.register_blueprint(blueprint)
 	app.run(host="0.0.0.0", port=port, debug=debug)

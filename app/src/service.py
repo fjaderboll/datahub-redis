@@ -29,6 +29,13 @@ def findDataset(auth, datasetName):
 
 	abort(404, "Unknown dataset '" + datasetName + "'")
 
+def findToken(auth, id):
+	for tokenInfo in db.scan_iter(match='token:*'):
+		tokenInfo = db.hgetall(tokenInfo)
+		if tokenInfo['username'] == auth['username'] and tokenInfo['id'] == str(id):
+			return tokenInfo
+	abort(404, "Unknown token with ID = " + str(id))
+
 def cleanObject(obj, fieldsToKeep):
 	newObj = {}
 	for field in fieldsToKeep:
@@ -36,18 +43,20 @@ def cleanObject(obj, fieldsToKeep):
 			newObj[field] = obj[field]
 	return newObj
 
-def createToken(username, isAdmin, name=None, ttl=None):
+def createToken(username, ttl=None, enabled=True, desc=None):
 	while True:
 		token = util.getRandomString(32)
 		tKey = Keys.getToken(token)
 		if not db.exists(tKey):
+			tokenId = db.incr(Keys.getTokenIdCounter())
 			tokenInfo = {
+				'id': tokenId,
 				'token': token,
 				'username': username,
-				'isAdmin': int(isAdmin)     # need to store as int
+				'enabled': int(enabled), # need to store as int
+				'desc': desc if desc else "",
+				'expire': ""
 			}
-			if name:
-				tokenInfo['name'] = name
 			if ttl:
 				tokenInfo['expire'] = (datetime.now() + timedelta(seconds=ttl)).replace(microsecond=0).isoformat()
 
@@ -55,5 +64,13 @@ def createToken(username, isAdmin, name=None, ttl=None):
 			if ttl:
 				db.expire(tKey, ttl)
 
-			tokenInfo['isAdmin'] = isAdmin  # return as bool
 			return tokenInfo
+
+def cleanToken(tokenInfo):
+	return {
+		'id': tokenInfo['id'],
+		'enabled': bool(int(tokenInfo['enabled'])),
+		'expire': tokenInfo['expire'] if tokenInfo['expire'] else None,
+		'desc': tokenInfo['desc'] if tokenInfo['desc'] else None,
+		'token': tokenInfo['token'][0:2] + '...' + tokenInfo['token'][-2:]
+	}
