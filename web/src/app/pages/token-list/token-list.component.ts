@@ -22,6 +22,8 @@ export class TokenListComponent implements OnInit, AfterViewInit {
 	@ViewChild(MatPaginator) paginator!: MatPaginator;
 	@ViewChild(MatSort) sort!: MatSort;
 
+	private createdToken: any;
+
   	constructor(
 		public auth: AuthenticationService,
 		private server: ServerService,
@@ -41,6 +43,12 @@ export class TokenListComponent implements OnInit, AfterViewInit {
 	private loadTokens() {
 		this.server.getTokens().subscribe({
 			next: (tokens: any) => {
+				tokens.forEach((t: any) => {
+					if(this.createdToken?.id === t.id) {
+						t.token = this.createdToken.token;
+						this.createdToken = null;
+					}
+				});
 				this.dataSource.data = tokens;
 			},
 			error: (e) => {
@@ -53,7 +61,7 @@ export class TokenListComponent implements OnInit, AfterViewInit {
 		this.server.updateToken(token.id, property, newValue).subscribe({
 			next: (response: any) => {
 				token[property] = newValue;
-                this.loadTokens();
+				this.loadTokens();
 			},
 			error: (e) => {
 				this.server.showHttpError(e);
@@ -65,6 +73,7 @@ export class TokenListComponent implements OnInit, AfterViewInit {
 		const dialog = this.dialog.open(CreateTokenDialogComponent);
 		dialog.afterClosed().subscribe(token => {
 			if(token) {
+				this.createdToken = token;
 				this.loadTokens();
 			}
 		});

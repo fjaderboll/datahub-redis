@@ -16,7 +16,7 @@ class TokensList(Resource):
 		for tokenInfo in db.scan_iter(match='token:*'):
 			tokenInfo = db.hgetall(tokenInfo)
 			if tokenInfo['username'] == auth['username']:
-				tokenInfos.append(service.cleanToken(tokenInfo))
+				tokenInfos.append(service.formatToken(tokenInfo))
 
 		return tokenInfos
 
@@ -39,7 +39,7 @@ class TokensList(Resource):
 				abort(400, 'Invalid TTL')
 
 		tokenInfo = service.createToken(auth['username'], ttl=ttlInt, desc=desc)
-		return service.cleanToken(tokenInfo)
+		return service.formatToken(tokenInfo, hideToken=False)
 
 @ns.route('/<int:id>')
 @ns.param('id', 'Token ID')
@@ -49,7 +49,7 @@ class TokensView(Resource):
 	@auth_required
 	def get(auth, self, id):
 		tokenInfo = service.findToken(auth, id)
-		return service.cleanToken(tokenInfo)
+		return service.formatToken(tokenInfo)
 
 	@ns.response(200, 'Success')
 	@ns.response(404, 'Unknown token')
@@ -76,7 +76,7 @@ class TokensView(Resource):
 				abort(400, 'Invalid TTL')
 
 		tokenInfo = db.hgetall(tKey)
-		return service.cleanToken(tokenInfo)
+		return service.formatToken(tokenInfo)
 
 	@ns.response(200, 'Success')
 	@ns.response(404, 'Unknown token')

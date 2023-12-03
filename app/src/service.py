@@ -50,7 +50,7 @@ def createToken(username, ttl=None, enabled=True, desc=None):
 		if not db.exists(tKey):
 			tokenId = db.incr(Keys.getTokenIdCounter())
 			tokenInfo = {
-				'id': tokenId,
+				'id': str(tokenId),
 				'token': token,
 				'username': username,
 				'enabled': int(enabled), # need to store as int
@@ -66,11 +66,11 @@ def createToken(username, ttl=None, enabled=True, desc=None):
 
 			return tokenInfo
 
-def cleanToken(tokenInfo):
+def formatToken(tokenInfo, hideToken=True):
 	return {
 		'id': tokenInfo['id'],
 		'enabled': bool(int(tokenInfo['enabled'])),
 		'expire': tokenInfo['expire'] if tokenInfo['expire'] else None,
 		'desc': tokenInfo['desc'] if tokenInfo['desc'] else None,
-		'token': tokenInfo['token'][0:2] + '...' + tokenInfo['token'][-2:]
+		'token': tokenInfo['token'][0:2] + '...' + tokenInfo['token'][-2:] if hideToken else tokenInfo['token']
 	}
