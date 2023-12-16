@@ -29,7 +29,7 @@ export class CreateDatasetDialogComponent implements OnInit {
 		this.server.createDataset(this.name, this.description).subscribe({
 			next: (v: any) => {
 				this.utils.toastSuccess("Created dataset '" + v.name + "'");
-				this.dialogRef.close(v.name);
+				this.dialogRef.close(v);
 			},
 			error: (e) => {
 				this.server.showHttpError(e);

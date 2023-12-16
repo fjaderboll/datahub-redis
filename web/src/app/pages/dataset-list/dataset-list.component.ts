@@ -54,8 +54,8 @@ export class DatasetListComponent implements OnInit, AfterViewInit {
 
 	public createDataset() {
 		const dialog = this.dialog.open(CreateDatasetDialogComponent);
-		dialog.afterClosed().subscribe(newDatasetName => {
-			if(newDatasetName) {
+		dialog.afterClosed().subscribe(dataset => {
+			if(dataset) {
 				this.loadDatasets();
 			}
 		});

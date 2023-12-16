@@ -5,59 +5,55 @@ from db import db, Keys
 import util
 import service
 
-ns = api.namespace('datasets', description='List, view, create and delete datasets')
+from endpoints.datasets import ns
 
-@ns.route('/')
-class DatasetsList(Resource):
+@ns.route('/<string:datasetName>/nodes')
+@ns.param('datasetName', 'Dataset name')
+class NodesList(Resource):
 	@ns.response(200, 'Success')
 	@auth_required
-	def get(auth, self):
-		datasetIds = db.smembers(Keys.getUserDatasetIds(auth['username']))
-		datasets = []
-		for datasetId in datasetIds:
-			dataset = db.hgetall(Keys.getDatasetById(datasetId))
-			dataset = service.cleanObject(dataset, ['name', 'desc'])
-			datasets.append(dataset)
-		return datasets
+	def get(auth, self, datasetName):
+		dataset = service.findDataset(auth, datasetName)
+		return service.getDatasetNodes(dataset['id'])
 
 	@ns.response(200, 'Success')
 	@ns.response(400, 'Bad request')
 	@auth_required
-	def post(auth, self):
+	def post(auth, self, datasetName):
+		dataset = service.findDataset(auth, datasetName)
+
 		input = api.payload
 		name = input['name']
 		desc = input['desc']
 
 		util.verifyValidName(input['name'], "Name")
 
-		datasetKeyName = Keys.getDatasetByName(input['name'])
-		datasetId = db.get(datasetKeyName)
-		if datasetId:
-			abort(400, "Dataset '" + name + "' already exists")
+		nodeKeyName = Keys.getDatasetByName(input['name'])
+		nodeId = db.get(nodeKeyName)
+		if nodeId:
+			abort(400, "Node '" + name + "' already exists")
 
-		datasetId = db.incr(Keys.getDatasetIdCounter())
-		dataset = {
-			'id': datasetId,
+		nodeId = db.incr(Keys.getNodeIdCounter())
+		node = {
+			'id': nodeId,
 			'name': name,
 			'desc': desc
 		}
-		db.set(datasetKeyName, datasetId)
-		db.hset(Keys.getDatasetById(datasetId), mapping=dataset)
-		db.sadd(Keys.getUserDatasetIds(auth['username']), datasetId)
+		db.set(nodeKeyName, nodeId)
+		db.hset(Keys.getNodeById(nodeId), mapping=node)
+		db.sadd(Keys.getDatasetNodeIds(dataset['id']), nodeId)
 
-		return service.cleanObject(dataset, ['name', 'desc'])
+		return service.cleanObject(node, ['name', 'desc'])
 
-@ns.route('/<string:datasetName>')
+@ns.route('/<string:datasetName>/nodes/<string:nodeName>')
 @ns.param('datasetName', 'Dataset name')
-class DatasetsView(Resource):
+@ns.param('nodeName', 'Node name')
+class NodesView(Resource):
 	@ns.response(200, 'Success')
 	@ns.response(404, 'Unknown dataset')
 	@auth_required
 	def get(auth, self, datasetName):
-		dataset = service.findDataset(auth, datasetName)
-		dataset['nodes'] = service.getDatasetNodes(dataset['id'])
-
-		return service.cleanObject(dataset, ['name', 'desc', 'nodes'])
+		return service.findDataset(auth, datasetName)
 
 	@ns.response(200, 'Success')
 	@ns.response(404, 'Unknown dataset')

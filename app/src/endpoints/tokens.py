@@ -5,7 +5,7 @@ from api import api, auth_required
 from db import db, Keys
 import service
 
-ns = api.namespace('tokens', description='List, view, create and delete datasets')
+ns = api.namespace('tokens', description='List, view, create and delete tokens')
 
 @ns.route('/')
 class TokensList(Resource):
@@ -20,7 +20,6 @@ class TokensList(Resource):
 
 		return tokenInfos
 
-	@api.doc(security=None)
 	@ns.response(200, 'Success')
 	@ns.response(400, 'Bad request')
 	@auth_required

@@ -19,7 +19,7 @@ def findUser(username, dbObj=False):
 		return util.copy(dbUser, ['username', 'email', 'isAdmin'])
 
 def findDataset(auth, datasetName):
-	validName = util.verifyValidName(datasetName, fail=False)
+	validName = util.verifyValidName(datasetName)
 	if validName:
 		datasetId = db.get(Keys.getDatasetByName(datasetName))
 		if datasetId:
@@ -28,6 +28,15 @@ def findDataset(auth, datasetName):
 				return dataset
 
 	abort(404, "Unknown dataset '" + datasetName + "'")
+
+def getDatasetNodes(datasetId):
+	nodeIds = db.smembers(Keys.getDatasetNodeIds(datasetId))
+	nodes = []
+	for nodeId in nodeIds:
+		dbNode = db.hgetall(Keys.getNodeById(nodeId))
+		node = cleanObject(dbNode, ['name', 'desc'])
+		nodes.append(node)
+	return nodes
 
 def findToken(auth, id):
 	for tokenInfo in db.scan_iter(match='token:*'):

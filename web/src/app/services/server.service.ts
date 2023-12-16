@@ -102,14 +102,14 @@ export class ServerService {
 
     // ----- Token -----
 
-    public getTokens() {
-		const url = this.apiUrl + "tokens/";
-		return this.http.get(url, this.httpOptionsJson);
-	}
-
     public createToken(description: string, ttl: number | null) {
 		const url = this.apiUrl + "tokens/";
 		return this.http.post(url, { desc: description, ttl }, this.httpOptionsJson);
+	}
+
+    public getTokens() {
+		const url = this.apiUrl + "tokens/";
+		return this.http.get(url, this.httpOptionsJson);
 	}
 
 	public updateToken(id: string, property: string, value: any) {
@@ -123,6 +123,11 @@ export class ServerService {
 	}
 
     // ----- Datasets -----
+
+    public createDataset(name: string, description: string) {
+		const url = this.apiUrl + "datasets/";
+		return this.http.post(url, { name, desc: description }, this.httpOptionsJson);
+	}
 
     public getDatasets() {
 		const url = this.apiUrl + "datasets/";
@@ -139,13 +144,35 @@ export class ServerService {
 		return this.http.put(url, { [property]: value }, this.httpOptionsText);
 	}
 
-	public createDataset(name: string, description: string) {
-		const url = this.apiUrl + "datasets/";
-		return this.http.post(url, { name, desc: description }, this.httpOptionsJson);
-	}
-
 	public deleteDataset(name: string) {
 		const url = this.apiUrl + "datasets/" + name;
+		return this.http.delete(url, this.httpOptionsText);
+	}
+
+    // ----- Nodes -----
+
+    public createNode(datasetName: string, nodeName: string, description: string) {
+		const url = this.apiUrl + "datasets/" + datasetName + "/nodes";
+		return this.http.post(url, { name: nodeName, desc: description }, this.httpOptionsJson);
+	}
+
+    public getNodes(datasetName: string) {
+		const url = this.apiUrl + "datasets/" + datasetName + "/nodes";
+		return this.http.get(url, this.httpOptionsJson);
+	}
+
+	public getNode(datasetName: string, nodeName: string) {
+		const url = this.apiUrl + "datasets/" + datasetName + "/nodes" + nodeName;
+		return this.http.get(url, this.httpOptionsJson);
+	}
+
+	public updateNode(datasetName: string, nodeName: string, property: string, value: any) {
+		const url = this.apiUrl + "datasets/" + datasetName + "/nodes" + nodeName;
+		return this.http.put(url, { [property]: value }, this.httpOptionsText);
+	}
+
+	public deleteNode(datasetName: string, nodeName: string) {
+		const url = this.apiUrl + "datasets/" + datasetName + "/nodes" + nodeName;
 		return this.http.delete(url, this.httpOptionsText);
 	}
 
