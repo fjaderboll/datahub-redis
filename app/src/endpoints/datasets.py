@@ -68,8 +68,9 @@ class DatasetsView(Resource):
 
 		input = api.payload
 		if 'name' in input:
+			util.verifyValidName(input['name'], "Name")
 			db.hset(dKey, 'name', input['name'])
-			db.rename(Keys.getDatasetByName(datasetName), Keys.getDatasetByName(input['name']))
+			db.rename(Keys.getDatasetIdByName(datasetName), Keys.getDatasetIdByName(input['name']))
 
 		if 'desc' in input:
 			db.hset(dKey, 'desc', input['desc'])
@@ -86,9 +87,9 @@ class DatasetsView(Resource):
 
 		for username in db.smembers(Keys.getUsers()):
 			db.srem(Keys.getUserDatasetIds(username), dataset['id'])
-		db.delete(Keys.getDatasetByName(datasetName))
+		db.delete(Keys.getDatasetIdByName(datasetName))
 		db.delete(Keys.getDatasetById(dataset['id']))
 
-		# TODO remove nodes/sensors/readings/tokens/exports
+		# TODO remove nodes/sensors/readings
 
 		return "Removed dataset '" + datasetName + "'"

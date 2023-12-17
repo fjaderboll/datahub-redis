@@ -19,9 +19,9 @@ def findUser(username, dbObj=False):
 		return util.copy(dbUser, ['username', 'email', 'isAdmin'])
 
 def findDataset(auth, datasetName):
-	validName = util.verifyValidName(datasetName)
+	validName = util.verifyValidName(datasetName, fail=False)
 	if validName:
-		datasetId = db.get(Keys.getDatasetByName(datasetName))
+		datasetId = db.get(Keys.getDatasetIdByName(datasetName))
 		if datasetId:
 			if db.sismember(Keys.getUserDatasetIds(auth['username']), datasetId):
 				dataset = db.hgetall(Keys.getDatasetById(datasetId))
@@ -37,6 +37,16 @@ def getDatasetNodes(datasetId):
 		node = cleanObject(dbNode, ['name', 'desc'])
 		nodes.append(node)
 	return nodes
+
+def findNode(datasetId, nodeName):
+	validName = util.verifyValidName(nodeName, fail=False)
+	if validName:
+		nodeId = db.get(Keys.getNodeIdByName(datasetId, nodeName))
+		if nodeId:
+			node = db.hgetall(Keys.getNodeById(nodeId))
+			return node
+
+	abort(404, "Unknown node '" + nodeName + "'")
 
 def findToken(auth, id):
 	for tokenInfo in db.scan_iter(match='token:*'):

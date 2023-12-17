@@ -7,18 +7,17 @@ import { UserViewComponent } from './pages/user-view/user-view.component';
 import { UserListComponent } from './pages/user-list/user-list.component';
 import { DatasetListComponent } from './pages/dataset-list/dataset-list.component';
 import { DatasetViewComponent } from './pages/dataset-view/dataset-view.component';
-import { NodeListComponent } from './pages/node-list/node-list.component';
 import { NodeViewComponent } from './pages/node-view/node-view.component';
 import { TokenListComponent } from './pages/token-list/token-list.component';
 import { ExportListComponent } from './pages/export-list/export-list.component';
+import { SensorViewComponent } from './pages/sensor-view/sensor-view.component';
 
 const routes: Routes = [
     { path: 'login', component: LoginComponent },
     { path: 'datasets', component: DatasetListComponent, canActivate: [authGuardGuard] },
     { path: 'datasets/:datasetName', component: DatasetViewComponent, canActivate: [authGuardGuard] },
-    { path: 'datasets/:datasetName/nodes', component: NodeListComponent, canActivate: [authGuardGuard] },
     { path: 'datasets/:datasetName/nodes/:nodeName', component: NodeViewComponent, canActivate: [authGuardGuard] },
-//    { path: 'nodes/:nodeName/sensors/:sensorName', component: SensorViewComponent, canActivate: [AuthGuardService] },
+    { path: 'datasets/:datasetName/nodes/:nodeName/sensors/:sensorName', component: SensorViewComponent, canActivate: [authGuardGuard] },
     { path: 'tokens', component: TokenListComponent, canActivate: [authGuardGuard] },
     { path: 'exports', component: ExportListComponent, canActivate: [authGuardGuard] },
     { path: 'users', component: UserListComponent, canActivate: [authGuardGuard] },

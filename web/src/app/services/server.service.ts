@@ -162,17 +162,17 @@ export class ServerService {
 	}
 
 	public getNode(datasetName: string, nodeName: string) {
-		const url = this.apiUrl + "datasets/" + datasetName + "/nodes" + nodeName;
+		const url = this.apiUrl + "datasets/" + datasetName + "/nodes/" + nodeName;
 		return this.http.get(url, this.httpOptionsJson);
 	}
 
 	public updateNode(datasetName: string, nodeName: string, property: string, value: any) {
-		const url = this.apiUrl + "datasets/" + datasetName + "/nodes" + nodeName;
+		const url = this.apiUrl + "datasets/" + datasetName + "/nodes/" + nodeName;
 		return this.http.put(url, { [property]: value }, this.httpOptionsText);
 	}
 
 	public deleteNode(datasetName: string, nodeName: string) {
-		const url = this.apiUrl + "datasets/" + datasetName + "/nodes" + nodeName;
+		const url = this.apiUrl + "datasets/" + datasetName + "/nodes/" + nodeName;
 		return this.http.delete(url, this.httpOptionsText);
 	}
 

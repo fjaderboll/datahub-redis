@@ -31,11 +31,13 @@ import { DatasetViewComponent } from './pages/dataset-view/dataset-view.componen
 import { DatasetListComponent } from './pages/dataset-list/dataset-list.component';
 import { ExportListComponent } from './pages/export-list/export-list.component';
 import { TokenListComponent } from './pages/token-list/token-list.component';
-import { NodeListComponent } from './pages/node-list/node-list.component';
 import { NodeViewComponent } from './pages/node-view/node-view.component';
 import { CreateDatasetDialogComponent } from './dialogs/create-dataset-dialog/create-dataset-dialog.component';
 import { CreateNodeDialogComponent } from './dialogs/create-node-dialog/create-node-dialog.component';
 import { CreateTokenDialogComponent } from './dialogs/create-token-dialog/create-token-dialog.component';
+import { SensorViewComponent } from './pages/sensor-view/sensor-view.component';
+import { CreateSensorDialogComponent } from './dialogs/create-sensor-dialog/create-sensor-dialog.component';
+import { CreateReadingDialogComponent } from './dialogs/create-reading-dialog/create-reading-dialog.component';
 
 @NgModule({
   declarations: [
@@ -54,11 +56,13 @@ import { CreateTokenDialogComponent } from './dialogs/create-token-dialog/create
     DatasetListComponent,
     ExportListComponent,
     TokenListComponent,
-    NodeListComponent,
     NodeViewComponent,
     CreateDatasetDialogComponent,
     CreateNodeDialogComponent,
-    CreateTokenDialogComponent
+    CreateTokenDialogComponent,
+    SensorViewComponent,
+    CreateSensorDialogComponent,
+    CreateReadingDialogComponent
   ],
   imports: [
     BrowserModule,

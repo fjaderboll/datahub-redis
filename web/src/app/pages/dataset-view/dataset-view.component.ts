@@ -74,7 +74,7 @@ export class DatasetViewComponent implements OnInit, AfterViewInit {
 		const dialog = this.dialog.open(ConfirmDialogComponent, {
 			data: {
 				title: "Delete Dataset",
-				text: "This will remove this dataset and all its nodes, sensors, readings, exports and tokens. Are you sure?",
+				text: "This will remove this dataset and all its nodes, sensors and readings. Are you sure?",
 				action: new Observable(
 					observer => {
 						this.server.deleteDataset(this.dataset.name).subscribe({
@@ -105,8 +105,8 @@ export class DatasetViewComponent implements OnInit, AfterViewInit {
 				datasetName: this.dataset.name
 			}
 		});
-		dialog.afterClosed().subscribe(newNodeName => {
-			if(newNodeName) {
+		dialog.afterClosed().subscribe(node => {
+			if(node) {
 				this.loadDataset();
 			}
 		});
