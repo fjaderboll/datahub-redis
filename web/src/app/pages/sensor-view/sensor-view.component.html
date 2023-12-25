@@ -1,1 +1,85 @@
-<p>sensor-view works!</p>
+<app-breadcrumb [links]="['/datasets', '/datasets/' + datasetName, '/datasets/' + datasetName + '/nodes/' + nodeName, '/datasets/' + datasetName + '/nodes/' + nodeName + '/sensors/' + sensorName]" [names]="['Datasets', datasetName, nodeName, sensorName]"></app-breadcrumb>
+
+<dl class="list">
+    <dt>Name</dt>
+    <dd>
+        <app-inline-edit type="text" [value]="sensor?.name" (onChange)="changedValue('name', $event)"></app-inline-edit>
+    </dd>
+
+    <dt>Description</dt>
+    <dd>
+        <app-inline-edit type="text" [value]="sensor?.desc" (onChange)="changedValue('desc', $event)"></app-inline-edit>
+    </dd>
+
+	<dt>Unit</dt>
+    <dd>
+        <app-inline-edit type="text" [value]="sensor?.unit" (onChange)="changedValue('unit', $event)"></app-inline-edit>
+    </dd>
+</dl>
+
+<div class="row margin-top align-right">
+	<div>
+		<button mat-raised-button color="warn" (click)="deleteSensor()">
+			<mat-icon>delete</mat-icon>
+			<span>Delete Sensor</span>
+		</button>
+	</div>
+</div>
+
+<div class="row margin-top align-right">
+	<div>
+		<button mat-raised-button color="primary" (click)="createReading()">
+			<mat-icon>downloading</mat-icon>
+			<span>Load More</span>
+		</button>
+	</div>
+
+	<div class="margin-left">
+		<button mat-raised-button color="primary" (click)="createReading()">
+			<mat-icon>show_chart</mat-icon>
+			<span>Visualize</span>
+		</button>
+	</div>
+
+	<div class="margin-left">
+		<button mat-raised-button color="primary" (click)="createReading()">
+			<mat-icon>add</mat-icon>
+			<span>Create Reading</span>
+		</button>
+	</div>
+</div>
+
+<div class="row margin-top align-right">
+	<span>
+		Loaded {{ 0 }} of {{ 0 }} readings
+	</span>
+</div>
+
+<div class="mat-elevation-z8 margin-top">
+	<table mat-table [dataSource]="dataSource" matSort matSortActive="timestamp" matSortDisableClear matSortDirection="desc">
+
+		<ng-container matColumnDef="timestamp">
+			<th mat-header-cell *matHeaderCellDef mat-sort-header>Timestamp</th>
+			<td mat-cell *matCellDef="let reading">
+				{{ reading.timestamp }}
+			</td>
+		</ng-container>
+
+		<ng-container matColumnDef="value">
+			<th mat-header-cell *matHeaderCellDef mat-sort-header>Value</th>
+			<td mat-cell *matCellDef="let reading">{{ reading.value }}</td>
+		</ng-container>
+
+		<ng-container matColumnDef="actions">
+			<th mat-header-cell *matHeaderCellDef mat-sort-header>Actions</th>
+			<td mat-cell *matCellDef="let reading"></td>
+		</ng-container>
+
+		<tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+		<tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+	</table>
+
+	<div [hidden]="dataSource.data.length <= 10">
+		<mat-paginator [pageSizeOptions]="[10, 100]"></mat-paginator>
+	</div>
+</div>

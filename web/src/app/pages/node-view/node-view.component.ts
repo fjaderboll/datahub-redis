@@ -17,7 +17,7 @@ import { UtilsService } from 'src/app/services/utils.service';
 	templateUrl: './node-view.component.html',
 	styleUrls: ['./node-view.component.scss']
 })
-export class NodeViewComponent  implements OnInit, AfterViewInit {
+export class NodeViewComponent implements OnInit, AfterViewInit {
 	public datasetName!: string;
 	public node: any;
 

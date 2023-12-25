@@ -45,3 +45,10 @@ def copy(obj, attributes):
 		else:
 			newObj[attr] = None
 	return newObj
+
+def cleanObject(obj, fieldsToKeep):
+	newObj = {}
+	for field in fieldsToKeep:
+		if field in obj:
+			newObj[field] = obj[field]
+	return newObj

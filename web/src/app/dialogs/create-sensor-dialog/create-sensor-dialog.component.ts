@@ -12,6 +12,7 @@ export class CreateSensorDialogComponent implements OnInit {
 	private inputData: any;
     public name: string = "";
 	public description: string = "";
+	public unit: string = "";
 
 	constructor(
 		public dialogRef: MatDialogRef<CreateSensorDialogComponent>,
@@ -30,7 +31,7 @@ export class CreateSensorDialogComponent implements OnInit {
 	}
 
 	public create() {
-		this.server.createSensor(this.inputData.datasetName, this.inputData.nodeName, this.name, this.description).subscribe({
+		this.server.createSensor(this.inputData.datasetName, this.inputData.nodeName, this.name, this.description, this.unit).subscribe({
 			next: (v: any) => {
 				this.utils.toastSuccess("Created sensor '" + v.name + "'");
 				this.dialogRef.close(v);

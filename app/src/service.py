@@ -57,6 +57,16 @@ def getNodeSensors(nodeId):
 		sensors.append(cSensor)
 	return sensors
 
+def findSensor(nodeId, sensorName):
+	validName = util.verifyValidName(sensorName, fail=False)
+	if validName:
+		sensorId = db.get(Keys.getSensorIdByName(nodeId, sensorName))
+		if sensorId:
+			sensor = db.hgetall(Keys.getSensorById(sensorId))
+			return sensor
+
+	abort(404, "Unknown sensor '" + sensorName + "'")
+
 def findToken(auth, id):
 	for tokenInfo in db.scan_iter(match='token:*'):
 		tokenInfo = db.hgetall(tokenInfo)

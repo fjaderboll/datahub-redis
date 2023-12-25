@@ -178,9 +178,9 @@ export class ServerService {
 
     // ----- Sensor -----
 
-    public createSensor(datasetName: string, nodeName: string, sensorName: string, description: string) {
+    public createSensor(datasetName: string, nodeName: string, sensorName: string, description: string, unit: string) {
 		const url = this.apiUrl + "datasets/" + datasetName + "/nodes/" + nodeName + "/sensors";
-		return this.http.post(url, { name: sensorName, desc: description }, this.httpOptionsJson);
+		return this.http.post(url, { name: sensorName, desc: description, unit }, this.httpOptionsJson);
 	}
 
     public getSensors(datasetName: string, nodeName: string) {

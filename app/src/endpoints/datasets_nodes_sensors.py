@@ -4,6 +4,7 @@ from api import api, auth_required
 from db import db, Keys
 import util
 import service
+from services import cleaner
 
 from endpoints.datasets_nodes import ns
 
@@ -28,6 +29,7 @@ class SensorsList(Resource):
 		input = api.payload
 		name = input['name']
 		desc = input['desc']
+		unit = input['unit']
 
 		util.verifyValidName(name, "Name")
 
@@ -40,13 +42,14 @@ class SensorsList(Resource):
 		sensor = {
 			'id': sensorId,
 			'name': name,
-			'desc': desc
+			'desc': desc,
+			'unit': unit
 		}
 		db.set(sensorIdKeyName, sensorId)
 		db.hset(Keys.getSensorById(sensorId), mapping=sensor)
 		db.sadd(Keys.getNodeSensorIds(node['id']), sensorId)
 
-		return service.cleanObject(sensor, ['name', 'desc'])
+		return cleaner.cleanSensor(sensor)
 
 @ns.route('/<string:datasetName>/nodes/<string:nodeName>/sensors/<string:sensorName>')
 @ns.param('datasetName', 'Dataset name')
@@ -56,45 +59,50 @@ class SensorsView(Resource):
 	@ns.response(200, 'Success')
 	@ns.response(404, 'Unknown sensor')
 	@auth_required
-	def get(auth, self, datasetName, nodeName):
+	def get(auth, self, datasetName, nodeName, sensorName):
 		dataset = service.findDataset(auth, datasetName)
 		node = service.findNode(dataset['id'], nodeName)
-		node['sensors'] = None # service.getDatasetNodes(dataset['id'])
+		sensor = service.findSensor(node['id'], sensorName)
 
-		return service.cleanObject(node, ['name', 'desc', 'sensors'])
+		return cleaner.cleanSensor(sensor)
 
 	@ns.response(200, 'Success')
 	@ns.response(404, 'Unknown sensor')
 	@auth_required
-	def put(auth, self, datasetName, nodeName):
+	def put(auth, self, datasetName, nodeName, sensorName):
 		dataset = service.findDataset(auth, datasetName)
 		node = service.findNode(dataset['id'], nodeName)
-		nKey = Keys.getNodeById(node['id'])
+		sensor = service.findSensor(node['id'], sensorName)
+
+		sKey = Keys.getSensorById(sensor['id'])
 
 		input = api.payload
 		if 'name' in input:
 			util.verifyValidName(input['name'], "Name")
-			db.hset(nKey, 'name', input['name'])
-			db.rename(Keys.getNodeIdByName(dataset['id'], nodeName), Keys.getNodeIdByName(dataset['id'], input['name']))
+			db.hset(sKey, 'name', input['name'])
+			db.rename(Keys.getSensorIdByName(node['id'], sensorName), Keys.getSensorIdByName(node['id'], input['name']))
 
 		if 'desc' in input:
-			db.hset(nKey, 'desc', input['desc'])
+			db.hset(sKey, 'desc', input['desc'])
 
-		node = db.hgetall(nKey)
-		node = service.cleanObject(node, ['name', 'desc'])
-		return node
+		if 'unit' in input:
+			db.hset(sKey, 'unit', input['unit'])
+
+		sensor = db.hgetall(sKey)
+		return cleaner.cleanSensor(sensor)
 
 	@ns.response(200, 'Success')
 	@ns.response(404, 'Unknown sensor')
 	@auth_required
-	def delete(auth, self, datasetName, nodeName):
+	def delete(auth, self, datasetName, nodeName, sensorName):
 		dataset = service.findDataset(auth, datasetName)
 		node = service.findNode(dataset['id'], nodeName)
+		sensor = service.findSensor(node['id'], sensorName)
 
-		db.srem(Keys.getDatasetNodeIds(dataset['id']), node['id'])
-		db.delete(Keys.getNodeIdByName(dataset['id'], nodeName))
-		db.delete(Keys.getNodeById(node['id']))
+		db.srem(Keys.getNodeSensorIds(node['id']), sensor['id'])
+		db.delete(Keys.getSensorIdByName(node['id'], sensorName))
+		db.delete(Keys.getSensorById(sensor['id']))
 
-		# TODO remove sensors/readings
+		# TODO remove readings
 
-		return "Removed node '" + nodeName + "'"
+		return "Removed sensor '" + sensorName + "'"
