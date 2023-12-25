@@ -176,4 +176,43 @@ export class ServerService {
 		return this.http.delete(url, this.httpOptionsText);
 	}
 
+    // ----- Sensor -----
+
+    public createSensor(datasetName: string, nodeName: string, sensorName: string, description: string) {
+		const url = this.apiUrl + "datasets/" + datasetName + "/nodes/" + nodeName + "/sensors";
+		return this.http.post(url, { name: sensorName, desc: description }, this.httpOptionsJson);
+	}
+
+    public getSensors(datasetName: string, nodeName: string) {
+		const url = this.apiUrl + "datasets/" + datasetName + "/nodes/" + nodeName + "/sensors";
+		return this.http.get(url, this.httpOptionsJson);
+	}
+
+	public getSensor(datasetName: string, nodeName: string, sensorName: string) {
+		const url = this.apiUrl + "datasets/" + datasetName + "/nodes/" + nodeName + "/sensors/" + sensorName;
+		return this.http.get(url, this.httpOptionsJson);
+	}
+
+	public updateSensor(datasetName: string, nodeName: string, sensorName: string, property: string, value: any) {
+		const url = this.apiUrl + "datasets/" + datasetName + "/nodes/" + nodeName + "/sensors/" + sensorName;
+		return this.http.put(url, { [property]: value }, this.httpOptionsText);
+	}
+
+	public deleteSensor(datasetName: string, nodeName: string, sensorName: string) {
+		const url = this.apiUrl + "datasets/" + datasetName + "/nodes/" + nodeName + "/sensors/" + sensorName;
+		return this.http.delete(url, this.httpOptionsText);
+	}
+
+    // ----- Readings -----
+
+    public createReading(datasetName: string, nodeName: string, sensorName: string, value: string) {
+		const url = this.apiUrl + "datasets/" + datasetName + "/nodes/" + nodeName + "/sensors/" + sensorName + "/readings";
+		return this.http.post(url, { value }, this.httpOptionsJson);
+	}
+
+    public getReadings(datasetName: string, nodeName: string, sensorName: string) {
+		const url = this.apiUrl + "datasets/" + datasetName + "/nodes/" + nodeName + "/sensors/" + sensorName + "/readings";
+		return this.http.get(url, this.httpOptionsJson);
+	}
+
 }

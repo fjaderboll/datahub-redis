@@ -33,9 +33,9 @@ def getDatasetNodes(datasetId):
 	nodeIds = db.smembers(Keys.getDatasetNodeIds(datasetId))
 	nodes = []
 	for nodeId in nodeIds:
-		dbNode = db.hgetall(Keys.getNodeById(nodeId))
-		node = cleanObject(dbNode, ['name', 'desc'])
-		nodes.append(node)
+		node = db.hgetall(Keys.getNodeById(nodeId))
+		cNode = cleanObject(node, ['name', 'desc'])
+		nodes.append(cNode)
 	return nodes
 
 def findNode(datasetId, nodeName):
@@ -47,6 +47,15 @@ def findNode(datasetId, nodeName):
 			return node
 
 	abort(404, "Unknown node '" + nodeName + "'")
+
+def getNodeSensors(nodeId):
+	sensorIds = db.smembers(Keys.getNodeSensorIds(nodeId))
+	sensors = []
+	for sensorId in sensorIds:
+		sensor = db.hgetall(Keys.getSensorById(sensorId))
+		cSensor = cleanObject(sensor, ['name', 'desc'])
+		sensors.append(cSensor)
+	return sensors
 
 def findToken(auth, id):
 	for tokenInfo in db.scan_iter(match='token:*'):

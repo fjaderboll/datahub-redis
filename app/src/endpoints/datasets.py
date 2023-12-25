@@ -30,7 +30,7 @@ class DatasetsList(Resource):
 
 		util.verifyValidName(input['name'], "Name")
 
-		datasetKeyName = Keys.getDatasetByName(input['name'])
+		datasetKeyName = Keys.getDatasetIdByName(input['name'])
 		datasetId = db.get(datasetKeyName)
 		if datasetId:
 			abort(400, "Dataset '" + name + "' already exists")
