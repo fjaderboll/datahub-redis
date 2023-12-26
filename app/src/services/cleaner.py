@@ -2,6 +2,16 @@ import util
 import datetime
 import pytz
 
+def cleanUser(user):
+	return cleanUsers([user])[0]
+
+def cleanUsers(users):
+	cleanedUsers = []
+	for user in users:
+		cleanedUser = util.copy(user, ['username', 'email', 'isAdmin'])
+		cleanedUsers.append(cleanedUser)
+	return cleanedUsers
+
 def cleanNode(node):
 	return util.cleanObject(node, ['name', 'desc', 'sensors'])
 

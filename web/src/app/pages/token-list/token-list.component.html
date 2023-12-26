@@ -32,7 +32,8 @@
 		<ng-container matColumnDef="expire">
 			<th mat-header-cell *matHeaderCellDef mat-sort-header>Expire</th>
 			<td mat-cell *matCellDef="let token">
-				<app-inline-edit type="number" [value]="token?.expire" (onChange)="changedValue(token, 'ttl', $event)"></app-inline-edit>
+				<app-inline-edit type="number" [value]="utils.printTimestamp(token?.expire)" (onChange)="changedValue(token, 'ttl', $event)"></app-inline-edit>
+				<span class="relative-time">{{ utils.getRelativeTime(token?.expire) }}</span>
 			</td>
 		</ng-container>
 

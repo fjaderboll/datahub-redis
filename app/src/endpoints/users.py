@@ -4,6 +4,7 @@ from api import api, auth_required
 from db import db, Keys
 import util
 import service
+from services import cleaner, user_service, token_service
 
 ns = api.namespace('users', description='Login and get user information')
 
@@ -19,13 +20,8 @@ class UsersList(Resource):
 	def get(auth, self):
 		util.verifyAdmin(auth)
 
-		usernames = db.smembers(Keys.getUsers())
-		users = []
-		for username in usernames:
-			user = service.findUser(username)
-			if user:
-				users.append(user)
-		return users
+		users = user_service.getAllUsers()
+		return cleaner.cleanUsers(users)
 
 	@api.doc(security=None)
 	@api.expect(createFields, validate=True)
@@ -54,7 +50,7 @@ class UsersList(Resource):
 		}
 		db.hset(Keys.getUser(username), mapping=user)
 		db.sadd(Keys.getUsers(), username)
-		return service.findUser(username)
+		return cleaner.cleanUser(user_service.findUser(username))
 
 @ns.route('/<string:username>')
 @ns.param('username', 'Username')
@@ -64,14 +60,15 @@ class UsersGet(Resource):
 	@auth_required
 	def get(auth, self, username):
 		util.verifyAdminOrUser(auth, username)
-		return service.findUser(username)
+		user = user_service.findUser(username)
+		return cleaner.cleanUser(user)
 
 	@ns.response(200, 'Success')
 	@ns.response(404, 'Unknown user')
 	@auth_required
 	def put(auth, self, username):
 		util.verifyAdminOrUser(auth, username)
-		service.findUser(username)
+		user_service.findUser(username)
 
 		input = api.payload
 		if 'email' in input:
@@ -85,16 +82,16 @@ class UsersGet(Resource):
 			hash = util.createPasswordHash(input['password'], salt)
 			db.hset(Keys.getUser(username), 'passwordHash', hash, 'passwordSalt', salt)
 
-		return service.findUser(username)
+		return cleaner.cleanUser(user_service.findUser(username))
 
 	@ns.response(200, 'Success')
 	@ns.response(404, 'Unknown user')
 	@auth_required
 	def delete(auth, self, username):
 		util.verifyAdminOrUser(auth, username)
-		service.findUser(username)
+		user_service.findUser(username)
 
-		# TODO stop if only user for connected datasets
+		# TODO abort if the only user for connected datasets
 
 		db.delete(Keys.getUser(username))
 		db.srem(Keys.getUsers(), 0, username)
@@ -113,22 +110,16 @@ class UsersLogin(Resource):
 		if not validName:
 			abort(401, "Invalid credentials")
 
-		dbUser = db.hgetall(Keys.getUser(username))
-		if len(dbUser) == 0:
+		user = db.hgetall(Keys.getUser(username))
+		if len(user) == 0:
 			abort(401, "Invalid credentials")
 
 		input = api.payload
 		if 'password' in input and input['password'] is not None:
-			hash = util.createPasswordHash(input['password'], dbUser['passwordSalt'])
-			if hash == dbUser['passwordHash']:
-				tokenInfo = service.createToken(username, ttl=3600, desc='Login')
-				return {
-					'token': tokenInfo['token'],
-					'isAdmin': bool(int(dbUser['isAdmin'])),
-					'username': username,
-					'expire': tokenInfo['expire'],
-					'id': tokenInfo['id']
-				}
+			hash = util.createPasswordHash(input['password'], user['passwordSalt'])
+			if hash == user['passwordHash']:
+				tokenInfo = token_service.createToken(username, user['isAdmin'], ttl=3600, desc='Login')
+				return token_service.formatToken(tokenInfo, hideToken=False)
 			else:
 				abort(401, "Invalid credentials")
 		else:
@@ -142,7 +133,6 @@ class UsersLogout(Resource):
 	@auth_required
 	def post(auth, self, username):
 		util.verifyAdminOrUser(auth, username)
-		print('hej')
 		tKey = Keys.getToken(auth['token'])
 		db.delete(tKey)
 		return "Token invalidated"
@@ -155,5 +145,6 @@ class UsersImpersonate(Resource):
 	@auth_required
 	def post(auth, self, username):
 		util.verifyAdmin(auth)
-		dbUser = service.findUser(username, dbObj=True)
-		return service.createToken(username, str(dbUser['isAdmin']) == "1", ttl=1200)
+		user = user_service.findUser(username)
+		tokenInfo = token_service.createToken(username, user['isAdmin'], ttl=3600, desc='Impersonate')
+		return token_service.formatToken(tokenInfo, hideToken=False)

@@ -3,7 +3,7 @@ from flask_restx import Resource, abort
 
 from api import api, auth_required
 from db import db, Keys
-import service
+from services import token_service
 
 ns = api.namespace('tokens', description='List, view, create and delete tokens')
 
@@ -16,7 +16,7 @@ class TokensList(Resource):
 		for tokenInfo in db.scan_iter(match='token:*'):
 			tokenInfo = db.hgetall(tokenInfo)
 			if tokenInfo['username'] == auth['username']:
-				tokenInfos.append(service.formatToken(tokenInfo))
+				tokenInfos.append(token_service.formatToken(tokenInfo))
 
 		return tokenInfos
 
@@ -37,8 +37,8 @@ class TokensList(Resource):
 			except ValueError:
 				abort(400, 'Invalid TTL')
 
-		tokenInfo = service.createToken(auth['username'], ttl=ttlInt, desc=desc)
-		return service.formatToken(tokenInfo, hideToken=False)
+		tokenInfo = token_service.createToken(auth['username'], auth['isAdmin'], ttl=ttlInt, desc=desc)
+		return token_service.formatToken(tokenInfo, hideToken=False)
 
 @ns.route('/<int:id>')
 @ns.param('id', 'Token ID')
@@ -47,14 +47,14 @@ class TokensView(Resource):
 	@ns.response(404, 'Unknown token')
 	@auth_required
 	def get(auth, self, id):
-		tokenInfo = service.findToken(auth, id)
-		return service.formatToken(tokenInfo)
+		tokenInfo = token_service.findToken(auth, id)
+		return token_service.formatToken(tokenInfo)
 
 	@ns.response(200, 'Success')
 	@ns.response(404, 'Unknown token')
 	@auth_required
 	def put(auth, self, id):
-		tokenInfo = service.findToken(auth, id)
+		tokenInfo = token_service.findToken(auth, id)
 		tKey = Keys.getToken(tokenInfo['token'])
 
 		input = api.payload
@@ -75,13 +75,13 @@ class TokensView(Resource):
 				abort(400, 'Invalid TTL')
 
 		tokenInfo = db.hgetall(tKey)
-		return service.formatToken(tokenInfo)
+		return token_service.formatToken(tokenInfo)
 
 	@ns.response(200, 'Success')
 	@ns.response(404, 'Unknown token')
 	@auth_required
 	def delete(auth, self, id):
-		tokenInfo = service.findToken(auth, id)
+		tokenInfo = token_service.findToken(auth, id)
 		db.delete(Keys.getToken(tokenInfo['token']))
 
 		return "Removed token with ID = " + str(id)
