@@ -61,7 +61,7 @@
 		<ng-container matColumnDef="timestamp">
 			<th mat-header-cell *matHeaderCellDef mat-sort-header>Timestamp</th>
 			<td mat-cell *matCellDef="let reading">
-				{{ reading.timestamp }}
+				{{ utils.printTimestamp(reading.timestamp) }}
 			</td>
 		</ng-container>
 

@@ -205,13 +205,13 @@ export class ServerService {
 
     // ----- Readings -----
 
-    public createReading(datasetName: string, nodeName: string, sensorName: string, value: string) {
+    public createReading(datasetName: string, nodeName: string, sensorName: string, value: string, time: string | null) {
 		const url = this.apiUrl + "datasets/" + datasetName + "/nodes/" + nodeName + "/sensors/" + sensorName + "/readings";
-		return this.http.post(url, { value }, this.httpOptionsJson);
+		return this.http.post(url, { value, time }, this.httpOptionsJson);
 	}
 
     public getReadings(datasetName: string, nodeName: string, sensorName: string) {
-		const url = this.apiUrl + "datasets/" + datasetName + "/nodes/" + nodeName + "/sensors/" + sensorName + "/readings";
+		const url = this.apiUrl + "datasets/" + datasetName + "/nodes/" + nodeName + "/sensors/" + sensorName + "/readings?limit=100";
 		return this.http.get(url, this.httpOptionsJson);
 	}
 

@@ -4,6 +4,10 @@ from flask_restx import abort
 from db import db, Keys
 import util
 
+def getReadingsRetention():
+	#return 1000 * 60 * 60 * 24 * 365 # one year
+	return 1000 * 60 * 5
+
 def findUser(username, dbObj=False):
 	validName = util.verifyValidName(username, "Username", fail=False)
 	if not validName:

@@ -2,7 +2,11 @@ import re
 import random
 import string
 import hashlib
-from flask_restx import abort
+from flask_restx import abort, fields
+
+class NullableString(fields.String):
+    __schema_type__ = ['string', 'null']
+    __schema_example__ = 'nullable string'
 
 def verifyAdmin(auth):
 	if not auth['isAdmin']:

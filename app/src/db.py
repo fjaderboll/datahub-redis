@@ -1,6 +1,7 @@
 import redis
 
 db = redis.Redis(decode_responses=True)
+ts = db.ts()
 
 class Keys():
 	def getToken(token):
@@ -54,3 +55,7 @@ class Keys():
 
 	def getSensorById(sensorId):
 		return 'sensor:' + str(sensorId)
+
+	# readings
+	def getReadings(sensorId):
+		return 'sensor-readings:' + str(sensorId)

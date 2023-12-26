@@ -8,7 +8,7 @@ from api import api
 from endpoints.state import ns as namespace_state
 from endpoints.users import ns as namespace_users
 from endpoints.tokens import ns as namespace_tokens
-from endpoints.datasets_nodes_sensors import ns as namespace_datasets
+from endpoints.datasets_nodes_sensors_readings import ns as namespace_datasets
 
 app = Flask(__name__)
 cors = CORS(app, resources={r"/*": {"origins": "http://localhost:4200"}})

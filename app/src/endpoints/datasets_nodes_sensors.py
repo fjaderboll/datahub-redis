@@ -1,7 +1,7 @@
 from flask_restx import Resource, fields, abort
 
 from api import api, auth_required
-from db import db, Keys
+from db import db, ts, Keys
 import util
 import service
 from services import cleaner
@@ -48,6 +48,7 @@ class SensorsList(Resource):
 		db.set(sensorIdKeyName, sensorId)
 		db.hset(Keys.getSensorById(sensorId), mapping=sensor)
 		db.sadd(Keys.getNodeSensorIds(node['id']), sensorId)
+		ts.create(Keys.getReadings(sensorId), retention_msecs=service.getReadingsRetention())
 
 		return cleaner.cleanSensor(sensor)
 
@@ -102,6 +103,7 @@ class SensorsView(Resource):
 		db.srem(Keys.getNodeSensorIds(node['id']), sensor['id'])
 		db.delete(Keys.getSensorIdByName(node['id'], sensorName))
 		db.delete(Keys.getSensorById(sensor['id']))
+		ts.delete(Keys.getReadings(sensor['id']))
 
 		# TODO remove readings
 
