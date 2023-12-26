@@ -4,10 +4,6 @@ from flask_restx import abort
 from db import db, Keys
 import util
 
-def getReadingsRetention():
-	#return 1000 * 60 * 60 * 24 * 365 # one year
-	return 1000 * 60 * 5
-
 def findUser(username, dbObj=False):
 	validName = util.verifyValidName(username, "Username", fail=False)
 	if not validName:
@@ -51,15 +47,6 @@ def findNode(datasetId, nodeName):
 			return node
 
 	abort(404, "Unknown node '" + nodeName + "'")
-
-def getNodeSensors(nodeId):
-	sensorIds = db.smembers(Keys.getNodeSensorIds(nodeId))
-	sensors = []
-	for sensorId in sensorIds:
-		sensor = db.hgetall(Keys.getSensorById(sensorId))
-		cSensor = cleanObject(sensor, ['name', 'desc'])
-		sensors.append(cSensor)
-	return sensors
 
 def findSensor(nodeId, sensorName):
 	validName = util.verifyValidName(sensorName, fail=False)

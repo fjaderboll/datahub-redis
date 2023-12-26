@@ -57,6 +57,9 @@ export class UtilsService {
 	        let time = Date.now() - new Date(timestamp).getTime();
 	        let futureDate = (time < 0);
 	        time = Math.abs(time);
+			if(time < 1000) {
+				return "just now";
+			}
 	        let multipliers = [1000, 60, 60, 24, 7, 4.32, 12, Infinity];
 	        let units = ["ms", "second", "minute", "hour", "day", "week", "month", "year"];
 

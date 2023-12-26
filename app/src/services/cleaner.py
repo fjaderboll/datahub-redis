@@ -2,11 +2,23 @@ import util
 import datetime
 import pytz
 
+def cleanNode(node):
+	return util.cleanObject(node, ['name', 'desc', 'sensors'])
+
 def cleanSensor(sensor):
-	return util.cleanObject(sensor, ['name', 'desc', 'unit'])
+	return cleanSensors([sensor])[0]
+
+def cleanSensors(sensors):
+	cleanedSensors = []
+	for sensor in sensors:
+		cleanedSensor = util.cleanObject(sensor, ['name', 'desc', 'unit', 'lastReading'])
+		cleanedSensors.append(cleanedSensor)
+	return cleanedSensors
 
 def cleanReading(reading, dataset, node, sensor):
-	return cleanReadings([reading], dataset, node, sensor)[0]
+	if reading:
+		return cleanReadings([reading], dataset, node, sensor)[0]
+	return None
 
 def cleanReadings(readings, dataset, node, sensor):
 	cleanedReadings = []

@@ -4,7 +4,7 @@ from api import api, auth_required
 from db import db, ts, Keys
 import util
 import service
-from services import cleaner
+from services import cleaner, sensor_service, reading_service
 
 from endpoints.datasets_nodes import ns
 
@@ -17,7 +17,8 @@ class SensorsList(Resource):
 	def get(auth, self, datasetName, nodeName):
 		dataset = service.findDataset(auth, datasetName)
 		node = service.findNode(dataset['id'], nodeName)
-		return service.getNodeSensors(node['id'])
+		sensors = sensor_service.getNodeSensors(node['id'], dataset, node)
+		return cleaner.cleanSensors(sensors)
 
 	@ns.response(200, 'Success')
 	@ns.response(400, 'Bad request')
@@ -31,25 +32,7 @@ class SensorsList(Resource):
 		desc = input['desc']
 		unit = input['unit']
 
-		util.verifyValidName(name, "Name")
-
-		sensorIdKeyName = Keys.getSensorIdByName(node['id'], name)
-		sensorId = db.get(sensorIdKeyName)
-		if sensorId:
-			abort(400, "Sensor '" + name + "' already exists")
-
-		sensorId = db.incr(Keys.getSensorIdCounter())
-		sensor = {
-			'id': sensorId,
-			'name': name,
-			'desc': desc,
-			'unit': unit
-		}
-		db.set(sensorIdKeyName, sensorId)
-		db.hset(Keys.getSensorById(sensorId), mapping=sensor)
-		db.sadd(Keys.getNodeSensorIds(node['id']), sensorId)
-		ts.create(Keys.getReadings(sensorId), retention_msecs=service.getReadingsRetention())
-
+		sensor = sensor_service.createSensor(node['id'], name, desc, unit)
 		return cleaner.cleanSensor(sensor)
 
 @ns.route('/<string:datasetName>/nodes/<string:nodeName>/sensors/<string:sensorName>')
@@ -64,6 +47,7 @@ class SensorsView(Resource):
 		dataset = service.findDataset(auth, datasetName)
 		node = service.findNode(dataset['id'], nodeName)
 		sensor = service.findSensor(node['id'], sensorName)
+		sensor['lastReading'] = cleaner.cleanReading(reading_service.getLastReading(sensor['id']), dataset, node, sensor)
 
 		return cleaner.cleanSensor(sensor)
 

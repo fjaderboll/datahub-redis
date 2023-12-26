@@ -21,8 +21,10 @@ export class SensorViewComponent implements OnInit, AfterViewInit {
 	public nodeName: any;
 	public sensorName: any;
 	public sensor: any;
+	public readings: any;
+	private readingsLimit = 1000;
 
-	public displayedColumns: string[] = ['timestamp', 'value', 'actions'];
+	public displayedColumns: string[] = ['timestamp', 'value'];
 	public dataSource = new MatTableDataSource<any>();
 	@ViewChild(MatPaginator) paginator!: MatPaginator;
 	@ViewChild(MatSort) sort!: MatSort;
@@ -42,6 +44,7 @@ export class SensorViewComponent implements OnInit, AfterViewInit {
 		this.sensorName = this.route.snapshot.paramMap.get('sensorName') || 'this should never happen';
 
 		this.loadSensor();
+		this.loadReadings();
 	}
 
 	ngAfterViewInit() {
@@ -53,7 +56,6 @@ export class SensorViewComponent implements OnInit, AfterViewInit {
 		this.server.getSensor(this.datasetName, this.nodeName, this.sensorName).subscribe({
 			next: (sensor: any) => {
 				this.sensor = sensor;
-				this.loadReadings();
 			},
 			error: (e) => {
 				this.server.showHttpError(e);
@@ -62,14 +64,20 @@ export class SensorViewComponent implements OnInit, AfterViewInit {
 	}
 
 	private loadReadings() {
-		this.server.getReadings(this.datasetName, this.nodeName, this.sensorName).subscribe({
+		this.server.getReadings(this.datasetName, this.nodeName, this.sensorName, this.readingsLimit).subscribe({
 			next: (readings: any) => {
+				this.readings = readings;
 				this.dataSource.data = readings;
 			},
 			error: (e) => {
 				this.server.showHttpError(e);
 			}
 		});
+	}
+
+	public loadMore() {
+		this.readingsLimit *= 2;
+		this.loadReadings();
 	}
 
 	public changedValue(property: string, newValue: any) {
@@ -125,6 +133,35 @@ export class SensorViewComponent implements OnInit, AfterViewInit {
 		});
 		dialog.afterClosed().subscribe(sensor => {
 			if(sensor) {
+				this.loadReadings();
+			}
+		});
+	}
+
+	public deleteReadings() {
+		const dialog = this.dialog.open(ConfirmDialogComponent, {
+			data: {
+				title: "Delete Readings",
+				text: "This will remove all readings for this sensor. Are you sure?",
+				action: new Observable(
+					observer => {
+						this.server.deleteReadings(this.datasetName, this.nodeName, this.sensorName).subscribe({
+							next: (v: any) => {
+								observer.next(v);
+							},
+							error: (e) => {
+								observer.error(e);
+							},
+							complete: () => {
+								observer.complete();
+							}
+						});
+					}
+				)
+			}
+		});
+		dialog.afterClosed().subscribe(confirmed => {
+			if(confirmed) {
 				this.loadReadings();
 			}
 		});

@@ -10,7 +10,7 @@ import { UtilsService } from 'src/app/services/utils.service';
 })
 export class CreateReadingDialogComponent implements OnInit {
 	private inputData: any;
-	public value: string = "";
+	public value!: number;
     public time: number | null = null;
 
 	constructor(
@@ -23,6 +23,10 @@ export class CreateReadingDialogComponent implements OnInit {
 	}
 
 	ngOnInit(): void {
+	}
+
+	public isFormValid() {
+		return this.value !== undefined && this.value !== null;
 	}
 
   	public create() {

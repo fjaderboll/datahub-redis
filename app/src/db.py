@@ -4,6 +4,11 @@ db = redis.Redis(decode_responses=True)
 ts = db.ts()
 
 class Keys():
+	# settings
+	def getSettings():
+		return 'settings'
+
+	# tokens
 	def getToken(token):
 		return 'token:' + token
 

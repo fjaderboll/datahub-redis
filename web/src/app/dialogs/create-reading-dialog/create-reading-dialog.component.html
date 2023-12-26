@@ -3,7 +3,7 @@
 	<div>
 		<mat-form-field appearance="outline">
 			<mat-label>Value</mat-label>
-			<input type="text" matInput [(ngModel)]="value" placeholder="Value">
+			<input type="number" matInput required [(ngModel)]="value" placeholder="Value">
 		</mat-form-field>
 	</div>
 
@@ -19,7 +19,7 @@
 		<mat-icon>close</mat-icon>
 		<span>Cancel</span>
 	</button>
-	<button mat-flat-button color="accent" (click)="create()">
+	<button mat-flat-button color="accent" (click)="create()" [disabled]="!isFormValid()">
 		<mat-icon>add</mat-icon>
 		<span>Create</span>
 	</button>

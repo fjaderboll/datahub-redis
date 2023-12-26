@@ -205,14 +205,22 @@ export class ServerService {
 
     // ----- Readings -----
 
-    public createReading(datasetName: string, nodeName: string, sensorName: string, value: string, time: string | null) {
+    public createReading(datasetName: string, nodeName: string, sensorName: string, value: number, time: string | null) {
 		const url = this.apiUrl + "datasets/" + datasetName + "/nodes/" + nodeName + "/sensors/" + sensorName + "/readings";
 		return this.http.post(url, { value, time }, this.httpOptionsJson);
 	}
 
-    public getReadings(datasetName: string, nodeName: string, sensorName: string) {
-		const url = this.apiUrl + "datasets/" + datasetName + "/nodes/" + nodeName + "/sensors/" + sensorName + "/readings?limit=100";
+    public getReadings(datasetName: string, nodeName: string, sensorName: string, limit: number | null) {
+		let url = this.apiUrl + "datasets/" + datasetName + "/nodes/" + nodeName + "/sensors/" + sensorName + "/readings";
+		if(limit) {
+			url += "?limit=" + limit;
+		}
 		return this.http.get(url, this.httpOptionsJson);
+	}
+
+	public deleteReadings(datasetName: string, nodeName: string, sensorName: string) {
+		const url = this.apiUrl + "datasets/" + datasetName + "/nodes/" + nodeName + "/sensors/" + sensorName + "/readings";
+		return this.http.delete(url, this.httpOptionsText);
 	}
 
 }

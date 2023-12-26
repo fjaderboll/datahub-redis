@@ -4,6 +4,7 @@ from api import api, auth_required
 from db import db, Keys
 import util
 import service
+from services import cleaner, sensor_service
 
 from endpoints.datasets import ns
 
@@ -55,9 +56,11 @@ class NodesView(Resource):
 	def get(auth, self, datasetName, nodeName):
 		dataset = service.findDataset(auth, datasetName)
 		node = service.findNode(dataset['id'], nodeName)
-		node['sensors'] = service.getNodeSensors(node['id'])
 
-		return service.cleanObject(node, ['name', 'desc', 'sensors'])
+		sensors = sensor_service.getNodeSensors(node['id'], dataset, node)
+		node['sensors'] = cleaner.cleanSensors(sensors)
+
+		return cleaner.cleanNode(node)
 
 	@ns.response(200, 'Success')
 	@ns.response(404, 'Unknown node')
