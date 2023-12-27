@@ -2,8 +2,15 @@ import os
 import requests
 import json
 import random
+import string
 
 BASE_URL = os.environ.get('BASE_URL', 'http://localhost:2070/')
+
+def getRandomName(prefix='', length=5):
+	return prefix + ''.join(random.choice(string.ascii_lowercase) for _ in range(length))
+
+def getRandomString(length):
+	return ''.join(random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(length))
 
 def createUser(username=None):
 	username = username if username else 'laban-' + str(random.randint(0, 1000))
