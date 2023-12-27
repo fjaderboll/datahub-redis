@@ -1,10 +1,8 @@
-from flask_restx import Resource, fields, abort
+from flask_restx import Resource
 
 from api import api, auth_required
 from db import db, Keys
-import util
-import service
-from services import cleaner, dataset_service, node_service
+from services import util, finder, cleaner, dataset_service, node_service
 
 ns = api.namespace('datasets', description='List, view, create and delete datasets')
 
@@ -38,7 +36,7 @@ class DatasetsView(Resource):
 	@ns.response(404, 'Unknown dataset')
 	@auth_required
 	def get(auth, self, datasetName):
-		dataset = service.findDataset(auth, datasetName)
+		dataset = finder.findDataset(auth, datasetName)
 		dataset['nodes'] = cleaner.cleanNodes(node_service.getDatasetNodes(dataset['id']))
 
 		return cleaner.cleanDataset(dataset)
@@ -47,7 +45,7 @@ class DatasetsView(Resource):
 	@ns.response(404, 'Unknown dataset')
 	@auth_required
 	def put(auth, self, datasetName):
-		dataset = service.findDataset(auth, datasetName)
+		dataset = finder.findDataset(auth, datasetName)
 		dKey = Keys.getDatasetById(dataset['id'])
 
 		input = api.payload
@@ -66,6 +64,6 @@ class DatasetsView(Resource):
 	@ns.response(404, 'Unknown dataset')
 	@auth_required
 	def delete(auth, self, datasetName):
-		dataset = service.findDataset(auth, datasetName)
+		dataset = finder.findDataset(auth, datasetName)
 		dataset_service.deleteDataset(dataset)
 		return "Removed dataset '" + datasetName + "'"

@@ -1,9 +1,9 @@
 from flask_restx import abort
 
 from db import db, Keys
-import util
+from services import util
 
-def findDataset(auth, datasetName):
+def findDataset(auth, datasetName, create=False):
 	validName = util.verifyValidName(datasetName, fail=False)
 	if validName:
 		datasetId = db.get(Keys.getDatasetIdByName(datasetName))
@@ -11,6 +11,8 @@ def findDataset(auth, datasetName):
 			if db.sismember(Keys.getUserDatasetIds(auth['username']), datasetId):
 				dataset = db.hgetall(Keys.getDatasetById(datasetId))
 				return dataset
+		elif create:
+			pass # TODO
 
 	abort(404, "Unknown dataset '" + datasetName + "'")
 

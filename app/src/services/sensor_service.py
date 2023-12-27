@@ -1,9 +1,7 @@
-from flask_restx import Resource, fields, abort
+from flask_restx import abort
+
 from db import db, ts, Keys
-from services import cleaner, settings_service, reading_service
-import dateutil.parser as dp
-from datetime import datetime
-import util
+from services import util, cleaner, settings_service, reading_service
 
 def createSensor(nodeId, name, desc=None, unit=None):
 	util.verifyValidName(name, "Name")

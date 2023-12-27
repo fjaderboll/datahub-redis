@@ -1,10 +1,8 @@
-from flask_restx import Resource, fields, abort
+from flask_restx import Resource
 
 from api import api, auth_required
 from db import db, Keys
-import util
-import service
-from services import cleaner, node_service, sensor_service
+from services import util, finder, cleaner, node_service, sensor_service
 
 from endpoints.datasets import ns
 
@@ -14,14 +12,14 @@ class NodesList(Resource):
 	@ns.response(200, 'Success')
 	@auth_required
 	def get(auth, self, datasetName):
-		dataset = service.findDataset(auth, datasetName)
+		dataset = finder.findDataset(auth, datasetName)
 		return cleaner.cleanNodes(node_service.getDatasetNodes(dataset['id']))
 
 	@ns.response(200, 'Success')
 	@ns.response(400, 'Bad request')
 	@auth_required
 	def post(auth, self, datasetName):
-		dataset = service.findDataset(auth, datasetName)
+		dataset = finder.findDataset(auth, datasetName)
 
 		input = api.payload
 		name = input['name']
@@ -38,8 +36,8 @@ class NodesView(Resource):
 	@ns.response(404, 'Unknown node')
 	@auth_required
 	def get(auth, self, datasetName, nodeName):
-		dataset = service.findDataset(auth, datasetName)
-		node = service.findNode(dataset['id'], nodeName)
+		dataset = finder.findDataset(auth, datasetName)
+		node = finder.findNode(dataset['id'], nodeName)
 
 		sensors = sensor_service.getNodeSensors(node['id'], dataset, node)
 		node['sensors'] = cleaner.cleanSensors(sensors)
@@ -50,8 +48,8 @@ class NodesView(Resource):
 	@ns.response(404, 'Unknown node')
 	@auth_required
 	def put(auth, self, datasetName, nodeName):
-		dataset = service.findDataset(auth, datasetName)
-		node = service.findNode(dataset['id'], nodeName)
+		dataset = finder.findDataset(auth, datasetName)
+		node = finder.findNode(dataset['id'], nodeName)
 		nKey = Keys.getNodeById(node['id'])
 
 		input = api.payload
@@ -71,8 +69,8 @@ class NodesView(Resource):
 	@ns.response(404, 'Unknown node')
 	@auth_required
 	def delete(auth, self, datasetName, nodeName):
-		dataset = service.findDataset(auth, datasetName)
-		node = service.findNode(dataset['id'], nodeName)
+		dataset = finder.findDataset(auth, datasetName)
+		node = finder.findNode(dataset['id'], nodeName)
 
 		node_service.deleteNode(node['id'])
 

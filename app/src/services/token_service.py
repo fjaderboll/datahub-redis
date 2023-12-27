@@ -1,9 +1,10 @@
 from flask_restx import abort
+
 from datetime import datetime, timedelta
 import pytz
 
 from db import db, Keys
-import util
+from services import util
 
 def findToken(auth, id):
 	for tokenInfo in db.scan_iter(match='token:*'):

@@ -2,9 +2,7 @@ from flask_restx import Resource, fields, abort
 
 from api import api, auth_required
 from db import db, Keys
-import util
-import service
-from services import cleaner, user_service, token_service, settings_service
+from services import util, cleaner, user_service, token_service, settings_service
 
 ns = api.namespace('users', description='Login and get user information')
 

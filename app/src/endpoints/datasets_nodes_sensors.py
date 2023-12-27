@@ -1,10 +1,8 @@
-from flask_restx import Resource, fields, abort
+from flask_restx import Resource
 
 from api import api, auth_required
-from db import db, ts, Keys
-import util
-import service
-from services import cleaner, sensor_service, reading_service
+from db import db, Keys
+from services import util, cleaner, finder, sensor_service, reading_service
 
 from endpoints.datasets_nodes import ns
 
@@ -15,8 +13,8 @@ class SensorsList(Resource):
 	@ns.response(200, 'Success')
 	@auth_required
 	def get(auth, self, datasetName, nodeName):
-		dataset = service.findDataset(auth, datasetName)
-		node = service.findNode(dataset['id'], nodeName)
+		dataset = finder.findDataset(auth, datasetName)
+		node = finder.findNode(dataset['id'], nodeName)
 		sensors = sensor_service.getNodeSensors(node['id'], dataset, node)
 		return cleaner.cleanSensors(sensors)
 
@@ -24,8 +22,8 @@ class SensorsList(Resource):
 	@ns.response(400, 'Bad request')
 	@auth_required
 	def post(auth, self, datasetName, nodeName):
-		dataset = service.findDataset(auth, datasetName)
-		node = service.findNode(dataset['id'], nodeName)
+		dataset = finder.findDataset(auth, datasetName)
+		node = finder.findNode(dataset['id'], nodeName)
 
 		input = api.payload
 		name = input['name']
@@ -44,9 +42,9 @@ class SensorsView(Resource):
 	@ns.response(404, 'Unknown sensor')
 	@auth_required
 	def get(auth, self, datasetName, nodeName, sensorName):
-		dataset = service.findDataset(auth, datasetName)
-		node = service.findNode(dataset['id'], nodeName)
-		sensor = service.findSensor(node['id'], sensorName)
+		dataset = finder.findDataset(auth, datasetName)
+		node = finder.findNode(dataset['id'], nodeName)
+		sensor = finder.findSensor(node['id'], sensorName)
 		sensor['lastReading'] = cleaner.cleanReading(reading_service.getLastReading(sensor['id']), dataset, node, sensor)
 		sensor['readingStats'] = reading_service.getReadingStats(sensor['id'])
 
@@ -56,9 +54,9 @@ class SensorsView(Resource):
 	@ns.response(404, 'Unknown sensor')
 	@auth_required
 	def put(auth, self, datasetName, nodeName, sensorName):
-		dataset = service.findDataset(auth, datasetName)
-		node = service.findNode(dataset['id'], nodeName)
-		sensor = service.findSensor(node['id'], sensorName)
+		dataset = finder.findDataset(auth, datasetName)
+		node = finder.findNode(dataset['id'], nodeName)
+		sensor = finder.findSensor(node['id'], sensorName)
 
 		sKey = Keys.getSensorById(sensor['id'])
 
@@ -81,9 +79,9 @@ class SensorsView(Resource):
 	@ns.response(404, 'Unknown sensor')
 	@auth_required
 	def delete(auth, self, datasetName, nodeName, sensorName):
-		dataset = service.findDataset(auth, datasetName)
-		node = service.findNode(dataset['id'], nodeName)
-		sensor = service.findSensor(node['id'], sensorName)
+		dataset = finder.findDataset(auth, datasetName)
+		node = finder.findNode(dataset['id'], nodeName)
+		sensor = finder.findSensor(node['id'], sensorName)
 
 		sensor_service.deleteSensor(sensor['id'])
 

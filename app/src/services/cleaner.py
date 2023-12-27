@@ -1,6 +1,7 @@
-import util
 import datetime
 import pytz
+
+from services import util
 
 def cleanUser(user):
 	return cleanUsers([user])[0]

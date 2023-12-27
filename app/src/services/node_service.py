@@ -1,9 +1,7 @@
 from flask_restx import Resource, fields, abort
-from db import db, ts, Keys
-from services import cleaner, settings_service, sensor_service
-import dateutil.parser as dp
-from datetime import datetime
-import util
+
+from db import db, Keys
+from services import util, sensor_service
 
 def createNode(datasetId, name, desc=None):
 	util.verifyValidName(name, "Name")

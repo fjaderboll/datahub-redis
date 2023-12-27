@@ -2,9 +2,8 @@ from flask_restx import Resource, fields
 from flask import request
 
 from api import api, auth_required
-from util import NullableString
-import service
-from services import cleaner, reading_service
+from services.util import NullableString
+from services import cleaner, finder, reading_service
 
 from endpoints.datasets_nodes_sensors import ns
 
@@ -21,9 +20,9 @@ class ReadingsList(Resource):
 		'limit':  {'in': 'query', 'description': 'Limits the result to this number of readings', 'default': '1000'}
 	})
 	def get(auth, self, datasetName, nodeName, sensorName):
-		dataset = service.findDataset(auth, datasetName)
-		node = service.findNode(dataset['id'], nodeName)
-		sensor = service.findSensor(node['id'], sensorName)
+		dataset = finder.findDataset(auth, datasetName)
+		node = finder.findNode(dataset['id'], nodeName)
+		sensor = finder.findSensor(node['id'], sensorName)
 
 		after = request.args.get('after')
 		before = request.args.get('before')
@@ -42,9 +41,9 @@ class ReadingsList(Resource):
 	@auth_required
 	@api.expect(createFields, validate=True)
 	def post(auth, self, datasetName, nodeName, sensorName):
-		dataset = service.findDataset(auth, datasetName)
-		node = service.findNode(dataset['id'], nodeName)
-		sensor = service.findSensor(node['id'], sensorName)
+		dataset = finder.findDataset(auth, datasetName)
+		node = finder.findNode(dataset['id'], nodeName)
+		sensor = finder.findSensor(node['id'], sensorName)
 
 		input = api.payload
 		value = input['value']
@@ -60,9 +59,9 @@ class ReadingsList(Resource):
 		'before': {'in': 'query', 'description': 'Only delete readings before this ISO timestamp or relative time in seconds', 'example': '2023-12-26T10:15:30+01:00'}
 	})
 	def delete(auth, self, datasetName, nodeName, sensorName):
-		dataset = service.findDataset(auth, datasetName)
-		node = service.findNode(dataset['id'], nodeName)
-		sensor = service.findSensor(node['id'], sensorName)
+		dataset = finder.findDataset(auth, datasetName)
+		node = finder.findNode(dataset['id'], nodeName)
+		sensor = finder.findSensor(node['id'], sensorName)
 
 		after = request.args.get('after')
 		before = request.args.get('before')

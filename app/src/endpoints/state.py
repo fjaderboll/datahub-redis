@@ -1,9 +1,7 @@
-from flask_restx import Resource, fields, abort
+from flask_restx import Resource
 
 from api import api
 from db import db, Keys
-import util
-import service
 
 ns = api.namespace('state', description='Get application state')
 

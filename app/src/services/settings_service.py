@@ -1,7 +1,4 @@
-from db import db, ts, Keys
-from services import cleaner
-import dateutil.parser as dp
-from datetime import datetime
+from db import db, Keys
 
 def setProperty(property, value):
 	db.hset(Keys.getSettings(), property, value)

@@ -1,7 +1,7 @@
 from flask_restx import abort
 
 from db import db, Keys
-import util
+from services import util
 
 def getAllUsers():
 	usernames = db.smembers(Keys.getUsers())
