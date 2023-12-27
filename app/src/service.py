@@ -14,15 +14,6 @@ def findDataset(auth, datasetName):
 
 	abort(404, "Unknown dataset '" + datasetName + "'")
 
-def getDatasetNodes(datasetId):
-	nodeIds = db.smembers(Keys.getDatasetNodeIds(datasetId))
-	nodes = []
-	for nodeId in nodeIds:
-		node = db.hgetall(Keys.getNodeById(nodeId))
-		cNode = cleanObject(node, ['name', 'desc'])
-		nodes.append(cNode)
-	return nodes
-
 def findNode(datasetId, nodeName):
 	validName = util.verifyValidName(nodeName, fail=False)
 	if validName:
@@ -42,10 +33,3 @@ def findSensor(nodeId, sensorName):
 			return sensor
 
 	abort(404, "Unknown sensor '" + sensorName + "'")
-
-def cleanObject(obj, fieldsToKeep):
-	newObj = {}
-	for field in fieldsToKeep:
-		if field in obj:
-			newObj[field] = obj[field]
-	return newObj

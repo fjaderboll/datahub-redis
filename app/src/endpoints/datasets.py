@@ -4,7 +4,7 @@ from api import api, auth_required
 from db import db, Keys
 import util
 import service
-from services import cleaner, dataset_service
+from services import cleaner, dataset_service, node_service
 
 ns = api.namespace('datasets', description='List, view, create and delete datasets')
 
@@ -39,9 +39,9 @@ class DatasetsView(Resource):
 	@auth_required
 	def get(auth, self, datasetName):
 		dataset = service.findDataset(auth, datasetName)
-		dataset['nodes'] = service.getDatasetNodes(dataset['id'])
+		dataset['nodes'] = cleaner.cleanNodes(node_service.getDatasetNodes(dataset['id']))
 
-		return service.cleanObject(dataset, ['name', 'desc', 'nodes'])
+		return cleaner.cleanDataset(dataset)
 
 	@ns.response(200, 'Success')
 	@ns.response(404, 'Unknown dataset')
@@ -60,8 +60,7 @@ class DatasetsView(Resource):
 			db.hset(dKey, 'desc', input['desc'])
 
 		dataset = db.hgetall(dKey)
-		dataset = service.cleanObject(dataset, ['name', 'desc'])
-		return dataset
+		return cleaner.cleanDataset(dataset)
 
 	@ns.response(200, 'Success')
 	@ns.response(404, 'Unknown dataset')

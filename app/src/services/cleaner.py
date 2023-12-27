@@ -18,12 +18,19 @@ def cleanDataset(dataset):
 def cleanDatasets(datasets):
 	cleanedDatasets = []
 	for dataset in datasets:
-		cleanedDataset = util.cleanObject(dataset, ['name', 'desc'])
+		cleanedDataset = util.cleanObject(dataset, ['name', 'desc', 'nodes'])
 		cleanedDatasets.append(cleanedDataset)
 	return cleanedDatasets
 
 def cleanNode(node):
-	return util.cleanObject(node, ['name', 'desc', 'sensors'])
+	return cleanNodes([node])[0]
+
+def cleanNodes(nodes):
+	cleanedNodes = []
+	for node in nodes:
+		cleanedNode = util.cleanObject(node, ['name', 'desc', 'sensors'])
+		cleanedNodes.append(cleanedNode)
+	return cleanedNodes
 
 def cleanSensor(sensor):
 	return cleanSensors([sensor])[0]

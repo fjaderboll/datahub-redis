@@ -38,3 +38,10 @@ def deleteNode(nodeId):
 	db.delete(Keys.getNodeById(node['id']))
 	db.delete(Keys.getNodeSensorIds(node['id']))
 
+def getDatasetNodes(datasetId):
+	nodeIds = db.smembers(Keys.getDatasetNodeIds(datasetId))
+	nodes = []
+	for nodeId in nodeIds:
+		node = db.hgetall(Keys.getNodeById(nodeId))
+		nodes.append(node)
+	return nodes

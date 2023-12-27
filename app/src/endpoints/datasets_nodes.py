@@ -15,7 +15,7 @@ class NodesList(Resource):
 	@auth_required
 	def get(auth, self, datasetName):
 		dataset = service.findDataset(auth, datasetName)
-		return service.getDatasetNodes(dataset['id'])
+		return cleaner.cleanNodes(node_service.getDatasetNodes(dataset['id']))
 
 	@ns.response(200, 'Success')
 	@ns.response(400, 'Bad request')
@@ -64,7 +64,7 @@ class NodesView(Resource):
 			db.hset(nKey, 'desc', input['desc'])
 
 		node = db.hgetall(nKey)
-		node = service.cleanObject(node, ['name', 'desc'])
+		node = cleaner.cleanNode(node)
 		return node
 
 	@ns.response(200, 'Success')
