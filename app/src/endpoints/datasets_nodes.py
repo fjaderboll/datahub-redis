@@ -4,7 +4,7 @@ from api import api, auth_required
 from db import db, Keys
 import util
 import service
-from services import cleaner, sensor_service
+from services import cleaner, node_service, sensor_service
 
 from endpoints.datasets import ns
 
@@ -27,24 +27,8 @@ class NodesList(Resource):
 		name = input['name']
 		desc = input['desc']
 
-		util.verifyValidName(input['name'], "Name")
-
-		nodeIdKeyName = Keys.getNodeIdByName(dataset['id'], input['name'])
-		nodeId = db.get(nodeIdKeyName)
-		if nodeId:
-			abort(400, "Node '" + name + "' already exists")
-
-		nodeId = db.incr(Keys.getNodeIdCounter())
-		node = {
-			'id': nodeId,
-			'name': name,
-			'desc': desc
-		}
-		db.set(nodeIdKeyName, nodeId)
-		db.hset(Keys.getNodeById(nodeId), mapping=node)
-		db.sadd(Keys.getDatasetNodeIds(dataset['id']), nodeId)
-
-		return service.cleanObject(node, ['name', 'desc'])
+		node = node_service.createNode(dataset['id'], name, desc)
+		return cleaner.cleanNode(node)
 
 @ns.route('/<string:datasetName>/nodes/<string:nodeName>')
 @ns.param('datasetName', 'Dataset name')
@@ -90,10 +74,6 @@ class NodesView(Resource):
 		dataset = service.findDataset(auth, datasetName)
 		node = service.findNode(dataset['id'], nodeName)
 
-		db.srem(Keys.getDatasetNodeIds(dataset['id']), node['id'])
-		db.delete(Keys.getNodeIdByName(dataset['id'], nodeName))
-		db.delete(Keys.getNodeById(node['id']))
-
-		# TODO remove sensors/readings
+		node_service.deleteNode(node['id'])
 
 		return "Removed node '" + nodeName + "'"

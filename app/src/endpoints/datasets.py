@@ -4,6 +4,7 @@ from api import api, auth_required
 from db import db, Keys
 import util
 import service
+from services import cleaner, dataset_service
 
 ns = api.namespace('datasets', description='List, view, create and delete datasets')
 
@@ -16,9 +17,8 @@ class DatasetsList(Resource):
 		datasets = []
 		for datasetId in datasetIds:
 			dataset = db.hgetall(Keys.getDatasetById(datasetId))
-			dataset = service.cleanObject(dataset, ['name', 'desc'])
 			datasets.append(dataset)
-		return datasets
+		return cleaner.cleanDatasets(datasets)
 
 	@ns.response(200, 'Success')
 	@ns.response(400, 'Bad request')
@@ -28,24 +28,8 @@ class DatasetsList(Resource):
 		name = input['name']
 		desc = input['desc']
 
-		util.verifyValidName(input['name'], "Name")
-
-		datasetKeyName = Keys.getDatasetIdByName(input['name'])
-		datasetId = db.get(datasetKeyName)
-		if datasetId:
-			abort(400, "Dataset '" + name + "' already exists")
-
-		datasetId = db.incr(Keys.getDatasetIdCounter())
-		dataset = {
-			'id': datasetId,
-			'name': name,
-			'desc': desc
-		}
-		db.set(datasetKeyName, datasetId)
-		db.hset(Keys.getDatasetById(datasetId), mapping=dataset)
-		db.sadd(Keys.getUserDatasetIds(auth['username']), datasetId)
-
-		return service.cleanObject(dataset, ['name', 'desc'])
+		dataset = dataset_service.createDataset(name, auth['username'], desc)
+		return cleaner.cleanDataset(dataset)
 
 @ns.route('/<string:datasetName>')
 @ns.param('datasetName', 'Dataset name')
@@ -84,12 +68,5 @@ class DatasetsView(Resource):
 	@auth_required
 	def delete(auth, self, datasetName):
 		dataset = service.findDataset(auth, datasetName)
-
-		for username in db.smembers(Keys.getUsers()):
-			db.srem(Keys.getUserDatasetIds(username), dataset['id'])
-		db.delete(Keys.getDatasetIdByName(datasetName))
-		db.delete(Keys.getDatasetById(dataset['id']))
-
-		# TODO remove nodes/sensors/readings
-
+		dataset_service.deleteDataset(dataset)
 		return "Removed dataset '" + datasetName + "'"

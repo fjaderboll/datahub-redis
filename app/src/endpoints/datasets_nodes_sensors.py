@@ -85,11 +85,6 @@ class SensorsView(Resource):
 		node = service.findNode(dataset['id'], nodeName)
 		sensor = service.findSensor(node['id'], sensorName)
 
-		db.srem(Keys.getNodeSensorIds(node['id']), sensor['id'])
-		db.delete(Keys.getSensorIdByName(node['id'], sensorName))
-		db.delete(Keys.getSensorById(sensor['id']))
-		ts.delete(Keys.getReadings(sensor['id']))
-
-		# TODO remove readings
+		sensor_service.deleteSensor(sensor['id'])
 
 		return "Removed sensor '" + sensorName + "'"

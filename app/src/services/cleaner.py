@@ -12,6 +12,16 @@ def cleanUsers(users):
 		cleanedUsers.append(cleanedUser)
 	return cleanedUsers
 
+def cleanDataset(dataset):
+	return cleanDatasets([dataset])[0]
+
+def cleanDatasets(datasets):
+	cleanedDatasets = []
+	for dataset in datasets:
+		cleanedDataset = util.cleanObject(dataset, ['name', 'desc'])
+		cleanedDatasets.append(cleanedDataset)
+	return cleanedDatasets
+
 def cleanNode(node):
 	return util.cleanObject(node, ['name', 'desc', 'sensors'])
 

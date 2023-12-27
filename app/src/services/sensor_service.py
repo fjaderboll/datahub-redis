@@ -16,6 +16,7 @@ def createSensor(nodeId, name, desc=None, unit=None):
 	sensorId = db.incr(Keys.getSensorIdCounter())
 	sensor = {
 		'id': sensorId,
+		'nodeId': nodeId,
 		'name': name,
 		'desc': desc,
 		'unit': unit
@@ -26,6 +27,16 @@ def createSensor(nodeId, name, desc=None, unit=None):
 	ts.create(Keys.getReadings(sensorId), retention_msecs=settings_service.getReadingsRetention())
 
 	return sensor
+
+def deleteSensor(sensorId):
+	sensor = db.hgetall(Keys.getSensorById(sensorId))
+
+	#reading_service.deleteReadings(sensor['id']) # not needed as we delete the entire time serie
+	db.delete(Keys.getReadings(sensor['id']))
+
+	db.srem(Keys.getNodeSensorIds(sensor['nodeId']), sensor['id'])
+	db.delete(Keys.getSensorIdByName(sensor['nodeId'], sensor['name']))
+	db.delete(Keys.getSensorById(sensor['id']))
 
 def getNodeSensors(nodeId, dataset, node):
 	sensorIds = db.smembers(Keys.getNodeSensorIds(nodeId))
