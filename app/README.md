@@ -45,5 +45,5 @@ Tests are located in `test` folder.
 Tests files must contain `test` to be discovered.
 
 ```shell
-BASE_URL=http://localhost:2070/ python3 -m unittest discover -s test
+BASE_URL=http://localhost:2070/ python3 -m unittest discover -s test -vv
 ```
