@@ -15,6 +15,11 @@
     <dd>
         <app-inline-edit type="text" [value]="sensor?.unit" (onChange)="changedValue('unit', $event)"></app-inline-edit>
     </dd>
+
+	<dt>Readings</dt>
+    <dd>
+        Loaded {{ readings?.length }} of {{ sensor?.readingStats.count }} readings, retention {{ utils.getDeltaTime(sensor?.readingStats.retention*1000) }}
+    </dd>
 </dl>
 
 <div class="row margin-top align-right">
@@ -35,7 +40,7 @@
 
 <div class="row margin-top align-right">
 	<div>
-		<button mat-raised-button color="primary" (click)="loadMore()">
+		<button mat-raised-button color="primary" (click)="loadMore()" [disabled]="readings?.length >= sensor?.readingStats.count">
 			<mat-icon>downloading</mat-icon>
 			<span>Load More</span>
 		</button>
@@ -54,12 +59,6 @@
 			<span>Create Reading</span>
 		</button>
 	</div>
-</div>
-
-<div class="row margin-top align-right">
-	<span>
-		Loaded {{ readings?.length }} of {{ 0 }} readings
-	</span>
 </div>
 
 <div class="mat-elevation-z8 margin-top">

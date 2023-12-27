@@ -21,7 +21,7 @@ def cleanSensor(sensor):
 def cleanSensors(sensors):
 	cleanedSensors = []
 	for sensor in sensors:
-		cleanedSensor = util.cleanObject(sensor, ['name', 'desc', 'unit', 'lastReading'])
+		cleanedSensor = util.cleanObject(sensor, ['name', 'desc', 'unit', 'lastReading', 'readingStats'])
 		cleanedSensors.append(cleanedSensor)
 	return cleanedSensors
 

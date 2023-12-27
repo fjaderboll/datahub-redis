@@ -4,7 +4,7 @@ from api import api, auth_required
 from db import db, Keys
 import util
 import service
-from services import cleaner, user_service, token_service
+from services import cleaner, user_service, token_service, settings_service
 
 ns = api.namespace('users', description='Login and get user information')
 
@@ -118,7 +118,7 @@ class UsersLogin(Resource):
 		if 'password' in input and input['password'] is not None:
 			hash = util.createPasswordHash(input['password'], user['passwordSalt'])
 			if hash == user['passwordHash']:
-				tokenInfo = token_service.createToken(username, user['isAdmin'], ttl=3600, desc='Login')
+				tokenInfo = token_service.createToken(username, user['isAdmin'], ttl=settings_service.getTokenTTL(), desc='Login')
 				return token_service.formatToken(tokenInfo, hideToken=False)
 			else:
 				abort(401, "Invalid credentials")
@@ -146,5 +146,5 @@ class UsersImpersonate(Resource):
 	def post(auth, self, username):
 		util.verifyAdmin(auth)
 		user = user_service.findUser(username)
-		tokenInfo = token_service.createToken(username, user['isAdmin'], ttl=3600, desc='Impersonate')
+		tokenInfo = token_service.createToken(username, user['isAdmin'], ttl=settings_service.getTokenTTL(), desc='Impersonate')
 		return token_service.formatToken(tokenInfo, hideToken=False)

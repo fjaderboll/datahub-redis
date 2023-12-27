@@ -133,6 +133,7 @@ export class SensorViewComponent implements OnInit, AfterViewInit {
 		});
 		dialog.afterClosed().subscribe(sensor => {
 			if(sensor) {
+				this.loadSensor();
 				this.loadReadings();
 			}
 		});
@@ -162,6 +163,7 @@ export class SensorViewComponent implements OnInit, AfterViewInit {
 		});
 		dialog.afterClosed().subscribe(confirmed => {
 			if(confirmed) {
+				this.loadSensor();
 				this.loadReadings();
 			}
 		});

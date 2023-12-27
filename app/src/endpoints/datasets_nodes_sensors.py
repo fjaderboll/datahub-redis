@@ -48,6 +48,7 @@ class SensorsView(Resource):
 		node = service.findNode(dataset['id'], nodeName)
 		sensor = service.findSensor(node['id'], sensorName)
 		sensor['lastReading'] = cleaner.cleanReading(reading_service.getLastReading(sensor['id']), dataset, node, sensor)
+		sensor['readingStats'] = reading_service.getReadingStats(sensor['id'])
 
 		return cleaner.cleanSensor(sensor)
 

@@ -34,3 +34,13 @@ def deleteReadings(sensorId, after=None, before=None):
 
 def getLastReading(sensorId):
 	return ts.get(Keys.getReadings(sensorId))
+
+def getReadingStats(sensorId):
+	info = ts.info(Keys.getReadings(sensorId))
+	return {
+		'memory': info.memory_usage,
+		'count': info.total_samples,
+		'retention': int(info.retention_msecs / 1000)
+		#'lastTimestamp': info.last_time_stamp,
+		#'firstTimestamp': info.first_time_stamp
+	}
