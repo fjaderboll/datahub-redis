@@ -41,9 +41,9 @@ class ReadingsList(Resource):
 	@auth_required
 	@api.expect(createFields, validate=True)
 	def post(auth, self, datasetName, nodeName, sensorName):
-		dataset = finder.findDataset(auth, datasetName)
-		node = finder.findNode(dataset['id'], nodeName)
-		sensor = finder.findSensor(node['id'], sensorName)
+		dataset = finder.findDataset(auth, datasetName, create=True)
+		node = finder.findNode(dataset['id'], nodeName, create=True)
+		sensor = finder.findSensor(node['id'], sensorName, create=True)
 
 		input = api.payload
 		value = input['value']
