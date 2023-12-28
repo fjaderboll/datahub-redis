@@ -38,11 +38,10 @@ export class DashboardComponent implements OnInit {
 
 	private createMemoryChart(system: any) {
 		const mem =  system.memory;
-		const multiplier = 1 / 1024 / 1024;
+		const utils = this.utils;
 
 		this.memoryChart = new Chart({
 			chart: {
-				type: 'pie',
 				plotBackgroundColor: undefined,
 				plotBorderWidth: 0,
 				plotShadow: false
@@ -78,12 +77,21 @@ export class DashboardComponent implements OnInit {
 					startAngle: -90,
 					endAngle: 90,
 					center: ['50%', '75%'],
-					size: '110%'
+					size: '110%',
+					colors: [
+						'#bfbfbf',
+						'#db802a',
+						'#498bfc',
+						'#63c970'
+					]
 				}
 			},
 			legend: {
 				enabled: true,
-				labelFormat: '{name} {y:.0f} MB',
+				labelFormatter: function() {
+					const thiz = this as any;
+					return this.name + ' ' + utils.printFilesize(thiz.y);
+				},
 				floating: true,
 				y: -60
 			},
@@ -93,10 +101,10 @@ export class DashboardComponent implements OnInit {
 					name: 'Memory usage',
 					innerSize: '50%',
 					data: [
-						['Other', (mem.total - mem.application - mem.database - mem.available) * multiplier],
-						['Application', mem.application * multiplier],
-						['Database', mem.database * multiplier],
-						['Available', mem.available * multiplier]
+						['Other', mem.total - mem.application - mem.database - mem.available],
+						['Application', mem.application],
+						['Database', mem.database],
+						['Available', mem.available]
 					]
 				}
 			]
