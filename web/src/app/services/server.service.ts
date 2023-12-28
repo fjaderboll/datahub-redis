@@ -53,10 +53,19 @@ export class ServerService {
 		}
 	}
 
+	// ----- State -----
+
     public getStateUsers() {
 		const url = this.apiUrl + "state/users";
 		return this.http.get(url, this.httpOptionsJson);
 	}
+
+	public getStateSystem() {
+		const url = this.apiUrl + "state/system";
+		return this.http.get(url, this.httpOptionsJson);
+	}
+
+    // ----- Users -----
 
 	public login(username: string, password: string) {
 		const url = this.apiUrl + "users/" + username + "/login";
@@ -72,8 +81,6 @@ export class ServerService {
 		const url = this.apiUrl + "users/" + username + "/impersonate";
 		return this.http.post(url, {}, this.httpOptionsJson);
 	}
-
-    // ----- Users -----
 
     public getUsers() {
 		const url = this.apiUrl + "users/";

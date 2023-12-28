@@ -46,7 +46,7 @@ class Keys():
 		return 'dataset-node-ids:' + datasetId
 
 	def getNodeIdByName(datasetId, nodeName):
-		return 'dataset:' + str(datasetId) + ':node-name:' + nodeName
+		return 'dataset-node-name:' + str(datasetId) + ':node-name:' + nodeName
 
 	def getNodeById(nodeId):
 		return 'node:' + str(nodeId)
@@ -56,7 +56,7 @@ class Keys():
 		return 'node-sensor-ids:' + nodeId
 
 	def getSensorIdByName(nodeId, sensorName):
-		return 'node:' + str(nodeId) + ':sensor-name:' + sensorName
+		return 'node-sensor-name:' + str(nodeId) + ':sensor-name:' + sensorName
 
 	def getSensorById(sensorId):
 		return 'sensor:' + str(sensorId)
