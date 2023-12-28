@@ -38,6 +38,7 @@ import { CreateTokenDialogComponent } from './dialogs/create-token-dialog/create
 import { SensorViewComponent } from './pages/sensor-view/sensor-view.component';
 import { CreateSensorDialogComponent } from './dialogs/create-sensor-dialog/create-sensor-dialog.component';
 import { CreateReadingDialogComponent } from './dialogs/create-reading-dialog/create-reading-dialog.component';
+import { ChartModule } from 'angular-highcharts';
 
 @NgModule({
   declarations: [
@@ -83,7 +84,8 @@ import { CreateReadingDialogComponent } from './dialogs/create-reading-dialog/cr
     ToastrModule.forRoot({
 		positionClass: 'toast-bottom-right',
 		preventDuplicates: true
-	})
+	}),
+	ChartModule
   ],
   providers: [],
   bootstrap: [AppComponent]

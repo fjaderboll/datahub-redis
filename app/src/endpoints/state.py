@@ -52,7 +52,7 @@ class StateSystem(Resource):
 				'total': psutil.virtual_memory().total,
 				'available': psutil.virtual_memory().available,
 				'percent': psutil.virtual_memory().percent,
-				'app': process.memory_info().rss,
+				'application': process.memory_info().rss,
 				'database': db.info()['used_memory'],
 				'timeseries': timeseries
 			}
