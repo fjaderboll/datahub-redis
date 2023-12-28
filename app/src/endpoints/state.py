@@ -30,18 +30,6 @@ class StateSystem(Resource):
 
 		process = psutil.Process()
 
-		timeseries = []
-		for dKey in db.scan_iter(match='dataset:*'):
-			dataset = db.hgetall(dKey)
-			for node in node_service.getDatasetNodes(dataset['id']):
-				for sensor in sensor_service.getNodeSensors(node['id'], dataset, node):
-					timeserie = reading_service.getReadingStats(sensor['id'])
-					timeserie['sensorName'] = sensor['name']
-					timeserie['nodeName'] = node['name']
-					timeserie['datasetName'] = dataset['name']
-
-					timeseries.append(timeserie)
-
 		return {
 			'cpu': {
 				'loadAvg': psutil.getloadavg(),
@@ -53,7 +41,33 @@ class StateSystem(Resource):
 				'available': psutil.virtual_memory().available,
 				'percent': psutil.virtual_memory().percent,
 				'application': process.memory_info().rss,
-				'database': db.info()['used_memory'],
-				'timeseries': timeseries
+				'database': db.info()['used_memory']
 			}
 		}
+
+@ns.route('/timeseries')
+class StateTimeseries(Resource):
+	@ns.response(200, 'Success')
+	@auth_required
+	def get(auth, self):
+		util.verifyAdmin(auth)
+
+		timeseries = []
+		for dKey in db.scan_iter(match='dataset:*'):
+			dataset = db.hgetall(dKey)
+			for node in node_service.getDatasetNodes(dataset['id']):
+				for sensor in sensor_service.getNodeSensors(node['id'], dataset, node):
+					stats = reading_service.getReadingStats(sensor['id'])
+
+					timeserie = {
+						'datasetName': dataset['name'],
+						'nodeName': node['name'],
+						'sensorName': sensor['name'],
+						'memory': stats['memory'],
+						'samples': stats['count'],
+						'retention': stats['retention']
+					}
+
+					timeseries.append(timeserie)
+
+		return timeseries

@@ -1,4 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
+import { MatPaginator } from '@angular/material/paginator';
+import { MatSort } from '@angular/material/sort';
+import { MatTableDataSource } from '@angular/material/table';
 import { Chart } from 'angular-highcharts';
 import { AuthenticationService } from 'src/app/services/authentication.service';
 import { ServerService } from 'src/app/services/server.service';
@@ -9,7 +12,13 @@ import { UtilsService } from 'src/app/services/utils.service';
 	templateUrl: './dashboard.component.html',
 	styleUrls: ['./dashboard.component.scss']
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, AfterViewInit {
+	public displayedColumns: string[] = ['datasetName', 'nodeName', 'sensorName', 'samples', 'memory', 'retention'];
+	public dataSource = new MatTableDataSource<any>();
+
+	@ViewChild(MatPaginator) paginator!: MatPaginator;
+	@ViewChild(MatSort) sort!: MatSort;
+
 	public memoryChart!: Chart;
 
 	constructor(
@@ -21,14 +30,30 @@ export class DashboardComponent implements OnInit {
 	ngOnInit(): void {
 		if(this.auth.isAdmin()) {
 			this.loadSystem();
+			this.loadTimeseries();
 		}
-		//this.chart.addPoint(Math.floor(Math.random() * 10));
   	}
+
+	ngAfterViewInit() {
+		this.dataSource.paginator = this.paginator;
+		this.dataSource.sort = this.sort;
+	}
 
 	private loadSystem() {
 		this.server.getStateSystem().subscribe({
 			next: (system: any) => {
 				this.createMemoryChart(system);
+			},
+			error: (e) => {
+				this.server.showHttpError(e);
+			}
+		});
+	}
+
+	private loadTimeseries() {
+		this.server.getStateTimeseries().subscribe({
+			next: (timeseries: any) => {
+				this.dataSource.data = timeseries;
 			},
 			error: (e) => {
 				this.server.showHttpError(e);

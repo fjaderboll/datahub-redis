@@ -65,6 +65,11 @@ export class ServerService {
 		return this.http.get(url, this.httpOptionsJson);
 	}
 
+	public getStateTimeseries() {
+		const url = this.apiUrl + "state/timeseries";
+		return this.http.get(url, this.httpOptionsJson);
+	}
+
     // ----- Users -----
 
 	public login(username: string, password: string) {
