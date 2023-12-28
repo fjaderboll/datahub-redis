@@ -29,6 +29,8 @@ source .venv/bin/activate
 ```
 
 ### Run
+From within Visual Studio Code you can use the `launch.json` file.
+
 ```shell
 ./src/app.py 2070    # start server at http://localhost:2070/
 ```

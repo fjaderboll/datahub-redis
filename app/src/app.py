@@ -21,7 +21,8 @@ def main(port, debug):
 	api.add_namespace(namespace_tokens)
 	api.add_namespace(namespace_datasets)
 	app.register_blueprint(blueprint)
-	app.run(host="0.0.0.0", port=port, debug=debug)
+	if port:
+		app.run(host="0.0.0.0", port=port, debug=debug)
 
 if __name__ == '__main__':
 	port = 2070
@@ -29,3 +30,5 @@ if __name__ == '__main__':
 		port = int(sys.argv[1])
 
 	main(port, port != 80)
+else:
+	main(None, False)
