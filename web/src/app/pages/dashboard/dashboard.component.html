@@ -8,7 +8,7 @@
 		<dd>{{ receivedReadingsPerSecond | number: '1.1-1' }}</dd>
 	</dl>
 	<div class="margin-left">
-		<mat-spinner mode="indeterminate" diameter="32"></mat-spinner>
+		<mat-spinner *ngIf="streamingReadings" mode="indeterminate" diameter="32"></mat-spinner>
 	</div>
 </div>
 

@@ -14,6 +14,7 @@ export class DashboardComponent implements OnInit {
 	public receivedReadings = 0;
 	public receivedReadingsPerSecond: number = 0.0;
 	public lastReadings: any = [];
+	public streamingReadings = false;
 
 	constructor(
 		private router: Router,
@@ -31,6 +32,7 @@ export class DashboardComponent implements OnInit {
 	}
 
 	private loadReadings() {
+		this.streamingReadings = true;
 		this.server.getStateReadings().subscribe({
 			next: (v: any) => {
 				if(v.partialText) {
@@ -42,6 +44,7 @@ export class DashboardComponent implements OnInit {
 			},
 			error: (e) => {
 				this.server.showHttpError(e);
+				this.streamingReadings = false;
 			}
 		});
 	}
