@@ -81,3 +81,8 @@ def createReading(headers, datasetName, nodeName, sensorName, value=None):
 	response = requests.post(BASE_URL + 'datasets/' + datasetName + '/nodes/' + nodeName + '/sensors/' + sensorName + '/readings', headers=headers, data=json.dumps(createData))
 	response.raise_for_status()
 	return response.json()
+
+def getReadings(headers, datasetName, nodeName, sensorName):
+	response = requests.get(BASE_URL + 'datasets/' + datasetName + '/nodes/' + nodeName + '/sensors/' + sensorName + '/readings', headers=headers)
+	response.raise_for_status()
+	return response.json()

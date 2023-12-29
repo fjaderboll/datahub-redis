@@ -22,7 +22,7 @@ def createReading(sensorId, value, time=None):
 def getReadings(sensorId, after=None, before=None, limit=None):
 	fromTime = parseTime(after, '-')
 	toTime = parseTime(before, '+')
-	count = int(limit)
+	count = int(limit) if limit else None
 
 	items = ts.range(Keys.getReadings(sensorId), fromTime, toTime, count=count)
 	return items

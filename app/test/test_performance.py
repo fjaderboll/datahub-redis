@@ -54,6 +54,16 @@ class TestPerf(unittest.TestCase):
 
 		self.log('Created {} readings'.format(datasetCount*nodeCount*sensorCount*readingCount), st1)
 
+		st1 = time.time()
+		for dataset in datasets:
+			for node in dataset['nodes']:
+				for sensor in node['sensors']:
+					st2 = time.time()
+					readings = helper.getReadings(headers, dataset['name'], node['name'], sensor['name'])
+					self.log('Loaded {} readings'.format(len(readings)), st2)
+
+		self.log('Loaded {} readings'.format(datasetCount*nodeCount*sensorCount*readingCount), st1)
+
 if __name__ == '__main__':
 	standalone = True
 	unittest.main()
