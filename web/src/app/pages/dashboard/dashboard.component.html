@@ -1,4 +1,19 @@
 
+<div *ngIf="auth.isAdmin()">
+	<div>
+		<app-system-memory></app-system-memory>
+	</div>
+
+	<div class="row margin-top align-right">
+		<div>
+			<button mat-raised-button color="primary" (click)="showTimeseries()">
+				<mat-icon>history</mat-icon>
+				<span>Show Timeseries</span>
+			</button>
+		</div>
+	</div>
+</div>
+
 <div class="row align-vertically">
 	<dl class="list">
 		<dt>Received readings</dt>
@@ -25,20 +40,5 @@
 
 		<span class="property">Value</span>
 		<span class="value">{{ reading.value }} {{ reading.unit }}</span>
-	</div>
-</div>
-
-<div *ngIf="auth.isAdmin()">
-	<div>
-		<app-system-memory></app-system-memory>
-	</div>
-
-	<div class="row margin-top align-right">
-		<div>
-			<button mat-raised-button color="primary" (click)="showTimeseries()">
-				<mat-icon>history</mat-icon>
-				<span>Show Timeseries</span>
-			</button>
-		</div>
 	</div>
 </div>

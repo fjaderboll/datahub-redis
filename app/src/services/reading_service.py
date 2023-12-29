@@ -8,7 +8,7 @@ from services import cleaner
 def parseTime(time, defaultValue):
 	if time:
 		try:
-			offset = int(time)
+			offset = float(time)
 			return int(datetime.now().timestamp()*1000 + offset*1000)
 		except ValueError:
 			return int(dp.parse(time).timestamp()*1000)

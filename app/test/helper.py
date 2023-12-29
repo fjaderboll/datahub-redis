@@ -76,9 +76,12 @@ def createSensor(headers, datasetName, nodeName, name=None, desc='description3',
 
 def createReading(headers, datasetName, nodeName, sensorName, value=None):
 	createData = {
-		'value': value if value else random.randint(0, 100000) / 100
+		'value': value if value else random.randint(0, 100000) / 100,
+		'time': str(-random.randint(0, 10000000) / 1000)
 	}
 	response = requests.post(BASE_URL + 'datasets/' + datasetName + '/nodes/' + nodeName + '/sensors/' + sensorName + '/readings', headers=headers, data=json.dumps(createData))
+	if not response:
+		print(response.text)
 	response.raise_for_status()
 	return response.json()
 
