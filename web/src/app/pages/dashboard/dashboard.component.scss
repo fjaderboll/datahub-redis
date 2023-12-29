@@ -1,4 +1,13 @@
 
-#memoryChart {
-	width: 80vmin;
+.reading {
+	margin: 0.5em;
+	padding: 0.5em;
+	background-color: #e3e3e9;
+	border-radius: 0.5em;
+
+	.property {
+		color: gray;
+		margin-right: 0.5em;
+		margin-left: 1.5em;
+	}
 }

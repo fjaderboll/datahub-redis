@@ -64,3 +64,6 @@ class Keys():
 	# readings
 	def getReadings(sensorId):
 		return 'sensor-readings:' + str(sensorId)
+
+	def getReadingsTopic():
+		return 'sensor-readings-topic'

@@ -1,7 +1,35 @@
-<p>dashboard works!</p>
+
+<div class="row align-vertically">
+	<dl class="list">
+		<dt>Received readings</dt>
+		<dd>{{ receivedReadings }}</dd>
+
+		<dt>Average per second</dt>
+		<dd>{{ receivedReadingsPerSecond | number: '1.1-1' }}</dd>
+	</dl>
+	<div class="margin-left">
+		<mat-spinner mode="indeterminate" diameter="32"></mat-spinner>
+	</div>
+</div>
+
+<div>
+	<div *ngFor="let reading of lastReadings" class="reading">
+		<span class="property">Dataset</span>
+		<span class="value"><a routerLink="/datasets/{{ reading.datasetName }}">{{ reading.datasetName }}</a></span>
+
+		<span class="property">Node</span>
+		<span class="value"><a routerLink="/datasets/{{ reading.datasetName }}/nodes/{{ reading.nodeName }}">{{ reading.nodeName }}</a></span>
+
+		<span class="property">Sensor</span>
+		<span class="value"><a routerLink="/datasets/{{ reading.datasetName }}/nodes/{{ reading.nodeName }}/sensors/{{ reading.sensorName }}">{{ reading.sensorName }}</a></span>
+
+		<span class="property">Value</span>
+		<span class="value">{{ reading.value }} {{ reading.unit }}</span>
+	</div>
+</div>
 
 <div *ngIf="auth.isAdmin()">
-	<div id="memoryChart">
+	<div>
 		<app-system-memory></app-system-memory>
 	</div>
 

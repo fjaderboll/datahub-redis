@@ -1,7 +1,9 @@
+from flask import Response, stream_with_context
 from flask_restx import Resource
 
 import os
 import psutil
+import json
 
 from api import api, auth_required
 from db import db, ts, Keys
@@ -97,3 +99,29 @@ class StateTimeseries(Resource):
 					timeseries.append(timeserie)
 
 		return timeseries
+
+@ns.route('/readings')
+class StateReadings(Resource):
+	@ns.response(200, 'Success')
+	@auth_required
+	def get(auth, self):
+		sub = ReadingSubscriber(auth['username'])
+		return Response(stream_with_context(sub), content_type='plain/text')
+
+class ReadingSubscriber:
+	def __init__(self, username):
+		self.datasetIds = db.smembers(Keys.getUserDatasetIds(username))
+		self.pubsub = db.pubsub()
+		self.pubsub.subscribe(Keys.getReadingsTopic())
+
+	def __iter__(self):
+		return self
+
+	def __next__(self):
+		for message in self.pubsub.listen():
+			if message['type'] == 'message':
+				reading = json.loads(message['data'])
+				datasetId = db.get(Keys.getDatasetIdByName(reading['datasetName']))
+				if datasetId in self.datasetIds:
+					return message['data'] + '\n'
+		raise StopIteration

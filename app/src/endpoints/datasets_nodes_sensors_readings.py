@@ -48,8 +48,8 @@ class ReadingsList(Resource):
 		value = util.getInput('value')
 		time = util.getInput('time')
 
-		reading = reading_service.createReading(sensor['id'], value, time=time)
-		return cleaner.cleanReading(reading, dataset, node, sensor)
+		cleanedReading = reading_service.createReading(dataset, node, sensor, value, time=time)
+		return cleanedReading
 
 	@ns.response(200, 'Success')
 	@auth_required

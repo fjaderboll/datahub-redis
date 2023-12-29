@@ -1,7 +1,9 @@
 import dateutil.parser as dp
 from datetime import datetime
+import json
 
-from db import ts, Keys
+from db import db, ts, Keys
+from services import cleaner
 
 def parseTime(time, defaultValue):
 	if time:
@@ -12,12 +14,15 @@ def parseTime(time, defaultValue):
 			return int(dp.parse(time).timestamp()*1000)
 	return defaultValue
 
-def createReading(sensorId, value, time=None):
+def createReading( dataset, node, sensor, value, time=None):
 	timestamp = parseTime(time, '*')
 
-	key = Keys.getReadings(sensorId)
+	key = Keys.getReadings(sensor['id'])
 	ts.add(key, timestamp, value)
-	return ts.get(key)
+	reading = ts.get(key)
+	cleanedReading = cleaner.cleanReading(reading, dataset, node, sensor)
+	db.publish(Keys.getReadingsTopic(), json.dumps(cleanedReading))
+	return cleanedReading
 
 def getReadings(sensorId, after=None, before=None, limit=None):
 	fromTime = parseTime(after, '-')

@@ -10,6 +10,7 @@ export class ServerService {
 	private apiUrl: string;
 	private httpOptionsJson: any;
 	private httpOptionsText: any;
+	private httpOptionsStream: any;
 
 	constructor(
 		private http: HttpClient,
@@ -32,6 +33,12 @@ export class ServerService {
 		this.httpOptionsText = {
 			headers,
 			responseType: 'text'
+		};
+		this.httpOptionsStream = {
+			headers,
+			responseType: 'text',
+			observe: 'events',
+			reportProgress: true
 		};
 	}
 
@@ -73,6 +80,11 @@ export class ServerService {
 	public getStateTimeseries() {
 		const url = this.apiUrl + "state/timeseries";
 		return this.http.get(url, this.httpOptionsJson);
+	}
+
+	public getStateReadings() {
+		const url = this.apiUrl + "state/readings";
+		return this.http.get(url, this.httpOptionsStream);
 	}
 
     // ----- Users -----

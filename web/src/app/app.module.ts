@@ -38,6 +38,7 @@ import { CreateTokenDialogComponent } from './dialogs/create-token-dialog/create
 import { SensorViewComponent } from './pages/sensor-view/sensor-view.component';
 import { CreateSensorDialogComponent } from './dialogs/create-sensor-dialog/create-sensor-dialog.component';
 import { CreateReadingDialogComponent } from './dialogs/create-reading-dialog/create-reading-dialog.component';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ChartModule } from 'angular-highcharts';
 import { TimeserieListComponent } from './pages/timeserie-list/timeserie-list.component';
 import { SystemMemoryComponent } from './components/system-memory/system-memory.component';
@@ -84,6 +85,7 @@ import { SystemMemoryComponent } from './components/system-memory/system-memory.
     MatTableModule,
     MatPaginatorModule,
     MatSortModule,
+	MatProgressSpinnerModule,
     FormsModule,
     ToastrModule.forRoot({
 		positionClass: 'toast-bottom-right',
