@@ -26,6 +26,15 @@
     </dd>
 </dl>
 
+<div class="row margin-top align-right">
+	<div>
+		<button mat-raised-button color="primary" (click)="applyRetention()">
+			<mat-icon>timer</mat-icon>
+			<span>Apply retention</span>
+		</button>
+	</div>
+</div>
+
 <div class="mat-elevation-z8 margin-top">
 	<table mat-table [dataSource]="dataSource" matSort matSortActive="memory" matSortDisableClear matSortDirection="desc">
 

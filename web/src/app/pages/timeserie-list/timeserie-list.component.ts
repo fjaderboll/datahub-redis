@@ -1,7 +1,10 @@
 import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
+import { Observable } from 'rxjs';
+import { ConfirmDialogComponent } from 'src/app/dialogs/confirm-dialog/confirm-dialog.component';
 import { ServerService } from 'src/app/services/server.service';
 import { UtilsService } from 'src/app/services/utils.service';
 
@@ -25,7 +28,8 @@ export class TimeserieListComponent implements OnInit, AfterViewInit {
 
 	constructor(
 		private server: ServerService,
-		public utils: UtilsService
+		public utils: UtilsService,
+		private dialog: MatDialog
 	) { }
 
 	ngOnInit(): void {
@@ -93,6 +97,35 @@ export class TimeserieListComponent implements OnInit, AfterViewInit {
 			},
 			error: (e) => {
 				this.server.showHttpError(e);
+			}
+		});
+	}
+
+	public applyRetention() {
+		const dialog = this.dialog.open(ConfirmDialogComponent, {
+			data: {
+				title: "Apply retention",
+				text: "This will update the rentetion on all existing timeseries to " + this.utils.getDeltaTime(this.system.retention.default*1000) + ". Are you sure?",
+				action: new Observable(
+					observer => {
+						this.server.updateStateSystem('apply', true).subscribe({
+							next: (v: any) => {
+								observer.next(v);
+							},
+							error: (e) => {
+								observer.error(e);
+							},
+							complete: () => {
+								observer.complete();
+							}
+						});
+					}
+				)
+			}
+		});
+		dialog.afterClosed().subscribe(confirmed => {
+			if(confirmed) {
+				this.loadTimeseries();
 			}
 		});
 	}

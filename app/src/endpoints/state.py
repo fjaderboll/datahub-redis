@@ -53,9 +53,23 @@ class StateSystem(Resource):
 		util.verifyAdmin(auth)
 
 		retention = util.getInput('retention')
+		apply = util.getInput('apply')
 
+		message = ''
 		if retention:
 			settings_service.setReadingsRetention(int(retention) * 1000)
+			message = 'Updated default retention'
+
+		if apply:
+			retention_msecs = settings_service.getReadingsRetention()
+			i = 0
+			for tsKey in db.scan_iter(match='sensor-readings:*'):
+				ts.alter(tsKey, retention_msecs=retention_msecs)
+				i += 1
+
+			message = (message + ' and applied' if message else 'Updated default retention') + ' on {} timeseries'.format(i)
+
+		return message
 
 @ns.route('/timeseries')
 class StateTimeseries(Resource):
