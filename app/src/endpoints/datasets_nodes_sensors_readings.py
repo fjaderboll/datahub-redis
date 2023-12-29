@@ -3,7 +3,7 @@ from flask import request
 
 from api import api, auth_required
 from services.util import NullableString
-from services import cleaner, finder, reading_service
+from services import util, cleaner, finder, reading_service
 
 from endpoints.datasets_nodes_sensors import ns
 
@@ -45,9 +45,8 @@ class ReadingsList(Resource):
 		node = finder.findNode(dataset['id'], nodeName, create=True)
 		sensor = finder.findSensor(node['id'], sensorName, create=True)
 
-		input = api.payload
-		value = input['value']
-		time = input['time'] if 'time' in input else None
+		value = util.getInput('value')
+		time = util.getInput('time')
 
 		reading = reading_service.createReading(sensor['id'], value, time=time)
 		return cleaner.cleanReading(reading, dataset, node, sensor)

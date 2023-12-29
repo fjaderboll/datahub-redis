@@ -4,7 +4,7 @@ def setProperty(property, value):
 	db.hset(Keys.getSettings(), property, value)
 
 def getProperty(property, defaultValue):
-	value = db.hget(Keys.getSettings(), 'retention')
+	value = db.hget(Keys.getSettings(), property)
 	if value:
 		return value
 	return defaultValue

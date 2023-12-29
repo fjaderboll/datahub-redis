@@ -1,7 +1,6 @@
 import unittest
 import requests
 import json
-import random
 
 import helper
 
@@ -12,15 +11,10 @@ class TestDataset(unittest.TestCase):
 
 		# create dataset
 		datasetName = helper.getRandomName('dataset-')
-		createData = {
-			'name': datasetName,
-			'desc': 'description1'
-		}
-		response = requests.post(helper.BASE_URL + 'datasets/', headers=headers, data=json.dumps(createData))
-		self.assertEqual(response.status_code, 200, response.text)
-		dataset1 = response.json()
+		desc = 'desc1'
+		dataset1 = helper.createDataset(headers, name=datasetName, desc=desc)
 		self.assertEqual(dataset1['name'], datasetName)
-		self.assertEqual(dataset1['desc'], createData['desc'])
+		self.assertEqual(dataset1['desc'], desc)
 
 		# get all datasets
 		response = requests.get(helper.BASE_URL + 'datasets', headers=headers)
@@ -34,7 +28,7 @@ class TestDataset(unittest.TestCase):
 		self.assertEqual(response.status_code, 200, response.text)
 		dataset2 = response.json()
 		self.assertEqual(dataset2['name'], datasetName)
-		self.assertEqual(dataset2['desc'], createData['desc'])
+		self.assertEqual(dataset2['desc'], desc)
 
 		# update dataset
 		newDatasetName = helper.getRandomName('dataset-')

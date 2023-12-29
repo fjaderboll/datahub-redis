@@ -22,9 +22,8 @@ class DatasetsList(Resource):
 	@ns.response(400, 'Bad request')
 	@auth_required
 	def post(auth, self):
-		input = api.payload
-		name = input['name']
-		desc = input['desc']
+		name = util.getInput('name')
+		desc = util.getInput('desc')
 
 		dataset = dataset_service.createDataset(name, auth['username'], desc)
 		return cleaner.cleanDataset(dataset)
@@ -48,14 +47,16 @@ class DatasetsView(Resource):
 		dataset = finder.findDataset(auth, datasetName)
 		dKey = Keys.getDatasetById(dataset['id'])
 
-		input = api.payload
-		if 'name' in input:
-			util.verifyValidName(input['name'], "Name")
-			db.hset(dKey, 'name', input['name'])
-			db.rename(Keys.getDatasetIdByName(datasetName), Keys.getDatasetIdByName(input['name']))
+		name = util.getInput('name')
+		desc = util.getInput('desc')
 
-		if 'desc' in input:
-			db.hset(dKey, 'desc', input['desc'])
+		if name:
+			util.verifyValidName(name, "Name")
+			db.hset(dKey, 'name', name)
+			db.rename(Keys.getDatasetIdByName(datasetName), Keys.getDatasetIdByName(name))
+
+		if desc:
+			db.hset(dKey, 'desc', desc)
 
 		dataset = db.hgetall(dKey)
 		return cleaner.cleanDataset(dataset)

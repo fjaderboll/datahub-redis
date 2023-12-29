@@ -26,17 +26,17 @@ class UsersList(Resource):
 	@ns.response(200, 'Success')
 	@ns.response(400, 'Bad request')
 	def post(self):
-		input = api.payload
+		username = util.getInput('username')
+		password = util.getInput('password')
 
-		util.verifyValidName(input['username'], "Username")
-		util.verifyNoneEmpty(input['password'], 'Password')
+		util.verifyValidName(username, "Username")
+		util.verifyNoneEmpty(password, 'Password')
 
-		username = input['username']
 		if db.sismember(Keys.getUsers(), username):
 			abort(400, "Username '" + username + "' already exists")
 
 		salt = util.createPasswordSalt()
-		hash = util.createPasswordHash(input['password'], salt)
+		hash = util.createPasswordHash(password, salt)
 		userCount = db.scard(Keys.getUsers())
 
 		user = {
@@ -68,16 +68,19 @@ class UsersGet(Resource):
 		util.verifyAdminOrUser(auth, username)
 		user_service.findUser(username)
 
-		input = api.payload
-		if 'email' in input:
-			db.hset(Keys.getUser(username), 'email', input['email'])
+		email = util.getInput('email')
+		isAdmin = util.getInput('isAdmin')
+		password = util.getInput('password')
 
-		if 'isAdmin' in input:
-			db.hset(Keys.getUser(username), 'isAdmin', int(input['isAdmin'] == 1))
+		if email:
+			db.hset(Keys.getUser(username), 'email', email)
 
-		if 'password' in input and input['password'] is not None and input['password'] != "":
+		if isAdmin:
+			db.hset(Keys.getUser(username), 'isAdmin', int(isAdmin))
+
+		if password:
 			salt = util.createPasswordSalt()
-			hash = util.createPasswordHash(input['password'], salt)
+			hash = util.createPasswordHash(password, salt)
 			db.hset(Keys.getUser(username), 'passwordHash', hash, 'passwordSalt', salt)
 
 		return cleaner.cleanUser(user_service.findUser(username))

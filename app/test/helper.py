@@ -13,7 +13,7 @@ def getRandomString(length):
 	return ''.join(random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(length))
 
 def createUser(username=None):
-	username = username if username else 'laban-' + str(random.randint(0, 1000))
+	username = username if username else getRandomName('testuser-')
 	password = 'abc123'
 	headers = {
 		'Content-Type': 'application/json'
@@ -45,3 +45,31 @@ def createUserAndLogin():
 	tokenInfo = response.json()
 	headers['Authorization'] = 'Bearer ' + tokenInfo['token']
 	return headers
+
+def createDataset(headers, name=None, desc='description1'):
+	createData = {
+		'name': name if name else getRandomName('dataset-'),
+		'desc': desc
+	}
+	response = requests.post(BASE_URL + 'datasets/', headers=headers, data=json.dumps(createData))
+	response.raise_for_status()
+	return response.json()
+
+def createNode(headers, datasetName, name=None, desc='description2'):
+	createData = {
+		'name': name if name else getRandomName('node-'),
+		'desc': desc
+	}
+	response = requests.post(BASE_URL + 'datasets/' + datasetName + '/nodes', headers=headers, data=json.dumps(createData))
+	response.raise_for_status()
+	return response.json()
+
+def createSensor(headers, datasetName, nodeName, name=None, desc='description3', unit='unit3'):
+	createData = {
+		'name': name if name else getRandomName('sensor-'),
+		'desc': desc,
+		'unit': unit
+	}
+	response = requests.post(BASE_URL + 'datasets/' + datasetName + '/nodes/' + nodeName + '/sensors', headers=headers, data=json.dumps(createData))
+	response.raise_for_status()
+	return response.json()

@@ -25,10 +25,9 @@ class SensorsList(Resource):
 		dataset = finder.findDataset(auth, datasetName)
 		node = finder.findNode(dataset['id'], nodeName)
 
-		input = api.payload
-		name = input['name']
-		desc = input['desc']
-		unit = input['unit']
+		name = util.getInput('name')
+		desc = util.getInput('desc')
+		unit = util.getInput('unit')
 
 		sensor = sensor_service.createSensor(node['id'], name, desc, unit)
 		return cleaner.cleanSensor(sensor)
@@ -60,17 +59,20 @@ class SensorsView(Resource):
 
 		sKey = Keys.getSensorById(sensor['id'])
 
-		input = api.payload
-		if 'name' in input:
-			util.verifyValidName(input['name'], "Name")
-			db.hset(sKey, 'name', input['name'])
-			db.rename(Keys.getSensorIdByName(node['id'], sensorName), Keys.getSensorIdByName(node['id'], input['name']))
+		name = util.getInput('name')
+		desc = util.getInput('desc')
+		unit = util.getInput('unit')
 
-		if 'desc' in input:
-			db.hset(sKey, 'desc', input['desc'])
+		if name:
+			util.verifyValidName(name, "Name")
+			db.hset(sKey, 'name', name)
+			db.rename(Keys.getSensorIdByName(node['id'], sensorName), Keys.getSensorIdByName(node['id'], name))
 
-		if 'unit' in input:
-			db.hset(sKey, 'unit', input['unit'])
+		if desc:
+			db.hset(sKey, 'desc', desc)
+
+		if unit:
+			db.hset(sKey, 'unit', unit)
 
 		sensor = db.hgetall(sKey)
 		return cleaner.cleanSensor(sensor)

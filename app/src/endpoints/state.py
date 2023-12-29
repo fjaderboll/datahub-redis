@@ -52,9 +52,10 @@ class StateSystem(Resource):
 	def put(auth, self):
 		util.verifyAdmin(auth)
 
-		input = api.payload
-		if 'retention' in input:
-			settings_service.setReadingsRetention(int(input['retention']) * 1000)
+		retention = util.getInput('retention')
+
+		if retention:
+			settings_service.setReadingsRetention(int(retention) * 1000)
 
 @ns.route('/timeseries')
 class StateTimeseries(Resource):

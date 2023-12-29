@@ -21,9 +21,8 @@ class NodesList(Resource):
 	def post(auth, self, datasetName):
 		dataset = finder.findDataset(auth, datasetName)
 
-		input = api.payload
-		name = input['name']
-		desc = input['desc']
+		name = util.getInput('name')
+		desc = util.getInput('desc')
 
 		node = node_service.createNode(dataset['id'], name, desc)
 		return cleaner.cleanNode(node)
@@ -52,14 +51,16 @@ class NodesView(Resource):
 		node = finder.findNode(dataset['id'], nodeName)
 		nKey = Keys.getNodeById(node['id'])
 
-		input = api.payload
-		if 'name' in input:
-			util.verifyValidName(input['name'], "Name")
-			db.hset(nKey, 'name', input['name'])
-			db.rename(Keys.getNodeIdByName(dataset['id'], nodeName), Keys.getNodeIdByName(dataset['id'], input['name']))
+		name = util.getInput('name')
+		desc = util.getInput('desc')
 
-		if 'desc' in input:
-			db.hset(nKey, 'desc', input['desc'])
+		if name:
+			util.verifyValidName(name, "Name")
+			db.hset(nKey, 'name', name)
+			db.rename(Keys.getNodeIdByName(dataset['id'], nodeName), Keys.getNodeIdByName(dataset['id'], name))
+
+		if desc:
+			db.hset(nKey, 'desc', desc)
 
 		node = db.hgetall(nKey)
 		node = cleaner.cleanNode(node)

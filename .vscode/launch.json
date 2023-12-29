@@ -27,6 +27,20 @@
 			"justMyCode": true
 		},
 		{
+			"name": "Python: Run all Unit Tests",
+			"type": "python",
+			"request": "launch",
+			"module": "unittest",
+			"cwd": "${workspaceFolder}/app",
+			"args": [
+				"discover",
+				"-s",
+				"test",
+				"-vv"
+			],
+			"justMyCode": true
+		},
+		{
 			"name": "Python: Current File",
 			"type": "python",
 			"request": "launch",
