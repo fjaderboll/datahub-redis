@@ -29,8 +29,8 @@ def createUser(username=None):
 
 	return (username, password)
 
-def createUserAndLogin():
-	(username, password) = createUser()
+def createUserAndLogin(username=None):
+	(username, password) = createUser(username)
 
 	# login
 	headers = {
@@ -71,5 +71,13 @@ def createSensor(headers, datasetName, nodeName, name=None, desc='description3',
 		'unit': unit
 	}
 	response = requests.post(BASE_URL + 'datasets/' + datasetName + '/nodes/' + nodeName + '/sensors', headers=headers, data=json.dumps(createData))
+	response.raise_for_status()
+	return response.json()
+
+def createReading(headers, datasetName, nodeName, sensorName, value=None):
+	createData = {
+		'value': value if value else random.randint(0, 100000) / 100
+	}
+	response = requests.post(BASE_URL + 'datasets/' + datasetName + '/nodes/' + nodeName + '/sensors/' + sensorName + '/readings', headers=headers, data=json.dumps(createData))
 	response.raise_for_status()
 	return response.json()

@@ -17,9 +17,11 @@ export class TimeserieListComponent implements OnInit, AfterViewInit {
 	@ViewChild(MatPaginator) paginator!: MatPaginator;
 	@ViewChild(MatSort) sort!: MatSort;
 
+	public totalTimeseries = 0;
 	public totalSamples = 0;
 	public totalMemory = 0;
 	public system: any;
+	private datasets: any;
 
 	constructor(
 		private server: ServerService,
@@ -28,7 +30,7 @@ export class TimeserieListComponent implements OnInit, AfterViewInit {
 
 	ngOnInit(): void {
 		this.loadSystem();
-		this.loadTimeseries();
+		this.loadDatasets();
   	}
 
 	ngAfterViewInit() {
@@ -47,11 +49,24 @@ export class TimeserieListComponent implements OnInit, AfterViewInit {
 		});
 	}
 
+	private loadDatasets() {
+		this.server.getDatasets().subscribe({
+			next: (datasets: any) => {
+				this.datasets = datasets;
+				this.loadTimeseries();
+			},
+			error: (e) => {
+				this.server.showHttpError(e);
+			}
+		});
+	}
+
 	private loadTimeseries() {
 		this.server.getStateTimeseries().subscribe({
 			next: (timeseries: any) => {
 				this.dataSource.data = timeseries;
 
+				this.totalTimeseries = timeseries.length;
 				this.totalSamples = 0;
 				this.totalMemory = 0;
 				timeseries.forEach((ts: any) => {
@@ -62,6 +77,12 @@ export class TimeserieListComponent implements OnInit, AfterViewInit {
 			error: (e) => {
 				this.server.showHttpError(e);
 			}
+		});
+	}
+
+	public hasAccess(timeserie: any) {
+		return this.datasets.some((dataset: any) => {
+			return dataset.name === timeserie.datasetName;
 		});
 	}
 

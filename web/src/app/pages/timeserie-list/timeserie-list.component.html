@@ -3,6 +3,11 @@
 <app-system-memory></app-system-memory>
 
 <dl class="list">
+	<dt>Total sensors</dt>
+    <dd>
+        {{ totalTimeseries }}
+    </dd>
+
     <dt>Total readings</dt>
     <dd>
         {{ totalSamples }}
@@ -27,27 +32,36 @@
 		<ng-container matColumnDef="datasetName">
 			<th mat-header-cell *matHeaderCellDef mat-sort-header>Dataset</th>
 			<td mat-cell *matCellDef="let timeserie">
-				<a routerLink="/datasets/{{ timeserie.datasetName }}">
+				<a *ngIf="hasAccess(timeserie)" routerLink="/datasets/{{ timeserie.datasetName }}">
 					{{ timeserie.datasetName }}
 				</a>
+				<span *ngIf="!hasAccess(timeserie)">
+					{{ timeserie.datasetName }}
+				</span>
 			</td>
 		</ng-container>
 
 		<ng-container matColumnDef="nodeName">
 			<th mat-header-cell *matHeaderCellDef mat-sort-header>Node</th>
 			<td mat-cell *matCellDef="let timeserie">
-				<a routerLink="/datasets/{{ timeserie.datasetName }}/nodes/{{ timeserie.nodeName }}">
+				<a *ngIf="hasAccess(timeserie)" routerLink="/datasets/{{ timeserie.datasetName }}/nodes/{{ timeserie.nodeName }}">
 					{{ timeserie.nodeName }}
 				</a>
+				<span *ngIf="!hasAccess(timeserie)">
+					{{ timeserie.nodeName }}
+				</span>
 			</td>
 		</ng-container>
 
 		<ng-container matColumnDef="sensorName">
 			<th mat-header-cell *matHeaderCellDef mat-sort-header>Sensor</th>
 			<td mat-cell *matCellDef="let timeserie">
-				<a routerLink="/datasets/{{ timeserie.datasetName }}/nodes/{{ timeserie.nodeName }}/sensors/{{ timeserie.sensorName }}">
+				<a *ngIf="hasAccess(timeserie)" routerLink="/datasets/{{ timeserie.datasetName }}/nodes/{{ timeserie.nodeName }}/sensors/{{ timeserie.sensorName }}">
 					{{ timeserie.sensorName }}
 				</a>
+				<span *ngIf="!hasAccess(timeserie)">
+					{{ timeserie.sensorName }}
+				</span>
 			</td>
 		</ng-container>
 
