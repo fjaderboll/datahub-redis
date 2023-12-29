@@ -65,6 +65,11 @@ export class ServerService {
 		return this.http.get(url, this.httpOptionsJson);
 	}
 
+	public updateStateSystem(property: string, value: any) {
+		const url = this.apiUrl + "state/system";
+		return this.http.put(url, { [property]: value }, this.httpOptionsText);
+	}
+
 	public getStateTimeseries() {
 		const url = this.apiUrl + "state/timeseries";
 		return this.http.get(url, this.httpOptionsJson);

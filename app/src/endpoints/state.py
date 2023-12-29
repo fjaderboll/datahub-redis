@@ -1,12 +1,11 @@
 from flask_restx import Resource
 
 import os
-import resource
 import psutil
 
 from api import api, auth_required
 from db import db, ts, Keys
-from services import util, node_service, sensor_service, reading_service
+from services import util, settings_service, node_service, sensor_service, reading_service
 
 ns = api.namespace('state', description='Get application state')
 
@@ -42,8 +41,20 @@ class StateSystem(Resource):
 				'percent': psutil.virtual_memory().percent,
 				'application': process.memory_info().rss,
 				'database': db.info()['used_memory']
+			},
+			'retention': {
+				'default': settings_service.getReadingsRetention() / 1000
 			}
 		}
+
+	@ns.response(200, 'Success')
+	@auth_required
+	def put(auth, self):
+		util.verifyAdmin(auth)
+
+		input = api.payload
+		if 'retention' in input:
+			settings_service.setReadingsRetention(int(input['retention']) * 1000)
 
 @ns.route('/timeseries')
 class StateTimeseries(Resource):
