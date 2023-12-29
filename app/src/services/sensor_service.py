@@ -3,7 +3,7 @@ from flask_restx import abort
 from db import db, ts, Keys
 from services import util, cleaner, settings_service, reading_service
 
-def createSensor(nodeId, name, desc=None, unit=None):
+def createSensor(nodeId, name, desc='', unit=''):
 	util.verifyValidName(name, "Name")
 
 	sensorIdKeyName = Keys.getSensorIdByName(nodeId, name)

@@ -17,7 +17,9 @@
 			"args": [
 				"run",
 				"--port",
-				"2070"
+				"2070",
+				"--host",
+				"0.0.0.0"
 				//"--no-debugger",
 				//"--no-reload"
 			],

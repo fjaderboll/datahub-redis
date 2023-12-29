@@ -3,7 +3,7 @@ from flask_restx import abort
 from db import db, ts, Keys
 from services import util, node_service
 
-def createDataset(name, username, desc=None):
+def createDataset(name, username, desc=''):
 	util.verifyValidName(name, "Name")
 
 	datasetKeyName = Keys.getDatasetIdByName(name)

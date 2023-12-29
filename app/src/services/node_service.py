@@ -3,7 +3,7 @@ from flask_restx import Resource, fields, abort
 from db import db, Keys
 from services import util, sensor_service
 
-def createNode(datasetId, name, desc=None):
+def createNode(datasetId, name, desc=''):
 	util.verifyValidName(name, "Name")
 
 	nodeIdKeyName = Keys.getNodeIdByName(datasetId, name)
