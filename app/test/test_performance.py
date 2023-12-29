@@ -19,7 +19,7 @@ class TestPerf(unittest.TestCase):
 		datasetCount = 2
 		nodeCount = 10
 		sensorCount = 3
-		readingCount = 20
+		readingCount = 50
 
 		st = time.time()
 		datasets = []
@@ -95,7 +95,7 @@ def loadReadings(headers, tasks):
 
 def runInParallel(func, headers, tasks):
 	processes = []
-	for i in range(0, threads):
+	for i in range(threads):
 		p = multiprocessing.Process(target=func, args=(headers, tasks))
 		processes.append(p)
 

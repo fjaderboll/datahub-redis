@@ -32,7 +32,8 @@ source .venv/bin/activate
 From within Visual Studio Code you can use the `launch.json` file.
 
 ```shell
-./src/app.py 2070    # start server at http://localhost:2070/
+./src/app.py 2070                                            # development
+gunicorn --workers 4 --bind 0.0.0.0:2070 -k gevent wsgi:app  # production
 ```
 
 ### Add new dependency

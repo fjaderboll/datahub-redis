@@ -5,7 +5,7 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
-			"name": "Python: Datahub App",
+			"name": "Datahub App - Development",
 			"type": "python",
 			"request": "launch",
 			"module": "flask",
@@ -27,7 +27,28 @@
 			"justMyCode": true
 		},
 		{
-			"name": "Python: Run all Unit Tests",
+			"name": "Datahub App - Production",
+			"type": "python",
+			"request": "launch",
+			"module": "gunicorn",
+			"cwd": "${workspaceFolder}/app/src",
+			"env": {
+				"GEVENT_SUPPORT": "True",
+			},
+			"args": [
+				"--workers",
+				"4",
+				"--bind",
+				"0.0.0.0:2070",
+				"-k",
+				"gevent",
+				"wsgi:app"
+			],
+			"jinja": true,
+			"justMyCode": true
+		},
+		{
+			"name": "Run all Unit Tests",
 			"type": "python",
 			"request": "launch",
 			"module": "unittest",

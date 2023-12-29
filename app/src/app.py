@@ -13,7 +13,7 @@ from endpoints.datasets_nodes_sensors_readings import ns as namespace_datasets
 app = Flask(__name__)
 cors = CORS(app, resources={r"/*": {"origins": "http://localhost:4200"}})
 
-def main(port, debug):
+def main(port=None, debug=False):
 	blueprint = Blueprint('api', __name__, url_prefix='')
 	api.init_app(blueprint)
 	api.add_namespace(namespace_state)
@@ -24,11 +24,12 @@ def main(port, debug):
 	if port:
 		app.run(host="0.0.0.0", port=port, debug=debug)
 
-if __name__ == '__main__':
+if __name__ == '__main__': # running from command line
 	port = 2070
 	if len(sys.argv) == 2:
 		port = int(sys.argv[1])
 
 	main(port, port != 80)
-else:
-	main(None, False)
+else: # running via flask
+	main()
+
