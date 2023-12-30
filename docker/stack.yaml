@@ -1,0 +1,14 @@
+version: "3.9"
+
+services:
+  redis:
+    image: redislabs/redistimeseries:1.10.10
+  app:
+    image: datahub-app
+    environment:
+      - "REDIS_HOST=redis"
+      - "REDIS_PORT=6379"
+  web:
+    image: datahub-web
+    ports:
+      - "2084:80"

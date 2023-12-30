@@ -18,8 +18,8 @@ pip3 install -r requirements.txt
 ## Database
 
 ```shell
-docker run -d --rm --name datahub-redis -p 6379:6379 redislabs/redistimeseries:1.10.9  # start
-docker exec -it datahub-redis redis-cli                                                # interact with database
+docker run -d --rm --name datahub-redis -p 6379:6379 redislabs/redistimeseries:1.10.10  # start
+docker exec -it datahub-redis redis-cli                                                 # interact with database
 ```
 
 ## Application
