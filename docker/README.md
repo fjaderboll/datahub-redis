@@ -8,7 +8,11 @@ docker image ls | grep datahub
 ```
 
 ## Deploy
+Look in `stack.yaml` to change the exposed port number.
+
 ```shell
-docker stack deploy --compose-file stack.yaml datahub
-docker stack rm datahub
+docker stack deploy --compose-file stack.yaml datahub # deploy
+docker stack rm datahub                               # un-deploy
 ```
+
+Then head to [http://localhost:2084/](http://localhost:2084/).
