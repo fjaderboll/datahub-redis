@@ -116,7 +116,9 @@ export class AuthenticationService {
                     this.server.showHttpError(e);
                 }
             });
-        }
+        } else {
+			this.setToken(null, this.username, this.admin, null);
+		}
 	}
 
 	public isAdmin() {
