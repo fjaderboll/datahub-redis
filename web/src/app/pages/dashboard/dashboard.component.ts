@@ -27,10 +27,6 @@ export class DashboardComponent implements OnInit {
 		this.loadReadings();
   	}
 
-	public showTimeseries() {
-		this.router.navigate(['/timeseries']);
-	}
-
 	private loadReadings() {
 		this.streamingReadings = true;
 		this.server.getStateReadings().subscribe({

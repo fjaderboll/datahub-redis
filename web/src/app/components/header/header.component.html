@@ -19,10 +19,15 @@
 		<span>Exports</span>
 	</a>
 
-	<a mat-button routerLink="/users" *ngIf="auth.isAdmin()">
-    	<mat-icon fontIcon="people"></mat-icon>
-		<span>Users</span>
+	<a mat-button *ngIf="!auth.isAdmin()" href="{{ apiUrl }}" target="_blank">
+    	<mat-icon svgIcon="swagger"></mat-icon>
+		<span>Swagger</span>
 	</a>
+
+	<button mat-button *ngIf="auth.isAdmin()" [matMenuTriggerFor]="menu">
+    	<mat-icon fontIcon="admin_panel_settings"></mat-icon>
+		<span>Admin</span>
+	</button>
 
 	<span class="spacer"></span>
 
@@ -37,3 +42,22 @@
   	</button>
 
 </mat-toolbar>
+
+<mat-menu #menu="matMenu">
+	<button mat-menu-item routerLink="/users">
+    	<mat-icon fontIcon="people"></mat-icon>
+		<span>Users</span>
+	</button>
+	<button mat-menu-item routerLink="/timeseries">
+    	<mat-icon fontIcon="history"></mat-icon>
+		<span>Timeseries</span>
+	</button>
+	<button mat-menu-item routerLink="/settings">
+    	<mat-icon fontIcon="settings"></mat-icon>
+		<span>Settings</span>
+	</button>
+	<a mat-menu-item href="{{ apiUrl }}" target="_blank">
+    	<mat-icon svgIcon="swagger"></mat-icon>
+		<span>Swagger</span>
+	</a>
+</mat-menu>

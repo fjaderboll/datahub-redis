@@ -13,5 +13,6 @@ export class AppComponent {
         private domSanitizer: DomSanitizer
     ){
 		this.matIconRegistry.addSvgIcon('datahub', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/img/logo/logo-white.min.svg'));
+		this.matIconRegistry.addSvgIcon('swagger', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/img/icons/swagger-black-white.min.svg'));
 	}
 }

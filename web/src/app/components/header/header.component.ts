@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { AuthenticationService } from 'src/app/services/authentication.service';
 import { ServerService } from 'src/app/services/server.service';
 import { UtilsService } from 'src/app/services/utils.service';
+import { environment } from 'src/environments/environment';
 
 @Component({
   selector: 'app-header',
@@ -10,6 +11,7 @@ import { UtilsService } from 'src/app/services/utils.service';
   styleUrls: ['./header.component.scss']
 })
 export class HeaderComponent implements OnInit {
+	public apiUrl: string = "";
 
 	constructor(
 		private router: Router,
@@ -19,6 +21,7 @@ export class HeaderComponent implements OnInit {
 	) { }
 
   	ngOnInit(): void {
+		this.apiUrl = environment.apiUrl;
   	}
 
 	/*public showLoginLink() {
