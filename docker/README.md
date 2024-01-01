@@ -15,4 +15,5 @@ docker stack deploy --compose-file stack.yaml datahub # deploy
 docker stack rm datahub                               # un-deploy
 ```
 
-Then head to [http://localhost:2084/](http://localhost:2084/).
+* Go to [http://localhost:2084/](http://localhost:2084/) for Web UI.
+* Go to [http://localhost:2084/api](http://localhost:2084/api) for Swagger doc.

@@ -3,6 +3,9 @@ version: "3.9"
 services:
   redis:
     image: redislabs/redistimeseries:1.10.10
+    volumes:
+      - "redis-data:/data"
+    command: redis-server --loadmodule /usr/lib/redis/modules/redistimeseries.so --save "86400 1 21600 20000" # https://github.com/RedisTimeSeries/RedisTimeSeries/blob/master/Dockerfile
   app:
     image: datahub-app
     environment:
@@ -12,3 +15,5 @@ services:
     image: datahub-web
     ports:
       - "2084:80"
+volumes:
+  redis-data:
