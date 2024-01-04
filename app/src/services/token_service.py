@@ -13,7 +13,7 @@ def findToken(auth, id):
 			return tokenInfo
 	abort(404, "Unknown token with ID = " + str(id))
 
-def createToken(username, isAdmin, ttl=None, enabled=True, desc=None):
+def createToken(username, isAdmin, ttl=0, enabled=True, desc=''):
 	while True:
 		token = util.getRandomString(32)
 		tKey = Keys.getToken(token)
@@ -24,8 +24,8 @@ def createToken(username, isAdmin, ttl=None, enabled=True, desc=None):
 				'token': token,
 				'username': username,
 				'enabled': int(enabled), # need to store as int
-				'desc': desc if desc else "",
-				'expire': "",
+				'desc': desc if desc else '',
+				'expire': '',
 				'isAdmin': int(isAdmin)
 			}
 			if ttl:

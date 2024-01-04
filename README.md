@@ -30,8 +30,10 @@ See [docker](docker/README.md) how to deploy using Docker.
 
 ## TODOs
 * write more Swagger doc
+* create insert readings endpoints (allow arrays of values)
 * sharing datasets to other users
 * don't allow deleting users if results in orphaned datasets
 * export readings to MQ broker
 * import readings from MQ broker
 * make Web UI work better on smaller screens
+* use built-in default retention instead of custom key

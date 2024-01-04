@@ -33,7 +33,8 @@ export class InlineEditComponent implements OnInit {
 
 	stopEdit(save: boolean) {
 		if(save && this.value != this.newValue) {
-			this.onChange.emit(this.newValue);
+			const v = (this.type == 'number' ? Number(this.newValue) : this.newValue);
+			this.onChange.emit(v);
 		}
 		this.editMode = false;
 	}

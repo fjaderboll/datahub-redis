@@ -2,17 +2,12 @@ from flask_restx import Resource, fields, abort
 
 from api import api, auth_required
 from db import db, Keys
-from services import util, cleaner, user_service, token_service, settings_service
+from services import util, cleaner, swagger_service, user_service, token_service, settings_service
 
 ns = api.namespace('users', description='Login and get user information')
 
 @ns.route('/')
 class UsersList(Resource):
-	createFields = api.model('CreateUserData', {
-		'username': fields.String(description='Username, must start with [a-z] followed by [a-z0-9_-@.]', required=True),
-		'password': fields.String(description='Password, non empty', required=True)
-	})
-
 	@ns.response(200, 'Success')
 	@auth_required
 	def get(auth, self):
@@ -22,12 +17,12 @@ class UsersList(Resource):
 		return cleaner.cleanUsers(users)
 
 	@api.doc(security=None)
-	@api.expect(createFields, validate=True)
 	@ns.response(200, 'Success')
 	@ns.response(400, 'Bad request')
+	@api.expect(swagger_service.createUserData)
 	def post(self):
-		username = util.getInput('username')
-		password = util.getInput('password')
+		username = util.getPayload('username')
+		password = util.getPayload('password')
 
 		util.verifyValidName(username, "Username")
 		util.verifyNoneEmpty(password, 'Password')
@@ -64,23 +59,22 @@ class UsersGet(Resource):
 	@ns.response(200, 'Success')
 	@ns.response(404, 'Unknown user')
 	@auth_required
+	@api.expect(swagger_service.updateUserData)
 	def put(auth, self, username):
 		util.verifyAdminOrUser(auth, username)
 		user_service.findUser(username)
 
-		email = util.getInput('email')
-		isAdmin = util.getInput('isAdmin')
-		password = util.getInput('password')
+		if 'email' in api.payload:
+			db.hset(Keys.getUser(username), 'email', api.payload['email'])
 
-		if email:
-			db.hset(Keys.getUser(username), 'email', email)
+		if 'isAdmin' in api.payload:
+			util.verifyAdmin(auth)
+			db.hset(Keys.getUser(username), 'isAdmin', int(api.payload['isAdmin']))
 
-		if isAdmin:
-			db.hset(Keys.getUser(username), 'isAdmin', int(isAdmin))
-
-		if password:
+		if 'password' in api.payload:
+			newPassword = api.payload['password']
 			salt = util.createPasswordSalt()
-			hash = util.createPasswordHash(password, salt)
+			hash = util.createPasswordHash(newPassword, salt)
 			db.hset(Keys.getUser(username), 'passwordHash', hash, 'passwordSalt', salt)
 
 		return cleaner.cleanUser(user_service.findUser(username))

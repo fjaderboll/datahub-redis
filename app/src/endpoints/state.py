@@ -7,7 +7,7 @@ import json
 
 from api import api, auth_required
 from db import db, ts, Keys
-from services import util, settings_service, node_service, sensor_service, reading_service
+from services import util, swagger_service, settings_service, node_service, sensor_service, reading_service
 
 ns = api.namespace('state', description='Get application state')
 
@@ -58,25 +58,26 @@ class StateSystem(Resource):
 
 	@ns.response(200, 'Success')
 	@auth_required
+	@api.expect(swagger_service.updateSystemData)
 	def put(auth, self):
 		util.verifyAdmin(auth)
 
-		retention = util.getInput('retention')
-		apply = util.getInput('apply')
-
 		message = ''
-		if retention:
-			settings_service.setReadingsRetention(int(retention) * 1000)
+		if 'retention' in api.payload:
+			retention = api.payload['retention']
+			settings_service.setReadingsRetention(retention * 1000)
 			message = 'Updated default retention'
 
-		if apply:
-			retention_msecs = settings_service.getReadingsRetention()
-			i = 0
-			for tsKey in db.scan_iter(match='sensor-readings:*'):
-				ts.alter(tsKey, retention_msecs=retention_msecs)
-				i += 1
+		if 'applyRetention' in api.payload:
+			applyRetention = api.payload['applyRetention']
+			if applyRetention:
+				retention_msecs = settings_service.getReadingsRetention()
+				i = 0
+				for tsKey in db.scan_iter(match='sensor-readings:*'):
+					ts.alter(tsKey, retention_msecs=retention_msecs)
+					i += 1
 
-			message = (message + ' and applied' if message else 'Updated default retention') + ' on {} timeseries'.format(i)
+				message = (message + ' and applied' if message else 'Updated default retention') + ' on {} timeseries'.format(i)
 
 		return message
 

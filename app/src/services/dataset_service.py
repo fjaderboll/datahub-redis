@@ -3,13 +3,15 @@ from flask_restx import abort
 from db import db, ts, Keys
 from services import util, node_service
 
-def createDataset(name, username, desc=''):
+def verifyValidDatasetName(name):
 	util.verifyValidName(name, "Name")
 
-	datasetKeyName = Keys.getDatasetIdByName(name)
-	datasetId = db.get(datasetKeyName)
+	datasetId = db.get(Keys.getDatasetIdByName(name))
 	if datasetId:
 		abort(400, "Dataset '" + name + "' already exists")
+
+def createDataset(name, username, desc=''):
+	verifyValidDatasetName(name)
 
 	datasetId = db.incr(Keys.getDatasetIdCounter())
 	dataset = {
@@ -17,7 +19,7 @@ def createDataset(name, username, desc=''):
 		'name': name,
 		'desc': desc
 	}
-	db.set(datasetKeyName, datasetId)
+	db.set(Keys.getDatasetIdByName(name), datasetId)
 	db.hset(Keys.getDatasetById(datasetId), mapping=dataset)
 	db.sadd(Keys.getUserDatasetIds(username), datasetId)
 

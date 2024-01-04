@@ -108,7 +108,7 @@ export class TimeserieListComponent implements OnInit, AfterViewInit {
 				text: "This will update the rentetion on all existing timeseries to " + this.utils.getDeltaTime(this.system.retention.default*1000) + ". Are you sure?",
 				action: new Observable(
 					observer => {
-						this.server.updateStateSystem('apply', true).subscribe({
+						this.server.updateStateSystem('applyRetention', true).subscribe({
 							next: (v: any) => {
 								observer.next(v);
 							},

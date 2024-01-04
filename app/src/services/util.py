@@ -2,18 +2,14 @@ import re
 import random
 import string
 import hashlib
-from flask_restx import abort, fields
+from flask_restx import abort
 
 from api import api
 
-class NullableString(fields.String):
-    __schema_type__ = ['string', 'null']
-    __schema_example__ = 'nullable string'
-
-def getInput(name):
+def getPayload(name, defaultValue=None):
 	if name in api.payload:
 		return api.payload[name]
-	return ''
+	return defaultValue
 
 def verifyAdmin(auth):
 	if not auth['isAdmin']:

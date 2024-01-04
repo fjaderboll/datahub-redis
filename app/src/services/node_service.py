@@ -3,13 +3,15 @@ from flask_restx import Resource, fields, abort
 from db import db, Keys
 from services import util, sensor_service
 
-def createNode(datasetId, name, desc=''):
-	util.verifyValidName(name, "Name")
+def verifyValidNodeName(datasetId, nodeName):
+	util.verifyValidName(nodeName, "Name")
 
-	nodeIdKeyName = Keys.getNodeIdByName(datasetId, name)
-	nodeId = db.get(nodeIdKeyName)
+	nodeId = db.get(Keys.getNodeIdByName(datasetId, nodeName))
 	if nodeId:
-		abort(400, "Node '" + name + "' already exists")
+		abort(400, "Node '" + nodeName + "' already exists")
+
+def createNode(datasetId, name, desc=''):
+	verifyValidNodeName(datasetId, name)
 
 	nodeId = db.incr(Keys.getNodeIdCounter())
 	node = {
@@ -18,7 +20,7 @@ def createNode(datasetId, name, desc=''):
 		'name': name,
 		'desc': desc
 	}
-	db.set(nodeIdKeyName, nodeId)
+	db.set(Keys.getNodeIdByName(datasetId, name), nodeId)
 	db.hset(Keys.getNodeById(nodeId), mapping=node)
 	db.sadd(Keys.getDatasetNodeIds(datasetId), nodeId)
 

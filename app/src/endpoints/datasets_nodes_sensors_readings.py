@@ -2,8 +2,7 @@ from flask_restx import Resource, fields
 from flask import request
 
 from api import api, auth_required
-from services.util import NullableString
-from services import util, cleaner, finder, reading_service
+from services import util, cleaner, finder, swagger_service, reading_service
 
 from endpoints.datasets_nodes_sensors import ns
 
@@ -31,22 +30,17 @@ class ReadingsList(Resource):
 		readings = reading_service.getReadings(sensor['id'], after=after, before=before, limit=limit)
 		return cleaner.cleanReadings(readings, dataset, node, sensor)
 
-	createFields = api.model('CreateReadingData', {
-		'value': fields.Float(description='The value', required=True),
-		'time': NullableString(description='An ISO timestamp or relative time in seconds. Defaults to now.', required=False)
-	})
-
 	@ns.response(200, 'Success')
 	@ns.response(400, 'Bad request')
 	@auth_required
-	@api.expect(createFields, validate=True)
+	@api.expect(swagger_service.createReadingData)
 	def post(auth, self, datasetName, nodeName, sensorName):
 		dataset = finder.findDataset(auth, datasetName, create=True)
 		node = finder.findNode(dataset['id'], nodeName, create=True)
 		sensor = finder.findSensor(node['id'], sensorName, create=True)
 
-		value = util.getInput('value')
-		time = util.getInput('time')
+		value = util.getPayload('value')
+		time = util.getPayload('timestamp')
 
 		cleanedReading = reading_service.createReading(dataset, node, sensor, value, time=time)
 		return cleanedReading

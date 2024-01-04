@@ -16,7 +16,8 @@ api = Api(version='2.0',
 			title='datahub-redis',
 			description='A speedy REST API for all your sensor readings',
 			authorizations=authorizations,
-			security='default')
+			security='default',
+			validate=True)
 
 @api.errorhandler
 def default_error_handler(e):

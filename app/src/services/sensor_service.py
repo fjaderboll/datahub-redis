@@ -3,13 +3,15 @@ from flask_restx import abort
 from db import db, ts, Keys
 from services import util, cleaner, settings_service, reading_service
 
-def createSensor(nodeId, name, desc='', unit=''):
-	util.verifyValidName(name, "Name")
+def verifyValidSensorName(nodeId, sensorName):
+	util.verifyValidName(sensorName, "Name")
 
-	sensorIdKeyName = Keys.getSensorIdByName(nodeId, name)
-	sensorId = db.get(sensorIdKeyName)
+	sensorId = db.get(Keys.getSensorIdByName(nodeId, sensorName))
 	if sensorId:
-		abort(400, "Sensor '" + name + "' already exists")
+		abort(400, "Sensor '" + sensorName + "' already exists")
+
+def createSensor(nodeId, name, desc='', unit=''):
+	verifyValidSensorName(nodeId, name)
 
 	sensorId = db.incr(Keys.getSensorIdCounter())
 	sensor = {
@@ -19,7 +21,7 @@ def createSensor(nodeId, name, desc='', unit=''):
 		'desc': desc,
 		'unit': unit
 	}
-	db.set(sensorIdKeyName, sensorId)
+	db.set(Keys.getSensorIdByName(nodeId, name), sensorId)
 	db.hset(Keys.getSensorById(sensorId), mapping=sensor)
 	db.sadd(Keys.getNodeSensorIds(nodeId), sensorId)
 	ts.create(Keys.getReadings(sensorId), retention_msecs=settings_service.getReadingsRetention())

@@ -1,6 +1,9 @@
+from parser import ParserError
 import dateutil.parser as dp
 from datetime import datetime
 import json
+
+from flask_restx import abort
 
 from db import db, ts, Keys
 from services import cleaner
@@ -11,10 +14,13 @@ def parseTime(time, defaultValue):
 			offset = float(time)
 			return int(datetime.now().timestamp()*1000 + offset*1000)
 		except ValueError:
-			return int(dp.parse(time).timestamp()*1000)
+			try:
+				return int(dp.parse(time).timestamp()*1000)
+			except ParserError:
+				abort(400, 'Invalid time: ' + time)
 	return defaultValue
 
-def createReading( dataset, node, sensor, value, time=None):
+def createReading(dataset, node, sensor, value, time=None):
 	timestamp = parseTime(time, '*')
 
 	key = Keys.getReadings(sensor['id'])

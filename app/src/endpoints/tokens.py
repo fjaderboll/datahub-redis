@@ -3,7 +3,7 @@ from flask_restx import Resource, abort
 
 from api import api, auth_required
 from db import db, Keys
-from services import token_service
+from services import util, swagger_service, token_service
 
 ns = api.namespace('tokens', description='List, view, create and delete tokens')
 
@@ -23,21 +23,12 @@ class TokensList(Resource):
 	@ns.response(200, 'Success')
 	@ns.response(400, 'Bad request')
 	@auth_required
+	@api.expect(swagger_service.createUpdateTokenData)
 	def post(auth, self):
-		input = api.payload
-		ttl = input['ttl']
-		desc = input['desc']
+		ttl = util.getPayload('ttl', 0)
+		desc = util.getPayload('desc')
 
-		ttlInt = None
-		if ttl:
-			try:
-				ttlInt = int(input['ttl'])
-				if ttlInt <= 0:
-					raise ValueError()
-			except ValueError:
-				abort(400, 'Invalid TTL')
-
-		tokenInfo = token_service.createToken(auth['username'], auth['isAdmin'], ttl=ttlInt, desc=desc)
+		tokenInfo = token_service.createToken(auth['username'], auth['isAdmin'], ttl=ttl, desc=desc)
 		return token_service.formatToken(tokenInfo, hideToken=False)
 
 @ns.route('/<int:id>')
@@ -53,26 +44,26 @@ class TokensView(Resource):
 	@ns.response(200, 'Success')
 	@ns.response(404, 'Unknown token')
 	@auth_required
+	@api.expect(swagger_service.createUpdateTokenData)
 	def put(auth, self, id):
 		tokenInfo = token_service.findToken(auth, id)
 		tKey = Keys.getToken(tokenInfo['token'])
 
-		input = api.payload
-		if 'desc' in input:
-			db.hset(tKey, 'desc', input['desc'])
+		payload = api.payload
+		if 'desc' in payload:
+			db.hset(tKey, 'desc', payload['desc'])
 
-		if 'enabled' in input:
-			db.hset(tKey, 'enabled', int(input['enabled'] == "true"))
+		if 'enabled' in payload:
+			db.hset(tKey, 'enabled', int(payload['enabled']))
 
-		if 'ttl' in input:
-			try:
-				ttlInt = int(input['ttl'])
-				if ttlInt <= 0:
-					raise ValueError()
-				db.expire(tKey, ttlInt)
-				db.hset(tKey, 'expire', (datetime.now() + timedelta(seconds=ttlInt)).replace(microsecond=0).isoformat())
-			except ValueError:
-				abort(400, 'Invalid TTL')
+		if 'ttl' in payload:
+			ttl = payload['ttl']
+			if ttl == 0:
+				db.persist(tKey)
+				db.hset(tKey, 'expire', '')
+			else:
+				db.expire(tKey, ttl)
+				db.hset(tKey, 'expire', (datetime.now() + timedelta(seconds=ttl)).replace(microsecond=0).isoformat())
 
 		tokenInfo = db.hgetall(tKey)
 		return token_service.formatToken(tokenInfo)

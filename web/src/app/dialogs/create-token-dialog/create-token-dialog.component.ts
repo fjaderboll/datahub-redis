@@ -22,11 +22,11 @@ export class CreateTokenDialogComponent implements OnInit {
 	}
 
     public isFormValid() {
-        return this.ttl == null || this.ttl > 0;
+        return this.ttl == null || this.ttl >= 0;
 	}
 
   	public create() {
-		this.server.createToken(this.description, this.ttl).subscribe({
+		this.server.createToken(this.description, this.ttl || 0).subscribe({
 			next: (v: any) => {
 				this.utils.toastSuccess('Token created');
 				this.dialogRef.close(v);

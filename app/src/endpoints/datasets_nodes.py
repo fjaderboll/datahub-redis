@@ -2,7 +2,7 @@ from flask_restx import Resource
 
 from api import api, auth_required
 from db import db, Keys
-from services import util, finder, cleaner, node_service, sensor_service
+from services import util, finder, cleaner, swagger_service, node_service, sensor_service
 
 from endpoints.datasets import ns
 
@@ -18,11 +18,12 @@ class NodesList(Resource):
 	@ns.response(200, 'Success')
 	@ns.response(400, 'Bad request')
 	@auth_required
+	@api.expect(swagger_service.createNodeData)
 	def post(auth, self, datasetName):
 		dataset = finder.findDataset(auth, datasetName)
 
-		name = util.getInput('name')
-		desc = util.getInput('desc')
+		name = util.getPayload('name')
+		desc = util.getPayload('desc')
 
 		node = node_service.createNode(dataset['id'], name, desc)
 		return cleaner.cleanNode(node)
@@ -46,21 +47,20 @@ class NodesView(Resource):
 	@ns.response(200, 'Success')
 	@ns.response(404, 'Unknown node')
 	@auth_required
+	@api.expect(swagger_service.updateNodeData)
 	def put(auth, self, datasetName, nodeName):
 		dataset = finder.findDataset(auth, datasetName)
 		node = finder.findNode(dataset['id'], nodeName)
 		nKey = Keys.getNodeById(node['id'])
 
-		name = util.getInput('name')
-		desc = util.getInput('desc')
+		if 'name' in api.payload:
+			newName = api.payload['name']
+			node_service.verifyValidNodeName(dataset['id'], newName)
+			db.hset(nKey, 'name', newName)
+			db.rename(Keys.getNodeIdByName(dataset['id'], nodeName), Keys.getNodeIdByName(dataset['id'], newName))
 
-		if name:
-			util.verifyValidName(name, "Name")
-			db.hset(nKey, 'name', name)
-			db.rename(Keys.getNodeIdByName(dataset['id'], nodeName), Keys.getNodeIdByName(dataset['id'], name))
-
-		if desc:
-			db.hset(nKey, 'desc', desc)
+		if 'desc' in api.payload:
+			db.hset(nKey, 'desc', api.payload['desc'])
 
 		node = db.hgetall(nKey)
 		node = cleaner.cleanNode(node)
