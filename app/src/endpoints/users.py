@@ -86,10 +86,7 @@ class UsersGet(Resource):
 		util.verifyAdminOrUser(auth, username)
 		user_service.findUser(username)
 
-		# TODO abort if the only user for connected datasets
-
-		db.delete(Keys.getUser(username))
-		db.srem(Keys.getUsers(), 0, username)
+		user_service.deleteUser(username)
 
 		return "Removed user '" + username + "'"
 
