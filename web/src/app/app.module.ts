@@ -43,6 +43,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { ChartModule } from 'angular-highcharts';
 import { TimeserieListComponent } from './pages/timeserie-list/timeserie-list.component';
 import { SystemMemoryComponent } from './components/system-memory/system-memory.component';
+import { ShareDatasetDialogComponent } from './dialogs/share-dataset-dialog/share-dataset-dialog.component';
 
 @NgModule({
   declarations: [
@@ -69,7 +70,8 @@ import { SystemMemoryComponent } from './components/system-memory/system-memory.
     CreateSensorDialogComponent,
     CreateReadingDialogComponent,
     TimeserieListComponent,
-    SystemMemoryComponent
+    SystemMemoryComponent,
+    ShareDatasetDialogComponent
   ],
   imports: [
     BrowserModule,

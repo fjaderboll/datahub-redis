@@ -9,19 +9,14 @@
 		<span>Datasets</span>
 	</a>
 
-	<a mat-button routerLink="/tokens" *ngIf="auth.isLoggedIn()">
-    	<mat-icon fontIcon="key"></mat-icon>
-		<span>Tokens</span>
-	</a>
+	<button mat-button *ngIf="auth.isLoggedIn()" [matMenuTriggerFor]="integrationMenu">
+    	<mat-icon fontIcon="swap_horiz"></mat-icon>
+		<span>Integration</span>
+	</button>
 
-	<a mat-button routerLink="/exports" *ngIf="auth.isLoggedIn()">
-    	<mat-icon fontIcon="forward_to_inbox"></mat-icon>
-		<span>Exports</span>
-	</a>
-
-	<button mat-button *ngIf="auth.isLoggedIn()" [matMenuTriggerFor]="moreMenu">
-    	<mat-icon fontIcon="more_vert"></mat-icon>
-		<span>More</span>
+	<button mat-button *ngIf="auth.isAdmin()" [matMenuTriggerFor]="adminMenu">
+    	<mat-icon fontIcon="admin_panel_settings"></mat-icon>
+		<span>Administration</span>
 	</button>
 
 	<span class="spacer"></span>
@@ -38,21 +33,36 @@
 
 </mat-toolbar>
 
-<mat-menu #moreMenu="matMenu">
-	<button mat-menu-item routerLink="/users" *ngIf="auth.isAdmin()">
-    	<mat-icon fontIcon="people"></mat-icon>
-		<span>Users</span>
+<mat-menu #integrationMenu="matMenu">
+	<button mat-menu-item routerLink="/users">
+    	<mat-icon fontIcon="key"></mat-icon>
+		<span>Tokens</span>
 	</button>
-	<button mat-menu-item routerLink="/timeseries" *ngIf="auth.isAdmin()">
-    	<mat-icon fontIcon="history"></mat-icon>
-		<span>Timeseries</span>
+	<button mat-menu-item routerLink="/exports" [disabled]="true">
+    	<mat-icon fontIcon="east"></mat-icon>
+		<span>Exports</span>
 	</button>
-	<button mat-menu-item routerLink="/settings" *ngIf="auth.isAdmin()">
-    	<mat-icon fontIcon="settings"></mat-icon>
-		<span>Settings</span>
+	<button mat-menu-item routerLink="/imports" [disabled]="true">
+    	<mat-icon fontIcon="west"></mat-icon>
+		<span>Imports</span>
 	</button>
 	<a mat-menu-item href="{{ apiUrl }}" target="_blank">
     	<mat-icon svgIcon="swagger"></mat-icon>
 		<span>Swagger</span>
 	</a>
+</mat-menu>
+
+<mat-menu #adminMenu="matMenu">
+	<button mat-menu-item routerLink="/users">
+    	<mat-icon fontIcon="people"></mat-icon>
+		<span>Users</span>
+	</button>
+	<button mat-menu-item routerLink="/timeseries">
+    	<mat-icon fontIcon="history"></mat-icon>
+		<span>Timeseries</span>
+	</button>
+	<button mat-menu-item routerLink="/settings" [disabled]="true">
+    	<mat-icon fontIcon="settings"></mat-icon>
+		<span>Settings</span>
+	</button>
 </mat-menu>

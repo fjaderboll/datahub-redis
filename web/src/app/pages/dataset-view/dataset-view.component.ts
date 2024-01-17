@@ -7,6 +7,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Observable } from 'rxjs';
 import { ConfirmDialogComponent } from 'src/app/dialogs/confirm-dialog/confirm-dialog.component';
 import { CreateNodeDialogComponent } from 'src/app/dialogs/create-node-dialog/create-node-dialog.component';
+import { ShareDatasetDialogComponent } from 'src/app/dialogs/share-dataset-dialog/share-dataset-dialog.component';
 import { AuthenticationService } from 'src/app/services/authentication.service';
 import { ServerService } from 'src/app/services/server.service';
 import { UtilsService } from 'src/app/services/utils.service';
@@ -17,7 +18,9 @@ import { UtilsService } from 'src/app/services/utils.service';
   styleUrls: ['./dataset-view.component.scss']
 })
 export class DatasetViewComponent implements OnInit, AfterViewInit {
+	public datasetName!: string;
 	public dataset: any;
+	public datasetUsers!: string[];
 
 	public displayedColumns: string[] = ['name', 'desc'];
 	public dataSource = new MatTableDataSource<any>();
@@ -34,7 +37,10 @@ export class DatasetViewComponent implements OnInit, AfterViewInit {
 	) { }
 
 	ngOnInit(): void {
+		this.datasetName = this.route.snapshot.paramMap.get('datasetName') || 'this should never happen';
+
 		this.loadDataset();
+		this.loadDatasetUsers();
 	}
 
 	ngAfterViewInit() {
@@ -43,12 +49,21 @@ export class DatasetViewComponent implements OnInit, AfterViewInit {
 	}
 
 	private loadDataset() {
-		let datasetName = this.route.snapshot.paramMap.get('datasetName') || 'this should never happen';
-
-		this.server.getDataset(datasetName).subscribe({
+		this.server.getDataset(this.datasetName).subscribe({
 			next: (dataset: any) => {
 				this.dataset = dataset;
 				this.dataSource.data = dataset.nodes;
+			},
+			error: (e) => {
+				this.server.showHttpError(e);
+			}
+		});
+	}
+
+	private loadDatasetUsers() {
+		this.server.getDatasetUsers(this.datasetName).subscribe({
+			next: (datasetUsers: any) => {
+				this.datasetUsers = datasetUsers;
 			},
 			error: (e) => {
 				this.server.showHttpError(e);
@@ -108,6 +123,53 @@ export class DatasetViewComponent implements OnInit, AfterViewInit {
 		dialog.afterClosed().subscribe(node => {
 			if(node) {
 				this.loadDataset();
+			}
+		});
+	}
+
+	public shareDataset() {
+		const dialog = this.dialog.open(ShareDatasetDialogComponent, {
+			data: {
+				datasetName: this.dataset.name
+			}
+		});
+		dialog.afterClosed().subscribe(username => {
+			if(username) {
+				this.loadDatasetUsers();
+			}
+		});
+	}
+
+	public unshareDataset(username: string) {
+		const self = this.auth.getUsername() === username;
+		const dialog = this.dialog.open(ConfirmDialogComponent, {
+			data: {
+				title: "Unshare Dataset",
+				text: "This will remove access to this dataset for user '" + username + "'"+(self ? " (yourself!)" : "")+". Are you sure?",
+				action: new Observable(
+					observer => {
+						this.server.unshareDataset(this.dataset.name, username).subscribe({
+							next: (v: any) => {
+								observer.next(v);
+							},
+							error: (e) => {
+								observer.error(e);
+							},
+							complete: () => {
+								observer.complete();
+							}
+						});
+					}
+				)
+			}
+		});
+		dialog.afterClosed().subscribe(confirmed => {
+			if(confirmed) {
+				if(self) {
+					this.router.navigate(['/datasets']);
+				} else {
+					this.loadDatasetUsers();
+				}
 			}
 		});
 	}

@@ -178,6 +178,21 @@ export class ServerService {
 		return this.http.delete(url, this.httpOptionsText);
 	}
 
+	public getDatasetUsers(name: string) {
+		const url = this.apiUrl + "datasets/" + name + "/users";
+		return this.http.get(url, this.httpOptionsJson);
+	}
+
+	public shareDataset(datasetName: string, username: string) {
+		const url = this.apiUrl + "datasets/" + datasetName + "/users";
+		return this.http.post(url, { username }, this.httpOptionsText);
+	}
+
+	public unshareDataset(datasetName: string, username: string) {
+		const url = this.apiUrl + "datasets/" + datasetName + "/users/" + username;
+		return this.http.delete(url, this.httpOptionsText);
+	}
+
     // ----- Nodes -----
 
     public createNode(datasetName: string, nodeName: string, description: string) {

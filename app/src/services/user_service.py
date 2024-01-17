@@ -11,14 +11,14 @@ def getAllUsers():
 		users.append(user)
 	return users
 
-def findUser(username):
+def findUser(username, statusCode=404):
 	validName = util.verifyValidName(username, "Username", fail=False)
 	if not validName:
-		abort(404, "Unknown user '" + username + "'")
+		abort(statusCode, "Unknown user '" + username + "'")
 
 	user = db.hgetall(Keys.getUser(str(username)))
 	if len(user) == 0:
-		abort(404, "Unknown user '" + username + "'")
+		abort(statusCode, "Unknown user '" + username + "'")
 
 	return user
 

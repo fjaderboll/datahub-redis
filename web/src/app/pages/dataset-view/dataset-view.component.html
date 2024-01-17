@@ -10,6 +10,14 @@
     <dd>
         <app-inline-edit type="text" [value]="dataset?.desc" (onChange)="changedValue('desc', $event)"></app-inline-edit>
     </dd>
+
+	<dt>Shared with</dt>
+    <dd>
+        <span *ngFor="let username of datasetUsers; let last = last">
+			<a [routerLink]="" (click)="unshareDataset(username)">{{ username }}</a>
+			<span *ngIf="!last">, </span>
+		</span>
+    </dd>
 </dl>
 
 <div class="row margin-top align-right">
@@ -24,6 +32,13 @@
 		<button mat-raised-button color="primary" (click)="createNode()">
 			<mat-icon>add</mat-icon>
 			<span>Create Node</span>
+		</button>
+	</div>
+
+	<div class="margin-left">
+		<button mat-raised-button color="primary" (click)="shareDataset()">
+			<mat-icon>person_add</mat-icon>
+			<span>Share dataset</span>
 		</button>
 	</div>
 </div>

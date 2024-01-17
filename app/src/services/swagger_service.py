@@ -40,6 +40,9 @@ updateDatasetData = api.model('UpdateDatasetData', {
     'name': fields.String(description='Name of dataset'),
     'desc': fields.String(description='Description of dataset')
 })
+addDatasetUserData = api.model('AddDatasetUserData', {
+    'username': fields.String(description='Username of user to share dataset with', required=True)
+})
 
 createNodeData = api.model('CreateNodeData', {
     'name': fields.String(description='Name of node', required=True),

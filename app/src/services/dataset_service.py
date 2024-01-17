@@ -35,3 +35,26 @@ def deleteDataset(dataset):
 	db.delete(Keys.getDatasetIdByName(dataset['name']))
 	db.delete(Keys.getDatasetById(dataset['id']))
 	db.delete(Keys.getDatasetNodeIds(dataset['id']))
+
+def findDatasetUsernames(datasetId):
+	usernames = []
+	allUsernames = db.smembers(Keys.getUsers())
+	for username in allUsernames:
+		userDatasetIds = db.smembers(Keys.getUserDatasetIds(username))
+		if datasetId in userDatasetIds:
+			usernames.append(username)
+
+	return usernames
+
+def addDatasetUser(datasetId, username):
+	db.sadd(Keys.getUserDatasetIds(username), datasetId)
+
+def removeDatasetUser(datasetId, username):
+	datasetUsernames = findDatasetUsernames(datasetId)
+	if username in datasetUsernames:
+		datasetUsernames.remove(username)
+
+		if len(datasetUsernames) == 0:
+			abort(400, 'This will result in dataset being orphaned; delete or share it')
+
+		db.srem(Keys.getUserDatasetIds(username), datasetId)
