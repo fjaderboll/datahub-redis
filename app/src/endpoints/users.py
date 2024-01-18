@@ -1,6 +1,6 @@
 from flask_restx import Resource, fields, abort
 
-from api import api, auth_required
+from api import api, auth_required, auth_optional
 from db import db, Keys
 from services import util, cleaner, swagger_service, user_service, token_service, settings_service
 
@@ -20,7 +20,11 @@ class UsersList(Resource):
 	@ns.response(200, 'Success')
 	@ns.response(400, 'Bad request')
 	@api.expect(swagger_service.createUserData)
-	def post(self):
+	@auth_optional
+	def post(auth, self):
+		if not settings_service.getAllowPublicCreateUser():
+			util.verifyAdmin(auth)
+
 		username = util.getPayload('username')
 		password = util.getPayload('password')
 
@@ -97,6 +101,7 @@ class UsersLogin(Resource):
 	@ns.response(200, 'Success')
 	@ns.response(400, 'Bad parameters')
 	@ns.response(401, 'Invalid credentials')
+	@api.expect(swagger_service.loginUserData)
 	def post(self, username):
 		validName = util.verifyValidName(username, "Username", fail=False)
 		if not validName:
@@ -106,16 +111,15 @@ class UsersLogin(Resource):
 		if len(user) == 0:
 			abort(401, "Invalid credentials")
 
-		input = api.payload
-		if 'password' in input and input['password'] is not None:
-			hash = util.createPasswordHash(input['password'], user['passwordSalt'])
-			if hash == user['passwordHash']:
-				tokenInfo = token_service.createToken(username, user['isAdmin'], ttl=settings_service.getTokenTTL(), desc='Login')
-				return token_service.formatToken(tokenInfo, hideToken=False)
-			else:
-				abort(401, "Invalid credentials")
+		if not settings_service.getAllowNonAdminLogin() and not bool(int(user['isAdmin'])):
+			abort(401, "Invalid credentials")
+
+		hash = util.createPasswordHash(api.payload['password'], user['passwordSalt'])
+		if hash == user['passwordHash']:
+			tokenInfo = token_service.createToken(username, user['isAdmin'], ttl=settings_service.getTokenTTL(), desc='Login')
+			return token_service.formatToken(tokenInfo, hideToken=False)
 		else:
-			abort(400, "Missing password")
+			abort(401, "Invalid credentials")
 
 @ns.route('/<string:username>/logout')
 @ns.param('username', 'Username')

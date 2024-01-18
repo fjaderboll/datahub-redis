@@ -34,6 +34,9 @@ updateUserData = api.model('UpdateUserData', {
 	'email': fields.String(description='E-mail'),
 	'isAdmin': fields.Boolean(description='Administrator. Must be administrator to update.')
 })
+loginUserData = api.model('LoginUserData', {
+	'password': fields.String(description='Password, non empty', required=True)
+})
 
 createDatasetData = api.model('CreateDatasetData', {
     'name': fields.String(description='Name of dataset', required=True),

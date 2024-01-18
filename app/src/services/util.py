@@ -12,7 +12,7 @@ def getPayload(name, defaultValue=None):
 	return defaultValue
 
 def verifyAdmin(auth):
-	if not auth['isAdmin']:
+	if not auth or not auth['isAdmin']:
 		abort(403, "Forbidden")
 
 def verifyAdminOrUser(auth, username):
