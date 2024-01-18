@@ -17,7 +17,7 @@ export class LoginComponent {
 	public username: string = "";
 	public password: string = "";
 	public createFirstUserRequired = false;
-	public createUserAllowed = false;
+	public allowPublicCreateUser = false;
 	public setupError = false;
 	public apiUrl: string = "";
 
@@ -38,7 +38,7 @@ export class LoginComponent {
 		this.server.getStateUsers().subscribe({
 			next: (v: any) => {
 				this.createFirstUserRequired = v.createFirstUserRequired;
-				this.createUserAllowed = v.createUserAllowed;
+				this.allowPublicCreateUser = v.allowPublicCreateUser;
 			},
 			error: (e) => {
 				console.log(e);

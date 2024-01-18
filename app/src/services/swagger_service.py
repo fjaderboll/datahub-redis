@@ -12,7 +12,8 @@ from api import api
 
 updateSystemData = api.model('UpdateSystemData', {
     'retention': fields.Integer(description='Set default retention policy in seconds'),
-    'applyRetention': fields.Boolean(description='Apply given or previously set retention to existing timeseries')
+    'applyRetention': fields.Boolean(description='Apply given or previously set retention to existing timeseries'),
+	'allowPublicCreateUser': fields.Boolean(description='Allow anyone to create user (otherwise only administrator can do it)')
 })
 
 createUpdateTokenData = api.model('CreateUpdateTokenData', {

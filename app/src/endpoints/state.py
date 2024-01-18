@@ -26,7 +26,7 @@ class StateLogin(Resource):
 		userCount = db.scard(Keys.getUsers())
 		return {
 			'createFirstUserRequired': (userCount == 0),
-			'createUserAllowed': True
+			'allowPublicCreateUser': (userCount == 0) or settings_service.getAllowPublicCreateUser()
 		}
 
 @ns.route('/system')
@@ -62,24 +62,26 @@ class StateSystem(Resource):
 	def put(auth, self):
 		util.verifyAdmin(auth)
 
-		message = ''
+		n = 0
 		if 'retention' in api.payload:
 			retention = api.payload['retention']
 			settings_service.setReadingsRetention(retention * 1000)
-			message = 'Updated default retention'
+			n += 1
 
 		if 'applyRetention' in api.payload:
 			applyRetention = api.payload['applyRetention']
 			if applyRetention:
 				retention_msecs = settings_service.getReadingsRetention()
-				i = 0
 				for tsKey in db.scan_iter(match='sensor-readings:*'):
 					ts.alter(tsKey, retention_msecs=retention_msecs)
-					i += 1
+					n += 1
 
-				message = (message + ' and applied' if message else 'Updated default retention') + ' on {} timeseries'.format(i)
+		if 'allowPublicCreateUser' in api.payload:
+			allowPublicCreateUser = api.payload['allowPublicCreateUser']
+			settings_service.setAllowPublicCreateUser(allowPublicCreateUser)
+			n += 1
 
-		return message
+		return 'Updated {} settings'.format(n)
 
 @ns.route('/timeseries')
 class StateTimeseries(Resource):

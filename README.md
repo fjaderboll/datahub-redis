@@ -29,9 +29,8 @@ Structure of entities with examples:
 See [docker](docker/README.md) how to deploy using Docker.
 
 ## TODOs
-* write more Swagger doc
 * create insert readings endpoints (allow arrays of values)
-* sharing datasets to other users
 * export readings to MQ broker
 * import readings from MQ broker
+* improve Swagger documentation
 * make Web UI work better on smaller screens

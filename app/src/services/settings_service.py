@@ -20,3 +20,9 @@ def getTokenTTL():
 
 def setTokenTTL(ttl):
 	setProperty('token-ttl', ttl)
+
+def getAllowPublicCreateUser():
+	return bool(getProperty('allowPublicCreateUser', True))
+
+def setAllowPublicCreateUser(allowed):
+	setProperty('allowPublicCreateUser', int(allowed))
