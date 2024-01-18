@@ -3,7 +3,7 @@ from flask_restx import Resource, abort
 
 from api import api, auth_required
 from db import db, Keys
-from services import util, swagger_service, token_service
+from services import util, swagger_service, settings_service, token_service
 
 ns = api.namespace('tokens', description='List, view, create and delete tokens')
 
@@ -25,7 +25,7 @@ class TokensList(Resource):
 	@auth_required
 	@api.expect(swagger_service.createUpdateTokenData)
 	def post(auth, self):
-		ttl = util.getPayload('ttl', 0)
+		ttl = util.getPayload('ttl', settings_service.getTokenTTL())
 		desc = util.getPayload('desc')
 
 		tokenInfo = token_service.createToken(auth['username'], auth['isAdmin'], ttl=ttl, desc=desc)

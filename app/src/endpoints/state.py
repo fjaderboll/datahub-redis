@@ -26,7 +26,7 @@ class StateLogin(Resource):
 		userCount = db.scard(Keys.getUsers())
 		return {
 			'createFirstUserRequired': (userCount == 0),
-			'allowPublicCreateUser': (userCount == 0) or settings_service.getAllowPublicCreateUser()
+			'allowPublicCreateUser': settings_service.getAllowPublicCreateUser()
 		}
 
 @ns.route('/system')
@@ -50,15 +50,26 @@ class StateSystem(Resource):
 				'percent': psutil.virtual_memory().percent,
 				'application': process.memory_info().rss,
 				'database': db.info()['used_memory']
-			},
-			'retention': {
-				'default': settings_service.getReadingsRetention() / 1000
 			}
+		}
+
+@ns.route('/settings')
+class StateSettings(Resource):
+	@ns.response(200, 'Success')
+	@auth_required
+	def get(auth, self):
+		util.verifyAdmin(auth)
+
+		return {
+			'retention': settings_service.getReadingsRetention() / 1000,
+			'allowPublicCreateUser': settings_service.getAllowPublicCreateUser(),
+			'allowNonAdminLogin': settings_service.getAllowNonAdminLogin(),
+			'tokenTTL': settings_service.getTokenTTL()
 		}
 
 	@ns.response(200, 'Success')
 	@auth_required
-	@api.expect(swagger_service.updateSystemData)
+	@api.expect(swagger_service.updateSystemSettingsData)
 	def put(auth, self):
 		util.verifyAdmin(auth)
 
@@ -79,6 +90,16 @@ class StateSystem(Resource):
 		if 'allowPublicCreateUser' in api.payload:
 			allowPublicCreateUser = api.payload['allowPublicCreateUser']
 			settings_service.setAllowPublicCreateUser(allowPublicCreateUser)
+			n += 1
+
+		if 'allowNonAdminLogin' in api.payload:
+			allowNonAdminLogin = api.payload['allowNonAdminLogin']
+			settings_service.setAllowNonAdminLogin(allowNonAdminLogin)
+			n += 1
+
+		if 'tokenTTL' in api.payload:
+			tokenTTL = api.payload['tokenTTL']
+			settings_service.setTokenTTL(tokenTTL)
 			n += 1
 
 		return 'Updated {} settings'.format(n)

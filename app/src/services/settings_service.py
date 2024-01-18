@@ -22,7 +22,13 @@ def setTokenTTL(ttl):
 	setProperty('token-ttl', ttl)
 
 def getAllowPublicCreateUser():
-	return bool(getProperty('allowPublicCreateUser', True))
+	return bool(int(getProperty('allow-public-create-user', True)))
 
-def setAllowPublicCreateUser(allowed):
-	setProperty('allowPublicCreateUser', int(allowed))
+def setAllowPublicCreateUser(allow):
+	setProperty('allow-public-create-user', int(allow))
+
+def getAllowNonAdminLogin():
+	return bool(int(getProperty('allow-non-admin-login', True)))
+
+def setAllowNonAdminLogin(allow):
+	setProperty('allow-non-admin-login', int(allow))

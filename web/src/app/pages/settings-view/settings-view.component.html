@@ -1,0 +1,27 @@
+<app-breadcrumb [links]="['/settings']" [names]="['Settings']"></app-breadcrumb>
+
+<dl class="list">
+	<dt>Default retention</dt>
+    <dd>
+		<app-inline-edit type="number" [value]="settings?.retention" (onChange)="updateSetting('retention', $event)"></app-inline-edit>
+        seconds
+		<span class="relative-time">{{ utils.getDeltaTime(settings?.retention*1000) }}</span>
+    </dd>
+
+	<dt>Default token expire time</dt>
+    <dd>
+		<app-inline-edit type="number" [value]="settings?.tokenTTL" (onChange)="updateSetting('tokenTTL', $event)"></app-inline-edit>
+        seconds
+		<span class="relative-time">{{ utils.getDeltaTime(settings?.tokenTTL*1000) }}</span>
+    </dd>
+
+	<dt>Allow public create user</dt>
+    <dd>
+		<app-inline-edit type="boolean" [value]="settings?.allowPublicCreateUser" (onChange)="updateSetting('allowPublicCreateUser', $event)"></app-inline-edit>
+    </dd>
+
+	<dt>Allow non-administrator login</dt>
+    <dd>
+		<app-inline-edit type="boolean" [value]="settings?.allowNonAdminLogin" (onChange)="updateSetting('allowNonAdminLogin', $event)"></app-inline-edit>
+    </dd>
+</dl>

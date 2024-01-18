@@ -20,9 +20,9 @@
 
 	<dt>Default retention</dt>
     <dd>
-		<app-inline-edit type="number" [value]="system?.retention.default" (onChange)="changedValue('retention', $event)"></app-inline-edit>
+		<app-inline-edit type="number" [value]="settings?.retention" (onChange)="updateSetting('retention', $event)"></app-inline-edit>
         seconds
-		<span class="relative-time">{{ utils.getDeltaTime(system?.retention.default*1000) }}</span>
+		<span class="relative-time">{{ utils.getDeltaTime(settings?.retention*1000) }}</span>
     </dd>
 </dl>
 

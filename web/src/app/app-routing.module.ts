@@ -12,6 +12,7 @@ import { TokenListComponent } from './pages/token-list/token-list.component';
 import { ExportListComponent } from './pages/export-list/export-list.component';
 import { SensorViewComponent } from './pages/sensor-view/sensor-view.component';
 import { TimeserieListComponent } from './pages/timeserie-list/timeserie-list.component';
+import { SettingsViewComponent } from './pages/settings-view/settings-view.component';
 
 const routes: Routes = [
     { path: 'login', component: LoginComponent },
@@ -24,6 +25,7 @@ const routes: Routes = [
     { path: 'users', component: UserListComponent, canActivate: [authGuardGuard] },
     { path: 'users/:username', component: UserViewComponent, canActivate: [authGuardGuard] },
 	{ path: 'timeseries', component: TimeserieListComponent, canActivate: [authGuardGuard] },
+	{ path: 'settings', component: SettingsViewComponent, canActivate: [authGuardGuard] },
     { path: '', component: DashboardComponent, canActivate: [authGuardGuard] },
     { path: '**', redirectTo: '', canActivate: [authGuardGuard] }
 ];

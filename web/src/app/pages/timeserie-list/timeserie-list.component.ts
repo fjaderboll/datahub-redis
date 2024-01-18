@@ -24,6 +24,7 @@ export class TimeserieListComponent implements OnInit, AfterViewInit {
 	public totalSamples = 0;
 	public totalMemory = 0;
 	public system: any;
+	public settings: any;
 	private datasets: any;
 
 	constructor(
@@ -34,6 +35,7 @@ export class TimeserieListComponent implements OnInit, AfterViewInit {
 
 	ngOnInit(): void {
 		this.loadSystem();
+		this.loadSettings();
 		this.loadDatasets();
   	}
 
@@ -46,6 +48,17 @@ export class TimeserieListComponent implements OnInit, AfterViewInit {
 		this.server.getStateSystem().subscribe({
 			next: (system: any) => {
 				this.system = system;
+			},
+			error: (e) => {
+				this.server.showHttpError(e);
+			}
+		});
+	}
+
+	private loadSettings() {
+		this.server.getStateSettings().subscribe({
+			next: (settings: any) => {
+				this.settings = settings;
 			},
 			error: (e) => {
 				this.server.showHttpError(e);
@@ -90,10 +103,11 @@ export class TimeserieListComponent implements OnInit, AfterViewInit {
 		});
 	}
 
-	public changedValue(property: string, newValue: any) {
-		this.server.updateStateSystem(property, newValue).subscribe({
+	public updateSetting(setting: string, newValue: any) {
+		this.server.updateStateSettings(setting, newValue).subscribe({
 			next: (response: any) => {
-				this.loadSystem();
+				this.loadSettings();
+				this.utils.toastSuccess(response);
 			},
 			error: (e) => {
 				this.server.showHttpError(e);
@@ -105,10 +119,10 @@ export class TimeserieListComponent implements OnInit, AfterViewInit {
 		const dialog = this.dialog.open(ConfirmDialogComponent, {
 			data: {
 				title: "Apply retention",
-				text: "This will update the rentetion on all existing timeseries to " + this.utils.getDeltaTime(this.system.retention.default*1000) + ". Are you sure?",
+				text: "This will update the rentetion on all existing timeseries to " + this.utils.getDeltaTime(this.settings.retention*1000) + ". Are you sure?",
 				action: new Observable(
 					observer => {
-						this.server.updateStateSystem('applyRetention', true).subscribe({
+						this.server.updateStateSettings('applyRetention', true).subscribe({
 							next: (v: any) => {
 								observer.next(v);
 							},

@@ -10,10 +10,12 @@ from api import api
 #    __schema_type__ = ['string', 'null']
 #    __schema_example__ = 'nullable integer'
 
-updateSystemData = api.model('UpdateSystemData', {
+updateSystemSettingsData = api.model('UpdateSystemSettingsData', {
     'retention': fields.Integer(description='Set default retention policy in seconds'),
     'applyRetention': fields.Boolean(description='Apply given or previously set retention to existing timeseries'),
-	'allowPublicCreateUser': fields.Boolean(description='Allow anyone to create user (otherwise only administrator can do it)')
+	'allowPublicCreateUser': fields.Boolean(description='Allow anyone to create user (otherwise only administrator can do it)'),
+	'allowNonAdminLogin': fields.Boolean(description='Allow anyone to login (otherwise only administrator can do it)'),
+	'tokenTTL': fields.Integer(description='Default time-to-live value in seconds for newly created tokens')
 })
 
 createUpdateTokenData = api.model('CreateUpdateTokenData', {
