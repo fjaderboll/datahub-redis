@@ -1,4 +1,4 @@
-from flask_restx import Resource, fields, abort
+from flask_restx import Resource, abort
 
 from api import api, auth_required, auth_optional
 from db import db, Keys

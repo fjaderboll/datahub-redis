@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from flask_restx import Resource, abort
+from flask_restx import Resource
 
 from api import api, auth_required
 from db import db, Keys

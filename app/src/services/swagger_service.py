@@ -92,3 +92,12 @@ createReadingData = api.model('CreateReadingData', {
 	'nodeName': fields.String(description='Name of node', required=True),
 	'datasetName': fields.String(description='Name of dataset', required=True)
 })
+getReadingsParams = {
+	'after':  {'in': 'query', 'description': 'Only return readings after this ISO timestamp or relative time in seconds', 'example': '-3600'},
+	'before': {'in': 'query', 'description': 'Only return readings before this ISO timestamp or relative time in seconds', 'example': '2023-12-26T10:15:30+01:00'},
+	'limit':  {'in': 'query', 'description': 'Limits the result to this number of readings', 'default': '1000'}
+}
+deleteReadingsParams={
+	'after':  {'in': 'query', 'description': 'Only delete readings after this ISO timestamp or relative time in seconds', 'example': '-3600'},
+	'before': {'in': 'query', 'description': 'Only delete readings before this ISO timestamp or relative time in seconds', 'example': '2023-12-26T10:15:30+01:00'}
+}

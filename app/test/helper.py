@@ -79,13 +79,51 @@ def createReading(headers, datasetName, nodeName, sensorName, value=None):
 		'value': value if value else random.randint(0, 100000) / 100,
 		'time': str(-random.randint(0, 10000000) / 1000)
 	}
-	response = requests.post(BASE_URL + 'datasets/' + datasetName + '/nodes/' + nodeName + '/sensors/' + sensorName + '/readings', headers=headers, data=json.dumps(createData))
+	response = requests.post(BASE_URL + 'datasets/' + datasetName + '/nodes/' + nodeName + '/sensors/' + sensorName + '/readings', headers=headers, data=json.dumps([createData]))
+	if not response:
+		print(response.text)
+	response.raise_for_status()
+	return response.json()
+
+def createReadings(headers, datasetName, nodeName, sensorName, datas):
+	for data in datas:
+		if not 'value' in data:
+			data['value'] = random.randint(0, 100000) / 100
+		if not 'time' in data:
+			data['time'] = str(-random.randint(0, 10000000) / 1000)
+
+	url = getReadingsUrl(datasetName, nodeName, sensorName)
+	response = requests.post(url, headers=headers, data=json.dumps(datas))
 	if not response:
 		print(response.text)
 	response.raise_for_status()
 	return response.json()
 
 def getReadings(headers, datasetName, nodeName, sensorName):
-	response = requests.get(BASE_URL + 'datasets/' + datasetName + '/nodes/' + nodeName + '/sensors/' + sensorName + '/readings', headers=headers)
+	url = getReadingsUrl(datasetName, nodeName, sensorName)
+	response = requests.get(url, headers=headers)
+	if not response:
+		print(response.text)
 	response.raise_for_status()
 	return response.json()
+
+def deleteReadings(headers, datasetName, nodeName, sensorName, after=None):
+	url = getReadingsUrl(datasetName, nodeName, sensorName)
+	if after:
+		url += '?after=' + str(after)
+	response = requests.delete(url, headers=headers)
+	if not response:
+		print(response.text)
+	response.raise_for_status()
+
+	return int(response.text.split(' ')[1])
+
+def getReadingsUrl(datasetName, nodeName, sensorName):
+	if sensorName:
+		return BASE_URL + 'datasets/' + datasetName + '/nodes/' + nodeName + '/sensors/' + sensorName + '/readings'
+	elif nodeName:
+		return BASE_URL + 'datasets/' + datasetName + '/nodes/' + nodeName + '/readings'
+	elif datasetName:
+		return BASE_URL + 'datasets/' + datasetName + '/readings'
+	else:
+		return BASE_URL + 'readings'
