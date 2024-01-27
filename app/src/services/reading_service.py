@@ -47,17 +47,18 @@ def createReadings(auth, datasetName, nodeName, sensorName):
 	if sensorName:
 		sensor = finder.findSensor(node['id'], sensorName, create=True)
 
+	cache = DbCache()
 	readings = []
 	for reading in api.payload:
 		value = reading['value']
 		time = reading['time'] if 'time' in reading else None
 
 		if not datasetName:
-			dataset = finder.findDataset(auth, reading['datasetName'], create=True)
+			dataset = cache.getDatasetByName(auth, reading['datasetName'], create=True)
 		if not nodeName:
-			node = finder.findNode(dataset['id'], reading['nodeName'], create=True)
+			node = cache.getNodeByName(dataset['id'], reading['nodeName'], create=True)
 		if not sensorName:
-			sensor = finder.findSensor(node['id'], reading['sensorName'], create=True)
+			sensor = cache.getSensorByName(node['id'], reading['sensorName'], create=True)
 
 		cleanedReading = createReading(dataset, node, sensor, value, time=time)
 		readings.append(cleanedReading)
@@ -96,6 +97,7 @@ def getReadings(auth, datasetName, nodeName, sensorName):
 	toTime = parseTime(before, '+')
 	count = parseLimit(limit, 1000)
 
+	cache = DbCache()
 	readings = []
 	c = None
 	for requestedSensor in requestedSensors:
@@ -105,11 +107,11 @@ def getReadings(auth, datasetName, nodeName, sensorName):
 				break
 
 		if not datasetName:
-			dataset = db.hgetall(Keys.getDatasetById(requestedSensor['datasetId']))
+			dataset = cache.getDatasetById(requestedSensor['datasetId'])
 		if not nodeName:
-			node = db.hgetall(Keys.getNodeById(requestedSensor['nodeId']))
+			node = cache.getNodeById(requestedSensor['nodeId'])
 		if not sensorName:
-			sensor = db.hgetall(Keys.getSensorById(requestedSensor['sensorId']))
+			sensor = cache.getSensorById(requestedSensor['sensorId'])
 
 		items = ts.range(Keys.getReadings(requestedSensor['sensorId']), fromTime, toTime, count=c)
 		readings.extend(cleaner.cleanReadings(items, dataset, node, sensor))
@@ -195,3 +197,59 @@ def getReadingStats(sensorId):
 		#'lastTimestamp': info.last_time_stamp,
 		#'firstTimestamp': info.first_time_stamp
 	}
+
+class DbCache:
+	def __init__(self):
+		self.datasets = {}
+		self.nodes = {}
+		self.sensors = {}
+
+	def getDatasetByName(self, auth, datasetName, create=False):
+		if datasetName in self.datasets:
+			dataset = self.datasets[datasetName]
+		else:
+			dataset = finder.findDataset(auth, datasetName, create=create)
+			self.datasets[datasetName] = dataset
+		return dataset
+
+	def getNodeByName(self, datasetId, nodeName, create=False):
+		key = Keys.getNodeIdByName(datasetId, nodeName)
+		if key in self.nodes:
+			node = self.nodes[key]
+		else:
+			node = finder.findNode(datasetId, nodeName, create=create)
+			self.nodes[key] = node
+		return node
+
+	def getSensorByName(self, nodeId, sensorName, create=False):
+		key = Keys.getSensorIdByName(nodeId, sensorName)
+		if key in self.sensors:
+			sensor = self.sensors[key]
+		else:
+			sensor = finder.findSensor(nodeId, sensorName, create=create)
+			self.sensors[key] = sensor
+		return sensor
+
+	def getDatasetById(self, datasetId):
+		if datasetId in self.datasets:
+			dataset = self.datasets[datasetId]
+		else:
+			dataset = db.hgetall(Keys.getDatasetById(datasetId))
+			self.datasets[datasetId] = dataset
+		return dataset
+
+	def getNodeById(self, nodeId):
+		if nodeId in self.nodes:
+			node = self.nodes[nodeId]
+		else:
+			node = db.hgetall(Keys.getNodeById(nodeId))
+			self.nodes[nodeId] = node
+		return node
+
+	def getSensorById(self, sensorId):
+		if sensorId in self.sensors:
+			sensor = self.sensors[sensorId]
+		else:
+			sensor = db.hgetall(Keys.getSensorById(sensorId))
+			self.sensors[sensorId] = sensor
+		return sensor
