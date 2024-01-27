@@ -32,9 +32,10 @@ export class DashboardComponent implements OnInit {
 		this.server.getStateReadings().subscribe({
 			next: (v: any) => {
 				if(v.partialText) {
-					const texts = v.partialText.trim().split('\n')
-					const text = texts[texts.length - 1];
-					const reading = JSON.parse(text);
+					const t = v.partialText.trim();
+					const i = t.lastIndexOf('\n');
+					const json = t.substring(i);
+					const reading = JSON.parse(json);
 					this.handleReading(reading);
 				}
 			},
