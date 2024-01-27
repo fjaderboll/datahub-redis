@@ -99,7 +99,7 @@ class UsersGet(Resource):
 class UsersLogin(Resource):
 	@api.doc(security=None)
 	@ns.response(200, 'Success')
-	@ns.response(400, 'Bad parameters')
+	@ns.response(400, 'Bad request')
 	@ns.response(401, 'Invalid credentials')
 	@api.expect(swagger_service.loginUserData)
 	def post(self, username):

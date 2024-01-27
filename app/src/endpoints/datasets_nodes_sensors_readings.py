@@ -1,8 +1,8 @@
-from flask_restx import Resource, fields
+from flask_restx import Resource
 from flask import request
 
 from api import api, auth_required
-from services import util, cleaner, finder, swagger_service, reading_service
+from services import cleaner, finder, swagger_service, reading_service
 
 from endpoints.datasets_nodes_sensors import ns
 
@@ -10,7 +10,7 @@ from endpoints.datasets_nodes_sensors import ns
 @ns.param('datasetName', 'Dataset name')
 @ns.param('nodeName', 'Node name')
 @ns.param('sensorName', 'Sensor name')
-class ReadingsList(Resource):
+class SensorReadingsList(Resource):
 	@ns.response(200, 'Success')
 	@auth_required
 	@api.doc(params={
@@ -33,17 +33,9 @@ class ReadingsList(Resource):
 	@ns.response(200, 'Success')
 	@ns.response(400, 'Bad request')
 	@auth_required
-	@api.expect(swagger_service.createReadingData)
+	@api.expect([swagger_service.createSensorReadingData])
 	def post(auth, self, datasetName, nodeName, sensorName):
-		dataset = finder.findDataset(auth, datasetName, create=True)
-		node = finder.findNode(dataset['id'], nodeName, create=True)
-		sensor = finder.findSensor(node['id'], sensorName, create=True)
-
-		value = util.getPayload('value')
-		time = util.getPayload('timestamp')
-
-		cleanedReading = reading_service.createReading(dataset, node, sensor, value, time=time)
-		return cleanedReading
+		return reading_service.createReadings(auth, datasetName, nodeName, sensorName)
 
 	@ns.response(200, 'Success')
 	@auth_required
@@ -61,3 +53,24 @@ class ReadingsList(Resource):
 
 		n = reading_service.deleteReadings(sensor['id'], after=after, before=before)
 		return "Removed " + str(n) + " readings"
+
+@ns.route('/<string:datasetName>/nodes/<string:nodeName>/readings')
+@ns.param('datasetName', 'Dataset name')
+@ns.param('nodeName', 'Node name')
+class NodeReadingsList(Resource):
+	@ns.response(200, 'Success')
+	@ns.response(400, 'Bad request')
+	@auth_required
+	@api.expect([swagger_service.createNodeReadingData])
+	def post(auth, self, datasetName, nodeName):
+		return reading_service.createReadings(auth, datasetName, nodeName, None)
+
+@ns.route('/<string:datasetName>/readings')
+@ns.param('datasetName', 'Dataset name')
+class DatasetReadingsList(Resource):
+	@ns.response(200, 'Success')
+	@ns.response(400, 'Bad request')
+	@auth_required
+	@api.expect([swagger_service.createDatasetReadingData])
+	def post(auth, self, datasetName):
+		return reading_service.createReadings(auth, datasetName, None, None)

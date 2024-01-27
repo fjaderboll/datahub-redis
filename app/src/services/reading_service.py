@@ -5,8 +5,9 @@ import json
 
 from flask_restx import abort
 
+from api import api
 from db import db, ts, Keys
-from services import cleaner
+from services import cleaner, finder
 
 def parseTime(time, defaultValue):
 	if time:
@@ -19,6 +20,35 @@ def parseTime(time, defaultValue):
 			except ParserError:
 				abort(400, 'Invalid time: ' + time)
 	return defaultValue
+
+def createReadings(auth, datasetName, nodeName, sensorName):
+	dataset = None
+	node = None
+	sensor = None
+
+	if datasetName:
+		dataset = finder.findDataset(auth, datasetName, create=True)
+	if nodeName:
+		node = finder.findNode(dataset['id'], nodeName, create=True)
+	if sensorName:
+		sensor = finder.findSensor(node['id'], sensorName, create=True)
+
+	readings = []
+	for reading in api.payload:
+		value = reading['value']
+		time = reading['time'] if 'time' in reading else None
+
+		if not datasetName:
+			dataset = finder.findDataset(auth, reading['datasetName'], create=True)
+		if not nodeName:
+			node = finder.findNode(dataset['id'], reading['nodeName'], create=True)
+		if not sensorName:
+			sensor = finder.findSensor(node['id'], reading['sensorName'], create=True)
+
+		cleanedReading = createReading(dataset, node, sensor, value, time=time)
+		readings.append(cleanedReading)
+
+	return readings
 
 def createReading(dataset, node, sensor, value, time=None):
 	timestamp = parseTime(time, '*')

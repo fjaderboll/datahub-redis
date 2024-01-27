@@ -8,6 +8,7 @@ from api import api
 from endpoints.state import ns as namespace_state
 from endpoints.users import ns as namespace_users
 from endpoints.tokens import ns as namespace_tokens
+from endpoints.readings import ns as namespace_readings
 from endpoints.datasets_nodes_sensors_readings import ns as namespace_datasets
 
 app = Flask(__name__)
@@ -19,6 +20,7 @@ def main(port=None, debug=False):
 	api.add_namespace(namespace_state)
 	api.add_namespace(namespace_users)
 	api.add_namespace(namespace_tokens)
+	api.add_namespace(namespace_readings)
 	api.add_namespace(namespace_datasets)
 	app.register_blueprint(blueprint)
 	if port:
