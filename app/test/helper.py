@@ -99,8 +99,9 @@ def createReadings(headers, datasetName, nodeName, sensorName, datas):
 	response.raise_for_status()
 	return response.json()
 
-def getReadings(headers, datasetName, nodeName, sensorName):
+def getReadings(headers, datasetName, nodeName, sensorName, limit=0):
 	url = getReadingsUrl(datasetName, nodeName, sensorName)
+	url += '?limit=' + str(limit)
 	response = requests.get(url, headers=headers)
 	if not response:
 		print(response.text)

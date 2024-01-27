@@ -23,11 +23,13 @@ def parseTime(time, defaultValue):
 	return defaultValue
 
 def parseLimit(limit, defaultValue):
-	if limit:
+	if limit is not None and limit != '':
 		try:
 			l = int(limit)
 			if l < 0:
 				abort(400, 'Invalid limit: ' + limit)
+			elif l == 0:
+				return None
 			return l
 		except ValueError:
 			abort(400, 'Invalid limit: ' + limit)
@@ -88,11 +90,11 @@ def getReadings(auth, datasetName, nodeName, sensorName):
 
 	after = request.args.get('after')
 	before = request.args.get('before')
-	limit = request.args.get('limit')
+	limit = request.args.get('limit', type=int)
 
 	fromTime = parseTime(after, '-')
 	toTime = parseTime(before, '+')
-	count = parseLimit(limit, None)
+	count = parseLimit(limit, 1000)
 
 	readings = []
 	c = None
