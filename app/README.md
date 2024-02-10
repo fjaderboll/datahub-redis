@@ -18,8 +18,14 @@ pip3 install -r requirements.txt
 ## Database
 
 ```shell
-docker run -d --rm --name datahub-redis -p 6379:6379 -v datahub-redis-data:/data redislabs/redistimeseries:1.10.10  # start
+docker run -d --rm --name datahub-redis -p 6379:6379 -v datahub-redis-data:/data redislabs/redistimeseries:1.10.11
 docker exec -it datahub-redis redis-cli   # interact with database
+```
+
+## MQ broker
+
+```shell
+docker run -d --rm --name emqx -p 18083:18083 -p 1883:1883 emqx:5.5.0
 ```
 
 ## Application
@@ -32,7 +38,8 @@ source .venv/bin/activate
 From within Visual Studio Code you can use the `launch.json` file.
 
 ```shell
-./src/app.py 2070                                            # development
+flask --app src/app.py --debug run                           # development (preferred way)
+#./src/app.py 2070                                           # development
 gunicorn --workers 4 --bind 0.0.0.0:2070 -k gevent wsgi:app  # production
 ```
 
