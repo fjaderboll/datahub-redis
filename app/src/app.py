@@ -12,7 +12,8 @@ from endpoints.users import ns as namespace_users
 from endpoints.tokens import ns as namespace_tokens
 from endpoints.readings import ns as namespace_readings
 from endpoints.datasets_nodes_sensors_readings import ns as namespace_datasets
-from pubsubthread import PubSubThread
+import mqttclient
+from mqttpub import MqttPub
 
 def createApp():
 	app = Flask(__name__)
@@ -27,18 +28,23 @@ def createApp():
 	api.add_namespace(namespace_datasets)
 	app.register_blueprint(blueprint)
 
-	print('started')
-	pubSubThread = PubSubThread(app.logger)
+	app.config['MQTT_BROKER_URL'] = 'localhost'
+	app.config['MQTT_BROKER_PORT'] = 1883
+	#app.config['MQTT_USERNAME'] = ''
+	#app.config['MQTT_PASSWORD'] = ''
+	app.config['MQTT_CLIENT_ID'] = 'flask-app'
+	app.config['MQTT_TLS_ENABLED'] = False
 
-	## this condition is needed to prevent creating duplicated thread in Flask debug mode
 	if not (app.debug or os.environ.get('FLASK_ENV') == 'development') or os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
+		mqttClient = mqttclient.create(app)
+
+		mqttPubThread = MqttPub(app.logger, mqttClient)
 		originalHandler = signal.getsignal(signal.SIGINT) # ctrl+c
 		def sigintHandler(signum, frame):
-			pubSubThread.stop()
+			mqttPubThread.stop()
 			originalHandler(signum, frame)
 		signal.signal(signal.SIGINT, sigintHandler)
-
-		pubSubThread.start()
+		mqttPubThread.start()
 
 	return app
 
