@@ -113,7 +113,7 @@ def getReadings(auth, datasetName, nodeName, sensorName):
 		if not sensorName:
 			sensor = cache.getSensorById(requestedSensor['sensorId'])
 
-		items = ts.range(Keys.getReadings(requestedSensor['sensorId']), fromTime, toTime, count=c)
+		items = ts.revrange(Keys.getReadings(requestedSensor['sensorId']), fromTime, toTime, count=c)
 		readings.extend(cleaner.cleanReadings(items, dataset, node, sensor))
 
 	return readings
