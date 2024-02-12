@@ -1,0 +1,58 @@
+authentication = [
+  {
+    backend = http
+    body {
+      clientid = "${clientid}"
+      password = "${password}"
+      username = "${username}"
+    }
+    connect_timeout = 15s
+    enable = true
+    enable_pipelining = 100
+    headers {content-type = "application/json"}
+    mechanism = password_based
+    method = post
+    pool_size = 8
+    request_timeout = 5s
+    ssl {
+      ciphers = []
+      depth = 10
+      enable = false
+      hibernate_after = 5s
+      log_level = notice
+      reuse_sessions = true
+      secure_renegotiate = true
+      verify = verify_peer
+      versions = [tlsv1.3, tlsv1.2]
+    }
+    url = "http://172.16.1.5:2070/mqtt/authenticate"
+  }
+]
+authorization {
+  cache {
+    enable = true
+    excludes = []
+    max_size = 32
+    ttl = 1m
+  }
+  deny_action = ignore
+  no_match = allow
+  sources = [
+    {
+      body {
+        action = "${action}"
+        topic = "${topic}"
+        username = "${username}"
+      }
+      connect_timeout = 15s
+      enable_pipelining = 100
+      headers {content-type = "application/json"}
+      method = post
+      pool_size = 8
+      request_timeout = 30s
+      ssl {enable = false, verify = verify_peer}
+      type = http
+      url = "http://172.16.1.5:2070/mqtt/authorize"
+    }
+  ]
+}

@@ -38,6 +38,17 @@ loginUserData = api.model('LoginUserData', {
 	'password': fields.String(description='Password, non empty', required=True)
 })
 
+mqttAuthenticateData = api.model('MqttAuthenticateData', {
+	'username': fields.String(description='Username', required=True),
+	'password': fields.String(description='Password', required=True),
+	'clientid': fields.String(description='Client ID', required=True)
+})
+mqttAuthorizeData = api.model('MqttAuthorizeData', {
+	'username': fields.String(description='Username', required=True),
+	'topic': fields.String(description='Topic', required=True),
+	'action': fields.String(description='Action', required=True)
+})
+
 createDatasetData = api.model('CreateDatasetData', {
     'name': fields.String(description='Name of dataset', required=True),
     'desc': fields.String(description='Description of dataset')

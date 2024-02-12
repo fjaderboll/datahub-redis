@@ -25,7 +25,16 @@ docker exec -it datahub-redis redis-cli   # interact with database
 ## MQ broker
 
 ```shell
-docker run -d --rm --name emqx -p 18083:18083 -p 1883:1883 emqx:5.5.0
+docker run \
+	-d \
+	--rm \
+	--name emqx \
+	-p 18083:18083 \
+	-p 1883:1883 \
+	-v ./cluster.hocon:/opt/emqx/data/configs/cluster.hocon \
+	-e "EMQX_dashboard__default_username=admin" \
+    -e "EMQX_dashboard__default_password=admin123" \
+	emqx:5.5.0
 ```
 
 ## Application

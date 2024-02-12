@@ -12,8 +12,11 @@ from endpoints.users import ns as namespace_users
 from endpoints.tokens import ns as namespace_tokens
 from endpoints.readings import ns as namespace_readings
 from endpoints.datasets_nodes_sensors_readings import ns as namespace_datasets
+from endpoints.mqtt import ns as namespace_mqtt
 import mqttclient
 from mqttpub import MqttPub
+
+from services import settings_service
 
 def createApp():
 	app = Flask(__name__)
@@ -26,12 +29,13 @@ def createApp():
 	api.add_namespace(namespace_tokens)
 	api.add_namespace(namespace_readings)
 	api.add_namespace(namespace_datasets)
+	api.add_namespace(namespace_mqtt)
 	app.register_blueprint(blueprint)
 
-	app.config['MQTT_BROKER_URL'] = 'localhost'
-	app.config['MQTT_BROKER_PORT'] = 1883
-	#app.config['MQTT_USERNAME'] = ''
-	#app.config['MQTT_PASSWORD'] = ''
+	app.config['MQTT_BROKER_URL'] = os.environ.get('MQTT_BROKER_URL', 'localhost')
+	app.config['MQTT_BROKER_PORT'] = os.environ.get('MQTT_BROKER_PORT', 1883)
+	app.config['MQTT_USERNAME'] = settings_service.getMqttUsername()
+	app.config['MQTT_PASSWORD'] = settings_service.getMqttPassword()
 	app.config['MQTT_CLIENT_ID'] = 'flask-app'
 	app.config['MQTT_TLS_ENABLED'] = False
 

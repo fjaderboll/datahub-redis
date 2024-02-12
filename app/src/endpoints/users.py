@@ -31,7 +31,7 @@ class UsersList(Resource):
 		util.verifyValidName(username, "Username")
 		util.verifyNoneEmpty(password, 'Password')
 
-		if db.sismember(Keys.getUsers(), username):
+		if username == settings_service.getMqttUsername() or db.sismember(Keys.getUsers(), username):
 			abort(400, "Username '" + username + "' already exists")
 
 		salt = util.createPasswordSalt()
@@ -103,23 +103,7 @@ class UsersLogin(Resource):
 	@ns.response(401, 'Invalid credentials')
 	@api.expect(swagger_service.loginUserData)
 	def post(self, username):
-		validName = util.verifyValidName(username, "Username", fail=False)
-		if not validName:
-			abort(401, "Invalid credentials")
-
-		user = db.hgetall(Keys.getUser(username))
-		if len(user) == 0:
-			abort(401, "Invalid credentials")
-
-		if not settings_service.getAllowNonAdminLogin() and not bool(int(user['isAdmin'])):
-			abort(401, "Invalid credentials")
-
-		hash = util.createPasswordHash(api.payload['password'], user['passwordSalt'])
-		if hash == user['passwordHash']:
-			tokenInfo = token_service.createToken(username, user['isAdmin'], ttl=settings_service.getTokenTTL(), desc='Login')
-			return token_service.formatToken(tokenInfo, hideToken=False)
-		else:
-			abort(401, "Invalid credentials")
+		return user_service.login(username, api.payload['password'])
 
 @ns.route('/<string:username>/logout')
 @ns.param('username', 'Username')

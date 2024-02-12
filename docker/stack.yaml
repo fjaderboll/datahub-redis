@@ -9,22 +9,28 @@ services:
   emqx:
     image: emqx:5.5.0
     volumes:
+      - "./cluster.hocon:/opt/emqx/data/configs/cluster.hocon"
     #  - "./cluster-override.conf:/opt/emqx/data/configs/cluster-override.conf"
-    #  - "web-cert:/mnt/web-cert:ro"
-    #  - "./certs/zoo.avall.net-fullchain.pem:/opt/emqx/etc/certs/zoo.avall.net-fullchain.pem"
-    #  - "./certs/zoo.avall.net-privkey.pem:/opt/emqx/etc/certs/zoo.avall.net-privkey.pem"
-    #ports:
-    #  - "1883:1883"
-    #  - "8883:8883"
-    #  - "18083:18083"
+    ports:
+      - "1883:1883"
+      - "18083:18083"
     environment:
       - "EMQX_dashboard__default_username=admin"
       - "EMQX_dashboard__default_password=67i5wy6i3apsadgc"
+    healthcheck:
+      test: ["CMD", "/opt/emqx/bin/emqx", "ctl", "status"]
+      interval: 30s
+      timeout: 25s
+      retries: 5
   app:
     image: datahub-app
     environment:
       - "REDIS_HOST=redis"
       - "REDIS_PORT=6379"
+      - "MQTT_BROKER_URL=emqx"
+      - "MQTT_BROKER_URL=1883"
+      - "MQTT_USERNAME=mqtt"
+      - "MQTT_PASSWORD=mqtt123"
   web:
     image: datahub-web
     ports:

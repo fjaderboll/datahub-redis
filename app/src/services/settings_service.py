@@ -1,3 +1,5 @@
+import os
+
 from db import db, Keys
 
 def setProperty(property, value):
@@ -32,3 +34,9 @@ def getAllowNonAdminLogin():
 
 def setAllowNonAdminLogin(allow):
 	setProperty('allow-non-admin-login', int(allow))
+
+def getMqttUsername():
+	return os.environ.get('MQTT_USERNAME', 'mqtt')
+
+def getMqttPassword():
+	return os.environ.get('MQTT_PASSWORD', 'mqtt123')

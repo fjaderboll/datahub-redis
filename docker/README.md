@@ -8,7 +8,7 @@ docker image ls | grep datahub
 ```
 
 ## Deploy
-Look in `stack.yaml` to change the exposed port number.
+Look in `stack.yaml` and update exposed port numbers and credentials.
 
 ```shell
 docker stack deploy --compose-file stack.yaml datahub # deploy
