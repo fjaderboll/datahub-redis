@@ -259,8 +259,32 @@ export class ServerService {
 		return this.http.post(url, { value, time }, this.httpOptionsJson);
 	}
 
-    public getReadings(datasetName: string, nodeName: string, sensorName: string, limit: number | null) {
+    public getSensorReadings(datasetName: string, nodeName: string, sensorName: string, limit: number | null) {
 		let url = this.apiUrl + "datasets/" + datasetName + "/nodes/" + nodeName + "/sensors/" + sensorName + "/readings";
+		if(limit) {
+			url += "?limit=" + limit;
+		}
+		return this.http.get(url, this.httpOptionsJson);
+	}
+
+	public getNodeReadings(datasetName: string, nodeName: string, limit: number | null) {
+		let url = this.apiUrl + "datasets/" + datasetName + "/nodes/" + nodeName + "/readings";
+		if(limit) {
+			url += "?limit=" + limit;
+		}
+		return this.http.get(url, this.httpOptionsJson);
+	}
+
+	public getDatasetReadings(datasetName: string, limit: number | null) {
+		let url = this.apiUrl + "datasets/" + datasetName + "/readings";
+		if(limit) {
+			url += "?limit=" + limit;
+		}
+		return this.http.get(url, this.httpOptionsJson);
+	}
+
+	public getReadings(limit: number | null) {
+		let url = this.apiUrl + "readings/";
 		if(limit) {
 			url += "?limit=" + limit;
 		}

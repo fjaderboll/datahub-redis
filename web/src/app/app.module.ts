@@ -45,6 +45,7 @@ import { TimeserieListComponent } from './pages/timeserie-list/timeserie-list.co
 import { SystemMemoryComponent } from './components/system-memory/system-memory.component';
 import { ShareDatasetDialogComponent } from './dialogs/share-dataset-dialog/share-dataset-dialog.component';
 import { SettingsViewComponent } from './pages/settings-view/settings-view.component';
+import { VisualizeReadingsDialogComponent } from './dialogs/visualize-readings-dialog/visualize-readings-dialog.component';
 
 @NgModule({
   declarations: [
@@ -73,7 +74,8 @@ import { SettingsViewComponent } from './pages/settings-view/settings-view.compo
     TimeserieListComponent,
     SystemMemoryComponent,
     ShareDatasetDialogComponent,
-    SettingsViewComponent
+    SettingsViewComponent,
+    VisualizeReadingsDialogComponent
   ],
   imports: [
     BrowserModule,

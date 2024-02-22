@@ -1,0 +1,14 @@
+<h1 mat-dialog-title>Visualize: <span [innerHTML]="getTitle()"></span></h1>
+<div mat-dialog-content>
+	<div id="readingsChart" [chart]="readingsChart"></div>
+</div>
+<div mat-dialog-actions>
+	<button mat-stroked-button color="primary" [mat-dialog-close]="false">
+		<mat-icon>close</mat-icon>
+		<span>Cancel</span>
+	</button>
+	<button mat-flat-button color="primary" (click)="loadMore()" [disabled]="data.readings?.length != readingsLimit">
+		<mat-icon>downloading</mat-icon>
+		<span>Load More</span>
+	</button>
+</div>

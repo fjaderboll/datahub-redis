@@ -7,6 +7,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Observable } from 'rxjs';
 import { ConfirmDialogComponent } from 'src/app/dialogs/confirm-dialog/confirm-dialog.component';
 import { CreateReadingDialogComponent } from 'src/app/dialogs/create-reading-dialog/create-reading-dialog.component';
+import { VisualizeReadingsDialogComponent } from 'src/app/dialogs/visualize-readings-dialog/visualize-readings-dialog.component';
 import { AuthenticationService } from 'src/app/services/authentication.service';
 import { ServerService } from 'src/app/services/server.service';
 import { UtilsService } from 'src/app/services/utils.service';
@@ -64,7 +65,7 @@ export class SensorViewComponent implements OnInit, AfterViewInit {
 	}
 
 	private loadReadings() {
-		this.server.getReadings(this.datasetName, this.nodeName, this.sensorName, this.readingsLimit).subscribe({
+		this.server.getSensorReadings(this.datasetName, this.nodeName, this.sensorName, this.readingsLimit).subscribe({
 			next: (readings: any) => {
 				this.readings = readings;
 				this.dataSource.data = readings;
@@ -165,6 +166,17 @@ export class SensorViewComponent implements OnInit, AfterViewInit {
 			if(confirmed) {
 				this.loadSensor();
 				this.loadReadings();
+			}
+		});
+	}
+
+	public visualizeReadings() {
+		this.dialog.open(VisualizeReadingsDialogComponent, {
+			data: {
+				datasetName: this.datasetName,
+                nodeName: this.nodeName,
+				sensorName: this.sensorName,
+				readings: this.readings
 			}
 		});
 	}

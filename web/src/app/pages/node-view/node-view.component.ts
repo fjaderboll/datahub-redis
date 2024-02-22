@@ -8,6 +8,7 @@ import { Observable } from 'rxjs';
 import { ConfirmDialogComponent } from 'src/app/dialogs/confirm-dialog/confirm-dialog.component';
 import { CreateNodeDialogComponent } from 'src/app/dialogs/create-node-dialog/create-node-dialog.component';
 import { CreateSensorDialogComponent } from 'src/app/dialogs/create-sensor-dialog/create-sensor-dialog.component';
+import { VisualizeReadingsDialogComponent } from 'src/app/dialogs/visualize-readings-dialog/visualize-readings-dialog.component';
 import { AuthenticationService } from 'src/app/services/authentication.service';
 import { ServerService } from 'src/app/services/server.service';
 import { UtilsService } from 'src/app/services/utils.service';
@@ -19,6 +20,7 @@ import { UtilsService } from 'src/app/services/utils.service';
 })
 export class NodeViewComponent implements OnInit, AfterViewInit {
 	public datasetName!: string;
+	public nodeName: any;
 	public node: any;
 
 	public displayedColumns: string[] = ['name', 'lastReading', 'desc'];
@@ -36,6 +38,9 @@ export class NodeViewComponent implements OnInit, AfterViewInit {
 	) { }
 
 	ngOnInit(): void {
+		this.datasetName = this.route.snapshot.paramMap.get('datasetName') || 'this should never happen';
+		this.nodeName = this.route.snapshot.paramMap.get('nodeName') || 'this should never happen';
+
 		this.loadNode();
 	}
 
@@ -45,10 +50,7 @@ export class NodeViewComponent implements OnInit, AfterViewInit {
 	}
 
 	private loadNode() {
-		this.datasetName = this.route.snapshot.paramMap.get('datasetName') || 'this should never happen';
-		let nodeName = this.route.snapshot.paramMap.get('nodeName') || 'this should never happen';
-
-		this.server.getNode(this.datasetName, nodeName).subscribe({
+		this.server.getNode(this.datasetName, this.nodeName).subscribe({
 			next: (node: any) => {
 				this.node = node;
 				this.dataSource.data = node.sensors;
@@ -112,6 +114,15 @@ export class NodeViewComponent implements OnInit, AfterViewInit {
 		dialog.afterClosed().subscribe(sensor => {
 			if(sensor) {
 				this.loadNode();
+			}
+		});
+	}
+
+	public visualizeReadings() {
+		this.dialog.open(VisualizeReadingsDialogComponent, {
+			data: {
+				datasetName: this.datasetName,
+                nodeName: this.nodeName
 			}
 		});
 	}

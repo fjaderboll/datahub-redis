@@ -8,6 +8,7 @@ import { Observable } from 'rxjs';
 import { ConfirmDialogComponent } from 'src/app/dialogs/confirm-dialog/confirm-dialog.component';
 import { CreateNodeDialogComponent } from 'src/app/dialogs/create-node-dialog/create-node-dialog.component';
 import { ShareDatasetDialogComponent } from 'src/app/dialogs/share-dataset-dialog/share-dataset-dialog.component';
+import { VisualizeReadingsDialogComponent } from 'src/app/dialogs/visualize-readings-dialog/visualize-readings-dialog.component';
 import { AuthenticationService } from 'src/app/services/authentication.service';
 import { ServerService } from 'src/app/services/server.service';
 import { UtilsService } from 'src/app/services/utils.service';
@@ -110,6 +111,14 @@ export class DatasetViewComponent implements OnInit, AfterViewInit {
 		dialog.afterClosed().subscribe(confirmed => {
 			if(confirmed) {
 				this.router.navigate(['/datasets']);
+			}
+		});
+	}
+
+	public visualizeReadings() {
+		this.dialog.open(VisualizeReadingsDialogComponent, {
+			data: {
+				datasetName: this.datasetName
 			}
 		});
 	}

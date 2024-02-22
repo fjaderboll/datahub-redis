@@ -4,6 +4,7 @@ import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { CreateDatasetDialogComponent } from 'src/app/dialogs/create-dataset-dialog/create-dataset-dialog.component';
+import { VisualizeReadingsDialogComponent } from 'src/app/dialogs/visualize-readings-dialog/visualize-readings-dialog.component';
 import { AuthenticationService } from 'src/app/services/authentication.service';
 import { ServerService } from 'src/app/services/server.service';
 import { UtilsService } from 'src/app/services/utils.service';
@@ -49,6 +50,12 @@ export class DatasetListComponent implements OnInit, AfterViewInit {
 			error: (e) => {
 				this.server.showHttpError(e);
 			}
+		});
+	}
+
+	public visualizeReadings() {
+		this.dialog.open(VisualizeReadingsDialogComponent, {
+			data: {}
 		});
 	}
 

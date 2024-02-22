@@ -29,7 +29,4 @@ Structure of entities with examples:
 See [docker](docker/README.md) how to deploy using Docker.
 
 ## TODOs
-* export readings to MQ broker
-* import readings from MQ broker
-* improve Swagger documentation
 * make Web UI work better on smaller screens
