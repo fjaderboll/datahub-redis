@@ -2,7 +2,6 @@
 import json
 import traceback
 
-from db import db, Keys
 from flask_mqtt import Mqtt
 
 from services import finder, reading_service
@@ -19,11 +18,17 @@ def create(app):
 		def on_connect(client, userdata, flags, rc):
 			if rc == 0:
 				logger.info('Connected successfully')
-				print(client)
-				mqtt.subscribe('in/users/+/datasets/+/nodes/+/sensors/+/readings')
-				mqtt.subscribe('in/users/+/datasets/+/nodes/+/readings')
-				mqtt.subscribe('in/users/+/datasets/readings')
-				mqtt.subscribe('in/users/+/readings')
+				topics = [
+					'in/datasets/+/nodes/+/sensors/+/readings',
+					'in/datasets/+/nodes/+/readings',
+					'in/datasets/+/readings'
+				]
+				for topic in topics:
+					(result, mid) = mqtt.subscribe(topic)
+					if result == 0:
+						logger.info('Subscribed to: ' + topic)
+					else:
+						logger.error('Unable to subscribe to: ' + topic)
 			else:
 				logger.info('Bad connection. Code:', rc)
 
@@ -32,17 +37,15 @@ def create(app):
 			topic = message.topic
 			payload = message.payload.decode()
 			topicParts = topic.split('/')
-			auth = {
-				'username': topicParts[2]
-			}
+			auth = None # user<->dataset validation already done in 'authorize'
 
 			try:
 				data = json.loads(payload)
-				datasetName = topicParts[4] if len(topicParts) >= 5 else data['datasetName']
-				nodeName    = topicParts[6] if len(topicParts) >= 7 else data['nodeName']
-				sensorName  = topicParts[8] if len(topicParts) >= 9 else data['sensorName']
+				datasetName = topicParts[2]
+				nodeName    = topicParts[4] if len(topicParts) >= 5 else data['nodeName']
+				sensorName  = topicParts[6] if len(topicParts) >= 7 else data['sensorName']
 
-				dataset = finder.findDataset(auth, datasetName, create=True)
+				dataset = finder.findDataset(auth, datasetName, create=False, validateUser=False) # dataset created in 'authorize'
 				node = finder.findNode(dataset['id'], nodeName, create=True)
 				sensor = finder.findSensor(node['id'], sensorName, create=True)
 				value = data['value']

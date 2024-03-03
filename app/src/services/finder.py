@@ -3,15 +3,15 @@ from flask_restx import abort
 from db import db, Keys
 from services import util, dataset_service, node_service, sensor_service
 
-def findDataset(auth, datasetName, create=False):
+def findDataset(auth, datasetName, create=False, validateUser=True):
 	validName = util.verifyValidName(datasetName, fail=False)
 	if validName:
 		datasetId = db.get(Keys.getDatasetIdByName(datasetName))
 		if datasetId:
-			if db.sismember(Keys.getUserDatasetIds(auth['username']), datasetId):
+			if not validateUser or db.sismember(Keys.getUserDatasetIds(auth['username']), datasetId):
 				dataset = db.hgetall(Keys.getDatasetById(datasetId))
 				return dataset
-		elif create:
+		elif create and not validateUser:
 			return dataset_service.createDataset(datasetName, auth['username'])
 
 	abort(404, "Unknown dataset '" + datasetName + "'")

@@ -36,7 +36,7 @@ authorization {
     ttl = 1m
   }
   deny_action = ignore
-  no_match = allow
+  no_match = deny
   sources = [
     {
       body {
