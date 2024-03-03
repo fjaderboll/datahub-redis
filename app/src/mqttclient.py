@@ -19,9 +19,9 @@ def create(app):
 			if rc == 0:
 				logger.info('Connected successfully')
 				topics = [
-					'in/datasets/+/nodes/+/sensors/+/readings',
-					'in/datasets/+/nodes/+/readings',
-					'in/datasets/+/readings'
+					'$queue/in/datasets/+/nodes/+/sensors/+/readings',
+					'$queue/in/datasets/+/nodes/+/readings',
+					'$queue/in/datasets/+/readings'
 				]
 				for topic in topics:
 					(result, mid) = mqtt.subscribe(topic)
@@ -52,7 +52,7 @@ def create(app):
 				time = data['time'] if 'time' in data else None
 
 				reading = reading_service.createReading(dataset, node, sensor, value, time)
-				print(reading)
+				#print(reading)
 			except Exception as e:
 				logger.error('Unable to process message on topic {} with payload: {}\n{}'.format(topic, payload, e))
 				traceback.print_exc()

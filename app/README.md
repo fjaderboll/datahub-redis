@@ -31,11 +31,12 @@ docker run \
 	--name datahub-emqx \
 	-p 18083:18083 \
 	-p 1883:1883 \
-	-v ../docker/cluster.hocon:/opt/emqx/data/configs/cluster.hocon \
+	-v $PWD/../docker/cluster.hocon.local:/opt/emqx/data/configs/cluster.hocon \
 	-e "EMQX_dashboard__default_username=admin" \
     -e "EMQX_dashboard__default_password=admin123" \
-	--add-host app:172.16.1.5 \
 	emqx:5.5.0
+	#-e "EMQX_AUTHENTICATION__1__URL=http://172.16.1.5:2070/mqtt/authenticate" \
+    #-e "EMQX_AUTHORIZATION__SOURCES__1__URL=http://172.16.1.5:2070/mqtt/authorize" \
 ```
 
 ## Application
