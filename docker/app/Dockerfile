@@ -14,7 +14,7 @@ USER appuser
 
 COPY tmp/src /home/appuser/app
 
-HEALTHCHECK --start-period=30s --timeout=3s CMD curl --fail -H "Connection: close" http://localhost:5000/state/health
+#HEALTHCHECK --start-period=30s --timeout=3s CMD curl --fail -H "Connection: close" http://localhost:5000/state/health
 WORKDIR /home/appuser/app
 
 CMD ["gunicorn", "-b", "0.0.0.0:5000", "-w", "4", "-k", "gevent", "--worker-tmp-dir", "/dev/shm", "wsgi:app"]

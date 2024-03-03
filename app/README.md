@@ -34,6 +34,7 @@ docker run \
 	-v ../docker/cluster.hocon:/opt/emqx/data/configs/cluster.hocon \
 	-e "EMQX_dashboard__default_username=admin" \
     -e "EMQX_dashboard__default_password=admin123" \
+	--add-host app:172.16.1.5 \
 	emqx:5.5.0
 ```
 
