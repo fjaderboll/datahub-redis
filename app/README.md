@@ -31,7 +31,7 @@ docker run \
 	--name datahub-emqx \
 	-p 18083:18083 \
 	-p 1883:1883 \
-	-v ./docker/cluster.hocon:/opt/emqx/data/configs/cluster.hocon \
+	-v ../docker/cluster.hocon:/opt/emqx/data/configs/cluster.hocon \
 	-e "EMQX_dashboard__default_username=admin" \
     -e "EMQX_dashboard__default_password=admin123" \
 	emqx:5.5.0
@@ -57,6 +57,14 @@ gunicorn --workers 4 --bind 0.0.0.0:2070 -k gevent wsgi:app  # production
 ```shell
 pip3 install flask-restx
 pip3 freeze | grep flask-restx== >> requirements.txt
+```
+
+### Upgrading dependencies
+
+```shell
+source .venv/bin/activate
+pip3 install pip-upgrader
+pip-upgrade  # enter 'all' to update requirements.txt
 ```
 
 ### Test

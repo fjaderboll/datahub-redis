@@ -33,7 +33,7 @@ def createApp():
 	app.register_blueprint(blueprint)
 
 	app.config['MQTT_BROKER_URL'] = os.environ.get('MQTT_BROKER_URL', 'localhost')
-	app.config['MQTT_BROKER_PORT'] = os.environ.get('MQTT_BROKER_PORT', 1883)
+	app.config['MQTT_BROKER_PORT'] = int(os.environ.get('MQTT_BROKER_PORT', '1883'))
 	app.config['MQTT_USERNAME'] = settings_service.getMqttUsername()
 	app.config['MQTT_PASSWORD'] = settings_service.getMqttPassword()
 	app.config['MQTT_CLIENT_ID'] = 'flask-app'
