@@ -55,6 +55,18 @@
 			"justMyCode": true
 		},
 		{
+			"name": "Docker - Redis",
+			"command": "docker run -it --rm --name datahub-redis -p 6379:6379 -v datahub-redis-data:/data redislabs/redistimeseries:1.10.11",
+			"request": "launch",
+			"type": "node-terminal"
+		},
+		{
+			"name": "Docker - EMQX",
+			"command": "docker run -it --rm --name datahub-emqx -p 18083:18083 -p 1883:1883 -v ${workspaceFolder}/docker/cluster.hocon.local:/opt/emqx/data/configs/cluster.hocon -e 'EMQX_dashboard__default_username=admin' -e 'EMQX_dashboard__default_password=admin123' emqx:5.5.0",
+			"request": "launch",
+			"type": "node-terminal"
+		},
+		{
 			"name": "Run all Unit Tests",
 			"type": "python",
 			"request": "launch",
