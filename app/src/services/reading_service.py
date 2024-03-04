@@ -8,7 +8,7 @@ from flask import request
 
 from api import api
 from db import db, ts, Keys
-from services import cleaner, finder
+from services import cleaner, finder, global_vars
 
 def parseTime(time, defaultValue):
 	if time:
@@ -72,7 +72,9 @@ def createReading(dataset, node, sensor, value, time=None):
 	ts.add(key, timestamp, value)
 	reading = ts.get(key)
 	cleanedReading = cleaner.cleanReading(reading, dataset, node, sensor)
-	db.publish(Keys.getReadingsTopic(), json.dumps(cleanedReading))
+	message = json.dumps(cleanedReading)
+	db.publish(Keys.getReadingsTopic(), message)
+	global_vars.mqttClient.publish(message)
 	return cleanedReading
 
 def getReadings(auth, datasetName, nodeName, sensorName):

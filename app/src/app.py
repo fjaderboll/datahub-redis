@@ -2,7 +2,8 @@
 
 import os
 import sys
-import signal
+import secrets
+#import signal
 from flask import Flask, Blueprint
 from flask_cors import CORS
 
@@ -14,7 +15,8 @@ from endpoints.readings import ns as namespace_readings
 from endpoints.datasets_nodes_sensors_readings import ns as namespace_datasets
 from endpoints.mqtt import ns as namespace_mqtt
 import mqttclient
-from mqttpub import MqttPub
+#from mqttpub import MqttPub
+from services import global_vars
 
 from services import settings_service
 
@@ -36,19 +38,19 @@ def createApp():
 	app.config['MQTT_BROKER_PORT'] = int(os.environ.get('MQTT_BROKER_PORT', '1883'))
 	app.config['MQTT_USERNAME'] = settings_service.getMqttUsername()
 	app.config['MQTT_PASSWORD'] = settings_service.getMqttPassword()
-	app.config['MQTT_CLIENT_ID'] = 'flask-app'
+	app.config['MQTT_CLIENT_ID'] = 'datahub-app_' + secrets.token_hex(4)   # broken in Flask-MQTT==1.1.1
 	app.config['MQTT_TLS_ENABLED'] = False
 
-	if not (app.debug or os.environ.get('FLASK_ENV') == 'development') or os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
-		mqttClient = mqttclient.create(app)
+	global_vars.mqttClient = mqttclient.create(app)
 
-		mqttPubThread = MqttPub(app.logger, mqttClient)
-		originalHandler = signal.getsignal(signal.SIGINT) # ctrl+c
-		def sigintHandler(signum, frame):
-			mqttPubThread.stop()
-			originalHandler(signum, frame)
-		signal.signal(signal.SIGINT, sigintHandler)
-		mqttPubThread.start()
+	#if not (app.debug or os.environ.get('FLASK_ENV') == 'development') or os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
+	#	mqttPubThread = MqttPub(app.logger, mqttClient)
+	#	originalHandler = signal.getsignal(signal.SIGINT) # ctrl+c
+	#	def sigintHandler(signum, frame):
+	#		mqttPubThread.stop()
+	#		originalHandler(signum, frame)
+	#	signal.signal(signal.SIGINT, sigintHandler)
+	#	mqttPubThread.start()
 
 	return app
 
