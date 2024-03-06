@@ -15,6 +15,10 @@
 	</dl>
 	<div class="margin-left">
 		<mat-spinner *ngIf="streamingReadings" mode="indeterminate" diameter="32"></mat-spinner>
+		<button *ngIf="!streamingReadings" mat-raised-button color="primary" (click)="streamReadings()">
+			<mat-icon>play_arrow</mat-icon>
+			<span>Stream readings</span>
+		</button>
 	</div>
 </div>
 

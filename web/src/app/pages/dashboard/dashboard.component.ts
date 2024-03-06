@@ -24,10 +24,10 @@ export class DashboardComponent implements OnInit {
 	) { }
 
 	ngOnInit(): void {
-		this.loadReadings();
+		this.streamReadings();
   	}
 
-	private loadReadings() {
+	public streamReadings() {
 		this.streamingReadings = true;
 		this.server.getStateReadings().subscribe({
 			next: (v: any) => {
