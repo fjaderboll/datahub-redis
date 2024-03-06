@@ -90,6 +90,11 @@ dl.list > dd:empty::after {
 	content: "-";
 }
 
+.mat-icon.tiny {
+	width: 16px;
+	height: 16px;
+	font-size: 16px;
+}
 .mat-icon.small {
 	width: 32px;
 	height: 32px;
