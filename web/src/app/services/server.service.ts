@@ -259,36 +259,42 @@ export class ServerService {
 		return this.http.post(url, { value, time }, this.httpOptionsJson);
 	}
 
-    public getSensorReadings(datasetName: string, nodeName: string, sensorName: string, limit: number | null) {
+    public getSensorReadings(datasetName: string, nodeName: string, sensorName: string, limit: number | null, after: string | null) {
 		let url = this.apiUrl + "datasets/" + datasetName + "/nodes/" + nodeName + "/sensors/" + sensorName + "/readings";
-		if(limit) {
-			url += "?limit=" + limit;
-		}
+		url += this.getReadingsParams(limit, after);
 		return this.http.get(url, this.httpOptionsJson);
 	}
 
-	public getNodeReadings(datasetName: string, nodeName: string, limit: number | null) {
+	public getNodeReadings(datasetName: string, nodeName: string, limit: number | null, after: string | null) {
 		let url = this.apiUrl + "datasets/" + datasetName + "/nodes/" + nodeName + "/readings";
-		if(limit) {
-			url += "?limit=" + limit;
-		}
+		url += this.getReadingsParams(limit, after);
 		return this.http.get(url, this.httpOptionsJson);
 	}
 
-	public getDatasetReadings(datasetName: string, limit: number | null) {
+	public getDatasetReadings(datasetName: string, limit: number | null, after: string | null) {
 		let url = this.apiUrl + "datasets/" + datasetName + "/readings";
-		if(limit) {
-			url += "?limit=" + limit;
-		}
+		url += this.getReadingsParams(limit, after);
 		return this.http.get(url, this.httpOptionsJson);
 	}
 
-	public getReadings(limit: number | null) {
+	public getReadings(limit: number | null, after: string | null) {
 		let url = this.apiUrl + "readings/";
-		if(limit) {
-			url += "?limit=" + limit;
-		}
+		url += this.getReadingsParams(limit, after);
 		return this.http.get(url, this.httpOptionsJson);
+	}
+	private getReadingsParams(limit: number | null, after: string | null) {
+		let p = '';
+		if(limit !== null) {
+			p += '?limit=' + limit;
+		}
+		if(after !== null) {
+			if(p == '') {
+				p += '?after=' + after
+			} else {
+				p += '&after=' + after
+			}
+		}
+		return p;
 	}
 
 	public deleteReadings(datasetName: string, nodeName: string, sensorName: string) {

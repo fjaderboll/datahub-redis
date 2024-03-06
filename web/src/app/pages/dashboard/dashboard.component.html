@@ -14,9 +14,9 @@
 		<dd>{{ receivedReadingsPerSecond | number: '1.1-1' }}</dd>
 	</dl>
 	<div class="margin-left">
-		<mat-spinner *ngIf="streamingReadings" mode="indeterminate" diameter="32"></mat-spinner>
-		<button *ngIf="!streamingReadings" mat-raised-button color="primary" (click)="streamReadings()">
-			<mat-icon>play_arrow</mat-icon>
+		<button mat-raised-button color="primary" (click)="streamReadings()" [disabled]="streamingReadings">
+			<mat-icon *ngIf="!streamingReadings">play_arrow</mat-icon>
+			<mat-icon *ngIf="streamingReadings" svgIcon="loading"></mat-icon>
 			<span>Stream readings</span>
 		</button>
 	</div>

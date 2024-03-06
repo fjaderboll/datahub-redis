@@ -38,3 +38,4 @@ You can also use `ng generate directive|pipe|service|class|guard|interface|enum|
 
 * Material Components: https://material.angular.io/components/
 * Icon library: https://fonts.google.com/icons?selected=Material+Icons
+* Animated SVGs: https://www.svgbackgrounds.com/elements/animated-svg-preloaders/

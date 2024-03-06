@@ -14,5 +14,6 @@ export class AppComponent {
     ){
 		this.matIconRegistry.addSvgIcon('datahub', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/img/logo/logo-white.min.svg'));
 		this.matIconRegistry.addSvgIcon('swagger', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/img/icons/swagger-black-white.min.svg'));
+		this.matIconRegistry.addSvgIcon('loading', this.domSanitizer.bypassSecurityTrustResourceUrl('../assets/img/icons/loading.svg'));
 	}
 }

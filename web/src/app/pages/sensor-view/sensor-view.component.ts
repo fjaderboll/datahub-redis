@@ -65,7 +65,7 @@ export class SensorViewComponent implements OnInit, AfterViewInit {
 	}
 
 	private loadReadings() {
-		this.server.getSensorReadings(this.datasetName, this.nodeName, this.sensorName, this.readingsLimit).subscribe({
+		this.server.getSensorReadings(this.datasetName, this.nodeName, this.sensorName, this.readingsLimit, null).subscribe({
 			next: (readings: any) => {
 				this.readings = readings;
 				this.dataSource.data = readings;

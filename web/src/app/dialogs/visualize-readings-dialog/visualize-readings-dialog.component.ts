@@ -11,20 +11,20 @@ import { Chart } from 'angular-highcharts';
 })
 export class VisualizeReadingsDialogComponent  implements OnInit {
 	private inputData: any;
-	public readingsLimit = 1000;
+	public after: number = -3*3600;
 	public readingsChart!: Chart;
+	public loading: boolean = false;
 
 	constructor(
 		public dialogRef: MatDialogRef<VisualizeReadingsDialogComponent>,
 		private server: ServerService,
-		private utils: UtilsService,
+		public utils: UtilsService,
         @Inject(MAT_DIALOG_DATA) public data: any
 	) {}
 
 	ngOnInit(): void {
 		if(this.data.readings) {
-			this.readingsLimit = this.data.readings.length;
-			console.log(this.readingsLimit);
+			this.updateRange(this.data.readings);
 			this.createMemoryChart();
 		} else {
 			this.loadReadings();
@@ -111,7 +111,7 @@ export class VisualizeReadingsDialogComponent  implements OnInit {
 				}
 			},
 			title: {
-				text: (this.data.sensorName || this.data.nodeName || this.data.datasetName || 'all readings') + ' - ' + this.data.readings.length + ' readings'
+				text: (this.data.sensorName || this.data.nodeName || this.data.datasetName || 'all readings') + ' - ' + this.data.readings.length + ' readings in the last ' + this.utils.getDeltaTime(-this.after*1000)
 			},
 			xAxis: {
                 type: 'datetime'
@@ -125,35 +125,55 @@ export class VisualizeReadingsDialogComponent  implements OnInit {
 	}
 
 	private loadReadings() {
+		this.loading = true;
 		const observer = {
 			next: (readings: any) => {
 				this.data.readings = readings;
 				this.createMemoryChart();
-				console.log(this.readingsLimit);
-				console.log(this.data.readings.length);
+				this.loading = false;
 			},
 			error: (e: any) => {
 				this.server.showHttpError(e);
+				this.loading = false;
 			}
 		};
 
+		const limit = 0;
+		const after = this.after + '';
 		if(this.data.sensorName) {
-			this.server.getSensorReadings(this.data.datasetName, this.data.nodeName, this.data.sensorName, this.readingsLimit).subscribe(observer);
+			this.server.getSensorReadings(this.data.datasetName, this.data.nodeName, this.data.sensorName, limit, after).subscribe(observer);
 		} else if(this.data.nodeName) {
-			this.server.getNodeReadings(this.data.datasetName, this.data.nodeName, this.readingsLimit).subscribe(observer);
+			this.server.getNodeReadings(this.data.datasetName, this.data.nodeName, limit, after).subscribe(observer);
 		} else if(this.data.datasetName) {
-			this.server.getDatasetReadings(this.data.datasetName, this.readingsLimit).subscribe(observer);
+			this.server.getDatasetReadings(this.data.datasetName, limit, after).subscribe(observer);
 		} else {
-			this.server.getReadings(this.readingsLimit).subscribe(observer);
+			this.server.getReadings(limit, after).subscribe(observer);
 		}
 	}
 
 	public loadMore() {
-		if(this.readingsLimit % 1000 != 0) {
-			this.readingsLimit = (Math.floor(this.data.readings.length / 1000) + 1) * 1000;
-		}
-		this.readingsLimit *= 2;
+		this.updateRange(null);
 		this.loadReadings();
+	}
+
+	private updateRange(readings: any | null) {
+		/*if(this.limit % 1000 != 0) {
+			this.limit = (Math.floor(this.data.readings.length / 1000) + 1) * 1000;
+		}
+		this.readingsLimit *= 2;*/
+
+		this.after *= 2;
+
+		if(readings) {
+			const n = readings.length;
+			if(n > 0) {
+				const lastReading = readings[n - 1];
+				const t = new Date(lastReading.timestamp).getTime();
+				console.log(new Date(lastReading.timestamp));
+				const age = new Date().getTime() - t;
+				this.after = -Math.round(age/1000);
+			}
+		}
 	}
 
 }

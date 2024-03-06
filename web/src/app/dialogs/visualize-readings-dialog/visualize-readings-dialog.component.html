@@ -7,8 +7,9 @@
 		<mat-icon>close</mat-icon>
 		<span>Cancel</span>
 	</button>
-	<button mat-flat-button color="primary" (click)="loadMore()" [disabled]="data.readings?.length != readingsLimit">
-		<mat-icon>downloading</mat-icon>
-		<span>Load More</span>
+	<button mat-flat-button color="primary" (click)="loadMore()" [disabled]="loading">
+		<mat-icon *ngIf="!loading">downloading</mat-icon>
+		<mat-icon *ngIf="loading" svgIcon="loading"></mat-icon>
+		<span>Load next {{ utils.getDeltaTime(-after*1000) }} </span>
 	</button>
 </div>
