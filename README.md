@@ -1,8 +1,10 @@
 # datahub (Redis version)
 
 ## About
-A database with REST API to store and retrieve time series
-of numbers, with a Web UI for viewing and administration.
+A fast database with a Web UI to hold your IoT data.
+Use the REST API to store and retrieve time series
+of numbers or use the built-in MQ broker to publish
+or subscribe to your data.
 
 ## Background
 I have many IoT devices generating data and need to store that
@@ -11,22 +13,21 @@ projects or free/cheap services the offered the simplicity I
 was looking for so I decided to write my own IoT database.
 
 ## History
-This is a re-design of my previous project [datahub](https://github.com/fjaderboll/datahub)
-with a Redis database instead of SQLite. This has the benefits of greatly improved speed, parallelism and
-less wear on your disk.
+This is a re-design of my previous project [datahub](https://github.com/fjaderboll/datahub), which is based on SQLite and PHP.
+Check this out if you want something that can be deployed simply on a web server.
 
-## File structure
-This project consists of two parts:
-* [app](app/README.md) - The application backend
-* [web](web/README.md) - The web frontend (optional, but convenient for setup and viewing data)
+## Overview
+![overview](doc/overview.png)
 
 ## Entities
 Structure of entities with examples:
 
 ![entities](doc/entities.png)
 
+## File structure
+This project consists of two parts:
+* [app](app/README.md) - The application backend (where it all happens)
+* [web](web/README.md) - The web frontend (administration and viewing data)
+
 ## Running
 See [docker](docker/README.md) how to deploy using Docker.
-
-## TODOs
-* make Web UI work better on smaller screens
