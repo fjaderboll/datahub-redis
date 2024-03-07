@@ -31,7 +31,7 @@ docker run \
 	--name datahub-emqx \
 	-p 18083:18083 \
 	-p 1883:1883 \
-	-v $PWD/../docker/cluster.hocon.local:/opt/emqx/data/configs/cluster.hocon \
+	-v $PWD/../docker/emqx/cluster.hocon.local:/opt/emqx/data/configs/cluster.hocon \
 	-e "EMQX_dashboard__default_username=admin" \
     -e "EMQX_dashboard__default_password=admin123" \
 	emqx:5.5.0

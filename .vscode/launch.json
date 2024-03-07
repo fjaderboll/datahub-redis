@@ -62,7 +62,7 @@
 		},
 		{
 			"name": "Docker - EMQX",
-			"command": "docker run -it --rm --name datahub-emqx -p 18083:18083 -p 1883:1883 -v ${workspaceFolder}/docker/cluster.hocon.local:/opt/emqx/data/configs/cluster.hocon -e 'EMQX_dashboard__default_username=admin' -e 'EMQX_dashboard__default_password=admin123' emqx:5.5.0",
+			"command": "docker run -it --rm --name datahub-emqx -p 18083:18083 -p 1883:1883 -v ${workspaceFolder}/docker/emqx/cluster.hocon.local:/opt/emqx/data/configs/cluster.hocon -e 'EMQX_dashboard__default_username=admin' -e 'EMQX_dashboard__default_password=admin123' emqx:5.5.0",
 			"request": "launch",
 			"type": "node-terminal"
 		},
