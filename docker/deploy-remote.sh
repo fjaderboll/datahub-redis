@@ -9,8 +9,10 @@ build() {
 }
 package() {
 	docker save -o /tmp/image_datahub-$1.tar datahub-$1
+	gzip -v /tmp/image_datahub-$1.tar
 }
 load() {
+	ssh $REMOTE_HOST gunzip -v /tmp/image_datahub-$1.tar.gz
 	ssh $REMOTE_HOST docker load -i /tmp/image_datahub-$1.tar
 	ssh $REMOTE_HOST rm /tmp/image_datahub-$1.tar
 }
@@ -19,11 +21,13 @@ build app
 build web
 build emqx
 
+ssh $REMOTE_HOST docker stack rm datahub
+
 package app
 package web
 package emqx
 
-scp stack.yaml /tmp/image_datahub-*.tar $REMOTE_HOST:/tmp/.
+scp stack.yaml /tmp/image_datahub-*.tar.gz $REMOTE_HOST:/tmp/.
 
 load app
 load web

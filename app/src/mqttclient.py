@@ -36,7 +36,7 @@ def create(app):
 		def on_message(client, userdata, message):
 			topic = message.topic
 			payload = message.payload.decode()
-			topicParts = topic.split('/')
+			topicParts = topic.lower().split('/')
 			auth = None # user<->dataset validation already done in 'authorize'
 
 			try:

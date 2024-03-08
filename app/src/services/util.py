@@ -20,7 +20,7 @@ def verifyAdminOrUser(auth, username):
 		abort(403, "Forbidden")
 
 def verifyValidName(name, attributeName="Attribute", fail=True):
-	regex = "^[a-z][a-z0-9_\-@.]*[a-z0-9]$"
+	regex = "^[a-z0-9][a-z0-9_\-@.]*[a-z0-9]$"
 	if re.search(regex, name) is None:
 		if fail:
 			abort(400, attributeName + " '" + name + "' does not match pattern " + regex)
