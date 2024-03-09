@@ -96,7 +96,7 @@ export class ServerService {
 
 	public login(username: string, password: string) {
 		const url = this.apiUrl + "users/" + username + "/login";
-		return this.http.post(url, { password }, this.httpOptionsJson);
+		return this.http.post(url, { password, referrer: 'Web login' }, this.httpOptionsJson);
 	}
 
     public logout(username: string) {

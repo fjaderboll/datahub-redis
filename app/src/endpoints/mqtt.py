@@ -25,7 +25,7 @@ class Authenticate(Resource):
 				allow = True
 		else:
 			try:
-				tokenInfo = user_service.login(username, password)
+				tokenInfo = user_service.login(username, password, 60, 'MQTT login', enabled=False)
 				allow = True
 			except:
 				pass

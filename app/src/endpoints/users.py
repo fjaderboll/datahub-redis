@@ -103,7 +103,11 @@ class UsersLogin(Resource):
 	@ns.response(401, 'Invalid credentials')
 	@api.expect(swagger_service.loginUserData)
 	def post(self, username):
-		return user_service.login(username, api.payload['password'])
+		desc = ''
+		if 'referrer' in api.payload:
+			desc = api.payload['referrer']
+		ttl = settings_service.getTokenTTL()
+		return user_service.login(username, api.payload['password'], ttl, desc)
 
 @ns.route('/<string:username>/logout')
 @ns.param('username', 'Username')

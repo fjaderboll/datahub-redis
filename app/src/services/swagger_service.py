@@ -35,7 +35,8 @@ updateUserData = api.model('UpdateUserData', {
 	'isAdmin': fields.Boolean(description='Administrator. Must be administrator to update.')
 })
 loginUserData = api.model('LoginUserData', {
-	'password': fields.String(description='Password, non empty', required=True)
+	'password': fields.String(description='Password, non empty', required=True),
+	'referrer': fields.String(description='Optional description for the token')
 })
 
 mqttAuthenticateData = api.model('MqttAuthenticateData', {

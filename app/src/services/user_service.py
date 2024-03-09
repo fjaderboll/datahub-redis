@@ -22,7 +22,7 @@ def findUser(username, statusCode=404):
 
 	return user
 
-def login(username, password):
+def login(username, password, ttl, desc, enabled=True):
 	validName = util.verifyValidName(username, "Username", fail=False)
 	if not validName:
 		abort(401, "Invalid credentials")
@@ -36,7 +36,7 @@ def login(username, password):
 
 	hash = util.createPasswordHash(password, user['passwordSalt'])
 	if hash == user['passwordHash']:
-		tokenInfo = token_service.createToken(username, user['isAdmin'], ttl=settings_service.getTokenTTL(), desc='Login')
+		tokenInfo = token_service.createToken(username, user['isAdmin'], ttl=ttl, desc=desc, enabled=enabled)
 		return token_service.formatToken(tokenInfo, hideToken=False)
 	else:
 		abort(401, "Invalid credentials")
