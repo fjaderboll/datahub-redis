@@ -9,7 +9,10 @@ build() {
 }
 package() {
 	docker save -o /tmp/image_datahub-$1.tar datahub-$1
-	gzip -v /tmp/image_datahub-$1.tar
+	if [ -f /tmp/image_datahub-$1.tar.gz ]; then
+		rm /tmp/image_datahub-$1.tar.gz
+	fi
+	gzip -v --fast /tmp/image_datahub-$1.tar
 }
 load() {
 	ssh $REMOTE_HOST gunzip -v /tmp/image_datahub-$1.tar.gz
