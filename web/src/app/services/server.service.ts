@@ -256,7 +256,11 @@ export class ServerService {
 
     public createReading(datasetName: string, nodeName: string, sensorName: string, value: number, time: string | null) {
 		const url = this.apiUrl + "datasets/" + datasetName + "/nodes/" + nodeName + "/sensors/" + sensorName + "/readings";
-		return this.http.post(url, { value, time }, this.httpOptionsJson);
+		const reading: any = { value };
+		if(time) {
+			reading['time'] = time;
+		}
+		return this.http.post(url, [reading], this.httpOptionsJson);
 	}
 
     public getSensorReadings(datasetName: string, nodeName: string, sensorName: string, limit: number | null, after: string | null) {
