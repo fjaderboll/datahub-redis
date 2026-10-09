@@ -2,7 +2,7 @@
 
 cd $(dirname "${BASH_SOURCE[0]}")
 
-REMOTE_HOST=panther.lan
+REMOTE_HOST=panther
 
 build() {
 	./$1/build.sh
