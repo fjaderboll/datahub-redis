@@ -35,17 +35,7 @@ Run from the `src` folder (or `docker exec <app container> python3 maintenance.p
 ```shell
 python3 maintenance.py check               # compare sensors in SQLite with time series in Redis
 python3 maintenance.py repair              # create missing time series and delete orphaned ones
-python3 maintenance.py remove-legacy-keys  # delete data left in Redis by the Redis-only version
 ```
-
-### Upgrading from the Redis-only version
-When the application starts with an empty SQLite database and Redis still contains
-users, datasets, nodes and sensors from the Redis-only version, these are imported
-automatically. Ids are kept, so the existing readings stay connected to their sensors.
-Orphaned entries are skipped and duplicates (such as two sensors with the same name on
-the same node) are merged; everything skipped or merged is logged as a warning.
-Once the application works as expected, run `maintenance.py check` followed by
-`maintenance.py remove-legacy-keys`.
 
 ## MQ broker
 

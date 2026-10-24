@@ -6,7 +6,7 @@ ENV TZ=Europe/Stockholm
 ENV DEBIAN_FRONTEND=noninteractive
 ENV SQLITE_PATH=/data/datahub.db
 
-RUN apt-get update && apt-get install -y --no-install-recommends curl tzdata iputils-ping && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends curl tzdata iputils-ping sqlite3 && rm -rf /var/lib/apt/lists/*
 COPY tmp/requirements.txt /tmp
 RUN pip3 install --no-cache-dir -r /tmp/requirements.txt && rm /tmp/requirements.txt
 

@@ -42,23 +42,3 @@ def findSeriesSensorIds():
 		if sensorId is not None:
 			sensorIds.add(sensorId)
 	return sensorIds
-
-def mergeSeries(fromSensorId, toSensorId):
-	"""Copy all readings to another sensor's series and delete the source, unless some could not be copied."""
-	fromKey = readingsKey(fromSensorId)
-	try:
-		samples = ts.range(fromKey, '-', '+')
-	except redis.ResponseError as e:
-		if isMissingKeyError(e):
-			return (0, 0)
-		raise
-
-	toKey = readingsKey(toSensorId)
-	failed = 0
-	for i in range(0, len(samples), 1000):
-		results = ts.madd([(toKey, timestamp, value) for timestamp, value in samples[i:i + 1000]])
-		failed += sum(1 for result in results if isinstance(result, Exception))
-
-	if not failed:
-		redisDb.delete(fromKey)
-	return (len(samples) - failed, failed)
