@@ -1,57 +1,96 @@
 from flask_restx import abort
 
-from db import db, Keys
+import db
 from services import util, settings_service, token_service
 
 def getAllUsers():
-	usernames = db.smembers(Keys.getUsers())
-	users = []
-	for username in usernames:
-		user = findUser(username)
-		users.append(user)
-	return users
+	return db.query('SELECT * FROM users ORDER BY username')
+
+def getUserCount():
+	return db.queryOne('SELECT COUNT(*) AS n FROM users')['n']
 
 def findUser(username, statusCode=404):
 	validName = util.verifyValidName(username, "Username", fail=False)
-	if not validName:
-		abort(statusCode, "Unknown user '" + username + "'")
+	if validName:
+		user = db.queryOne('SELECT * FROM users WHERE username = ?', (username,))
+		if user:
+			return user
 
-	user = db.hgetall(Keys.getUser(str(username)))
-	if len(user) == 0:
-		abort(statusCode, "Unknown user '" + username + "'")
+	abort(statusCode, "Unknown user '" + username + "'")
+
+def createUser(username, password):
+	util.verifyValidName(username, "Username")
+	util.verifyNoneEmpty(password, 'Password')
+
+	if username == settings_service.getMqttUsername():
+		abort(400, "Username '" + username + "' already exists")
+
+	salt = util.createPasswordSalt()
+	hash = util.createPasswordHash(password, salt)
+
+	with db.transaction():
+		if db.queryOne('SELECT 1 FROM users WHERE username = ?', (username,)):
+			abort(400, "Username '" + username + "' already exists")
+
+		isAdmin = getUserCount() == 0
+		db.execute('INSERT INTO users (username, password_hash, password_salt, email, is_admin) VALUES (?, ?, ?, ?, ?)',
+			(username, hash, salt, '', int(isAdmin)))
+
+	return findUser(username)
+
+def updateUser(username, email=None, isAdmin=None, password=None):
+	user = findUser(username)
+
+	with db.transaction():
+		if email is not None:
+			db.execute('UPDATE users SET email = ? WHERE id = ?', (email, user['id']))
+
+		if isAdmin is not None:
+			db.execute('UPDATE users SET is_admin = ? WHERE id = ?', (int(isAdmin), user['id']))
+
+		if password is not None:
+			salt = util.createPasswordSalt()
+			hash = util.createPasswordHash(password, salt)
+			db.execute('UPDATE users SET password_hash = ?, password_salt = ? WHERE id = ?', (hash, salt, user['id']))
+
+	return findUser(username)
+
+def authenticate(username, password):
+	"""Return the user if the credentials are valid and the user may log in, otherwise None."""
+	if not util.verifyValidName(username, "Username", fail=False):
+		return None
+
+	user = db.queryOne('SELECT * FROM users WHERE username = ?', (username,))
+	if not user:
+		return None
+
+	if not settings_service.getAllowNonAdminLogin() and not user['is_admin']:
+		return None
+
+	if util.createPasswordHash(password, user['password_salt']) != user['password_hash']:
+		return None
 
 	return user
 
-def login(username, password, ttl, desc, enabled=True):
-	validName = util.verifyValidName(username, "Username", fail=False)
-	if not validName:
+def login(username, password, ttl, desc):
+	user = authenticate(username, password)
+	if not user:
 		abort(401, "Invalid credentials")
 
-	user = db.hgetall(Keys.getUser(username))
-	if len(user) == 0:
-		abort(401, "Invalid credentials")
-
-	if not settings_service.getAllowNonAdminLogin() and not bool(int(user['isAdmin'])):
-		abort(401, "Invalid credentials")
-
-	hash = util.createPasswordHash(password, user['passwordSalt'])
-	if hash == user['passwordHash']:
-		tokenInfo = token_service.createToken(username, user['isAdmin'], ttl=ttl, desc=desc, enabled=enabled)
-		return token_service.formatToken(tokenInfo, hideToken=False)
-	else:
-		abort(401, "Invalid credentials")
+	tokenInfo = token_service.createToken(user, ttl=ttl, desc=desc)
+	return token_service.formatToken(tokenInfo, hideToken=False)
 
 def deleteUser(username):
-	userDatasetIds = db.smembers(Keys.getUserDatasetIds(username))
+	user = findUser(username)
 
-	otherUsernames = db.smembers(Keys.getUsers()) - {username}
-	for otherUsername in otherUsernames:
-		otherUserDatasetIds = db.smembers(Keys.getUserDatasetIds(otherUsername))
-		userDatasetIds -= otherUserDatasetIds
+	with db.transaction():
+		orphanCount = db.queryOne('''
+			SELECT COUNT(*) AS n FROM dataset_users du
+			WHERE du.user_id = ?
+			AND NOT EXISTS (SELECT 1 FROM dataset_users other WHERE other.dataset_id = du.dataset_id AND other.user_id != du.user_id)
+		''', (user['id'],))['n']
 
-	if len(userDatasetIds) > 0:
-		abort(400, 'This will result in ' + str(len(userDatasetIds)) + ' orphaned dataset(s); delete or share them first')
+		if orphanCount > 0:
+			abort(400, 'This will result in ' + str(orphanCount) + ' orphaned dataset(s); delete or share them first')
 
-	db.delete(Keys.getUser(username))
-	db.delete(Keys.getUserDatasetIds(username))
-	db.srem(Keys.getUsers(), username)
+		db.execute('DELETE FROM users WHERE id = ?', (user['id'],))

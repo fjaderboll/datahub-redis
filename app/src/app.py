@@ -3,11 +3,14 @@
 import os
 import sys
 import secrets
+import logging
 #import signal
 from flask import Flask, Blueprint
 from flask_cors import CORS
 
 from api import api
+import db
+import maintenance
 from endpoints.state import ns as namespace_state
 from endpoints.users import ns as namespace_users
 from endpoints.tokens import ns as namespace_tokens
@@ -22,6 +25,7 @@ from services import settings_service
 
 def createApp():
 	app = Flask(__name__)
+	app.logger.setLevel(logging.INFO)
 	cors = CORS(app, resources={r"/*": {"origins": "http://localhost:4200"}})
 
 	blueprint = Blueprint('api', __name__, url_prefix='')
@@ -34,11 +38,17 @@ def createApp():
 	api.add_namespace(namespace_mqtt)
 	app.register_blueprint(blueprint)
 
+	maintenance.initialize(app.logger)
+
+	@app.teardown_appcontext
+	def closeDb(exception):
+		db.closeDb()
+
 	app.config['MQTT_BROKER_URL'] = os.environ.get('MQTT_BROKER_URL', 'localhost')
 	app.config['MQTT_BROKER_PORT'] = int(os.environ.get('MQTT_BROKER_PORT', '1883'))
 	app.config['MQTT_USERNAME'] = settings_service.getMqttUsername()
 	app.config['MQTT_PASSWORD'] = settings_service.getMqttPassword()
-	app.config['MQTT_CLIENT_ID'] = 'datahub-app_' + secrets.token_hex(4)   # broken in Flask-MQTT==1.1.1
+	app.config['MQTT_CLIENT_ID'] = 'datahub-app_' + secrets.token_hex(4)
 	app.config['MQTT_TLS_ENABLED'] = False
 
 	global_vars.mqttClient = mqttclient.create(app)

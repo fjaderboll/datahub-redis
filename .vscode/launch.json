@@ -56,7 +56,7 @@
 		},
 		{
 			"name": "Docker - Redis",
-			"command": "docker run -it --rm --name datahub-redis -p 6379:6379 -v datahub-redis-data:/data redislabs/redistimeseries:1.10.11",
+			"command": "docker run -it --rm --name datahub-redis -p 6379:6379 -v datahub-redis-data:/data redis:8.10.2",
 			"request": "launch",
 			"type": "node-terminal"
 		},

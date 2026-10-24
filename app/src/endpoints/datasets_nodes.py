@@ -1,7 +1,6 @@
 from flask_restx import Resource
 
 from api import api, auth_required
-from db import db, Keys
 from services import util, finder, cleaner, swagger_service, node_service, sensor_service
 
 from endpoints.datasets import ns
@@ -39,7 +38,7 @@ class NodesView(Resource):
 		dataset = finder.findDataset(auth, datasetName)
 		node = finder.findNode(dataset['id'], nodeName)
 
-		sensors = sensor_service.getNodeSensors(node['id'], dataset, node)
+		sensors = sensor_service.getNodeSensors(dataset['name'], node)
 		node['sensors'] = cleaner.cleanSensors(sensors)
 
 		return cleaner.cleanNode(node)
@@ -51,20 +50,8 @@ class NodesView(Resource):
 	def put(auth, self, datasetName, nodeName):
 		dataset = finder.findDataset(auth, datasetName)
 		node = finder.findNode(dataset['id'], nodeName)
-		nKey = Keys.getNodeById(node['id'])
-
-		if 'name' in api.payload:
-			newName = api.payload['name']
-			node_service.verifyValidNodeName(dataset['id'], newName)
-			db.hset(nKey, 'name', newName)
-			db.rename(Keys.getNodeIdByName(dataset['id'], nodeName), Keys.getNodeIdByName(dataset['id'], newName))
-
-		if 'desc' in api.payload:
-			db.hset(nKey, 'desc', api.payload['desc'])
-
-		node = db.hgetall(nKey)
-		node = cleaner.cleanNode(node)
-		return node
+		node = node_service.updateNode(node, name=util.getPayload('name'), desc=util.getPayload('desc'))
+		return cleaner.cleanNode(node)
 
 	@ns.response(200, 'Success')
 	@ns.response(404, 'Unknown node')
@@ -73,6 +60,6 @@ class NodesView(Resource):
 		dataset = finder.findDataset(auth, datasetName)
 		node = finder.findNode(dataset['id'], nodeName)
 
-		node_service.deleteNode(node['id'])
+		node_service.deleteNode(node)
 
 		return "Removed node '" + nodeName + "'"

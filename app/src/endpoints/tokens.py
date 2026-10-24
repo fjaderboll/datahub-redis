@@ -1,8 +1,6 @@
-from datetime import datetime, timedelta
 from flask_restx import Resource
 
 from api import api, auth_required
-from db import db, Keys
 from services import util, swagger_service, settings_service, token_service
 
 ns = api.namespace('tokens', description='List, view, create and delete tokens')
@@ -12,13 +10,7 @@ class TokensList(Resource):
 	@ns.response(200, 'Success')
 	@auth_required
 	def get(auth, self):
-		tokenInfos = []
-		for tokenInfo in db.scan_iter(match='token:*'):
-			tokenInfo = db.hgetall(tokenInfo)
-			if tokenInfo['username'] == auth['username']:
-				tokenInfos.append(token_service.formatToken(tokenInfo))
-
-		return tokenInfos
+		return [token_service.formatToken(tokenInfo) for tokenInfo in token_service.getUserTokens(auth['username'])]
 
 	@ns.response(200, 'Success')
 	@ns.response(400, 'Bad request')
@@ -28,7 +20,7 @@ class TokensList(Resource):
 		ttl = util.getPayload('ttl', settings_service.getTokenTTL())
 		desc = util.getPayload('desc')
 
-		tokenInfo = token_service.createToken(auth['username'], auth['isAdmin'], ttl=ttl, desc=desc)
+		tokenInfo = token_service.createToken(auth, ttl=ttl, desc=desc)
 		return token_service.formatToken(tokenInfo, hideToken=False)
 
 @ns.route('/<int:id>')
@@ -47,25 +39,7 @@ class TokensView(Resource):
 	@api.expect(swagger_service.createUpdateTokenData)
 	def put(auth, self, id):
 		tokenInfo = token_service.findToken(auth, id)
-		tKey = Keys.getToken(tokenInfo['token'])
-
-		payload = api.payload
-		if 'desc' in payload:
-			db.hset(tKey, 'desc', payload['desc'])
-
-		if 'enabled' in payload:
-			db.hset(tKey, 'enabled', int(payload['enabled']))
-
-		if 'ttl' in payload:
-			ttl = payload['ttl']
-			if ttl == 0:
-				db.persist(tKey)
-				db.hset(tKey, 'expire', '')
-			else:
-				db.expire(tKey, ttl)
-				db.hset(tKey, 'expire', (datetime.now() + timedelta(seconds=ttl)).replace(microsecond=0).isoformat())
-
-		tokenInfo = db.hgetall(tKey)
+		tokenInfo = token_service.updateToken(tokenInfo, desc=util.getPayload('desc'), enabled=util.getPayload('enabled'), ttl=util.getPayload('ttl'))
 		return token_service.formatToken(tokenInfo)
 
 	@ns.response(200, 'Success')
@@ -73,6 +47,6 @@ class TokensView(Resource):
 	@auth_required
 	def delete(auth, self, id):
 		tokenInfo = token_service.findToken(auth, id)
-		db.delete(Keys.getToken(tokenInfo['token']))
+		token_service.deleteToken(tokenInfo['token'])
 
 		return "Removed token with ID = " + str(id)

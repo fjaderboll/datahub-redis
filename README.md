@@ -19,6 +19,11 @@ Check this out if you want something that can be deployed simply on a web server
 ## Overview
 ![overview](doc/overview.png)
 
+## Storage
+Readings are stored in [Redis](https://redis.io/) time series, which keeps them in memory
+for fast access and avoids unnecessary disk writes.
+Users, datasets, nodes and sensors are stored in [SQLite](https://www.sqlite.org/).
+
 ## Entities
 Structure of entities with examples:
 

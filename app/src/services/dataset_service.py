@@ -1,60 +1,81 @@
 from flask_restx import abort
 
-from db import db, ts, Keys
-from services import util, node_service
+import db
+import tsdb
+from services import util
 
 def verifyValidDatasetName(name):
 	util.verifyValidName(name, "Name")
 
-	datasetId = db.get(Keys.getDatasetIdByName(name))
-	if datasetId:
+	if db.queryOne('SELECT 1 FROM datasets WHERE name = ?', (name,)):
 		abort(400, "Dataset '" + name + "' already exists")
 
+def getDatasetById(datasetId):
+	return db.queryOne('SELECT * FROM datasets WHERE id = ?', (datasetId,))
+
+def getUserDatasets(username):
+	return db.query('''
+		SELECT d.* FROM datasets d
+		JOIN dataset_users du ON du.dataset_id = d.id
+		JOIN users u ON u.id = du.user_id
+		WHERE u.username = ?
+		ORDER BY d.name
+	''', (username,))
+
+def findUserDataset(username, datasetName):
+	return db.queryOne('''
+		SELECT d.* FROM datasets d
+		JOIN dataset_users du ON du.dataset_id = d.id
+		JOIN users u ON u.id = du.user_id
+		WHERE d.name = ? AND u.username = ?
+	''', (datasetName, username))
+
 def createDataset(name, username, desc=''):
-	verifyValidDatasetName(name)
+	with db.transaction():
+		verifyValidDatasetName(name)
+		cursor = db.execute('INSERT INTO datasets (name, description) VALUES (?, ?)', (name, desc or ''))
+		datasetId = cursor.lastrowid
+		db.execute('INSERT INTO dataset_users (dataset_id, user_id) SELECT ?, id FROM users WHERE username = ?', (datasetId, username))
 
-	datasetId = db.incr(Keys.getDatasetIdCounter())
-	dataset = {
-		'id': datasetId,
-		'name': name,
-		'desc': desc
-	}
-	db.set(Keys.getDatasetIdByName(name), datasetId)
-	db.hset(Keys.getDatasetById(datasetId), mapping=dataset)
-	db.sadd(Keys.getUserDatasetIds(username), datasetId)
+	return getDatasetById(datasetId)
 
-	return dataset
+def updateDataset(dataset, name=None, desc=None):
+	with db.transaction():
+		if name is not None:
+			verifyValidDatasetName(name)
+			db.execute('UPDATE datasets SET name = ? WHERE id = ?', (name, dataset['id']))
+
+		if desc is not None:
+			db.execute('UPDATE datasets SET description = ? WHERE id = ?', (desc, dataset['id']))
+
+	return getDatasetById(dataset['id'])
 
 def deleteDataset(dataset):
-	nodeIds = db.smembers(Keys.getDatasetNodeIds(dataset['id']))
-	for nodeId in nodeIds:
-		node_service.deleteNode(nodeId)
+	with db.transaction():
+		sensorIds = [row['id'] for row in db.query('''
+			SELECT s.id FROM sensors s JOIN nodes n ON n.id = s.node_id WHERE n.dataset_id = ?
+		''', (dataset['id'],))]
+		db.execute('DELETE FROM datasets WHERE id = ?', (dataset['id'],))
 
-	for username in db.smembers(Keys.getUsers()):
-		db.srem(Keys.getUserDatasetIds(username), dataset['id'])
-	db.delete(Keys.getDatasetIdByName(dataset['name']))
-	db.delete(Keys.getDatasetById(dataset['id']))
-	db.delete(Keys.getDatasetNodeIds(dataset['id']))
+	tsdb.deleteSeries(sensorIds)
 
 def findDatasetUsernames(datasetId):
-	usernames = []
-	allUsernames = db.smembers(Keys.getUsers())
-	for username in allUsernames:
-		userDatasetIds = db.smembers(Keys.getUserDatasetIds(username))
-		if datasetId in userDatasetIds:
-			usernames.append(username)
-
-	return usernames
+	rows = db.query('''
+		SELECT u.username FROM users u
+		JOIN dataset_users du ON du.user_id = u.id
+		WHERE du.dataset_id = ?
+		ORDER BY u.username
+	''', (datasetId,))
+	return [row['username'] for row in rows]
 
 def addDatasetUser(datasetId, username):
-	db.sadd(Keys.getUserDatasetIds(username), datasetId)
+	db.execute('INSERT OR IGNORE INTO dataset_users (dataset_id, user_id) SELECT ?, id FROM users WHERE username = ?', (datasetId, username))
 
 def removeDatasetUser(datasetId, username):
-	datasetUsernames = findDatasetUsernames(datasetId)
-	if username in datasetUsernames:
-		datasetUsernames.remove(username)
+	with db.transaction():
+		datasetUsernames = findDatasetUsernames(datasetId)
+		if username in datasetUsernames:
+			if len(datasetUsernames) == 1:
+				abort(400, 'This will result in dataset being orphaned; delete or share it')
 
-		if len(datasetUsernames) == 0:
-			abort(400, 'This will result in dataset being orphaned; delete or share it')
-
-		db.srem(Keys.getUserDatasetIds(username), datasetId)
+			db.execute('DELETE FROM dataset_users WHERE dataset_id = ? AND user_id = (SELECT id FROM users WHERE username = ?)', (datasetId, username))

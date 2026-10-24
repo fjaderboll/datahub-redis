@@ -6,8 +6,9 @@ import psutil
 import json
 
 from api import api, auth_required
-from db import db, ts, Keys
-from services import util, swagger_service, settings_service, node_service, sensor_service, reading_service
+import db
+import tsdb
+from services import util, swagger_service, settings_service, user_service, dataset_service, reading_service
 
 ns = api.namespace('state', description='Get application state')
 
@@ -16,16 +17,16 @@ class StateHealth(Resource):
 	@api.doc(security=None)
 	@ns.response(200, 'Success')
 	def get(self):
-		return db.info()['uptime_in_seconds']
+		db.queryOne('SELECT 1')
+		return tsdb.redisDb.info()['uptime_in_seconds']
 
 @ns.route('/users')
 class StateLogin(Resource):
 	@api.doc(security=None)
 	@ns.response(200, 'Success')
 	def get(self):
-		userCount = db.scard(Keys.getUsers())
 		return {
-			'createFirstUserRequired': (userCount == 0),
+			'createFirstUserRequired': (user_service.getUserCount() == 0),
 			'allowPublicCreateUser': settings_service.getAllowPublicCreateUser()
 		}
 
@@ -49,7 +50,7 @@ class StateSystem(Resource):
 				'available': psutil.virtual_memory().available,
 				'percent': psutil.virtual_memory().percent,
 				'application': process.memory_info().rss,
-				'database': db.info()['used_memory']
+				'database': tsdb.redisDb.info()['used_memory']
 			}
 		}
 
@@ -83,9 +84,9 @@ class StateSettings(Resource):
 			applyRetention = api.payload['applyRetention']
 			if applyRetention:
 				retention_msecs = settings_service.getReadingsRetention()
-				for tsKey in db.scan_iter(match='sensor-readings:*'):
-					ts.alter(tsKey, retention_msecs=retention_msecs)
-					n += 1
+				sensorIds = [row['id'] for row in db.query('SELECT id FROM sensors')]
+				results = reading_service.runPerSensor(sensorIds, lambda pipe, key: pipe.alter(key, retention_msecs=retention_msecs))
+				n += sum(1 for result in results.values() if result)
 
 		if 'allowPublicCreateUser' in api.payload:
 			allowPublicCreateUser = api.payload['allowPublicCreateUser']
@@ -111,23 +112,26 @@ class StateTimeseries(Resource):
 	def get(auth, self):
 		util.verifyAdmin(auth)
 
+		sensors = db.query('''
+			SELECT s.id, s.name, n.name AS node_name, d.name AS dataset_name
+			FROM sensors s
+			JOIN nodes n ON n.id = s.node_id
+			JOIN datasets d ON d.id = n.dataset_id
+			ORDER BY d.name, n.name, s.name
+		''')
+		statsBySensorId = reading_service.getReadingStatsMany([sensor['id'] for sensor in sensors])
+
 		timeseries = []
-		for dKey in db.scan_iter(match='dataset:*'):
-			dataset = db.hgetall(dKey)
-			for node in node_service.getDatasetNodes(dataset['id']):
-				for sensor in sensor_service.getNodeSensors(node['id'], dataset, node):
-					stats = reading_service.getReadingStats(sensor['id'])
-
-					timeserie = {
-						'datasetName': dataset['name'],
-						'nodeName': node['name'],
-						'sensorName': sensor['name'],
-						'memory': stats['memory'],
-						'samples': stats['count'],
-						'retention': stats['retention']
-					}
-
-					timeseries.append(timeserie)
+		for sensor in sensors:
+			stats = statsBySensorId[sensor['id']]
+			timeseries.append({
+				'datasetName': sensor['dataset_name'],
+				'nodeName': sensor['node_name'],
+				'sensorName': sensor['name'],
+				'memory': stats['memory'],
+				'samples': stats['count'],
+				'retention': stats['retention']
+			})
 
 		return timeseries
 
@@ -141,9 +145,9 @@ class StateReadings(Resource):
 
 class ReadingSubscriber:
 	def __init__(self, username):
-		self.datasetIds = db.smembers(Keys.getUserDatasetIds(username))
-		self.pubsub = db.pubsub()
-		self.pubsub.subscribe(Keys.getReadingsTopic())
+		self.datasetIds = {dataset['id'] for dataset in dataset_service.getUserDatasets(username)}
+		self.pubsub = tsdb.redisDb.pubsub()
+		self.pubsub.subscribe(tsdb.READINGS_TOPIC)
 
 	def __iter__(self):
 		return self
@@ -152,7 +156,7 @@ class ReadingSubscriber:
 		for message in self.pubsub.listen():
 			if message['type'] == 'message':
 				reading = json.loads(message['data'])
-				datasetId = db.get(Keys.getDatasetIdByName(reading['datasetName']))
-				if datasetId in self.datasetIds:
+				dataset = db.queryOne('SELECT id FROM datasets WHERE name = ?', (reading['datasetName'],))
+				if dataset and dataset['id'] in self.datasetIds:
 					return message['data'] + '\n'
 		raise StopIteration

@@ -1,13 +1,13 @@
-from parser import ParserError
-import dateutil.parser as dp
 from datetime import datetime
 import json
 
+import dateutil.parser as dp
 from flask_restx import abort
 from flask import request
 
 from api import api
-from db import db, ts, Keys
+import db
+import tsdb
 from services import cleaner, finder, global_vars
 
 def parseTime(time, defaultValue):
@@ -18,7 +18,7 @@ def parseTime(time, defaultValue):
 		except ValueError:
 			try:
 				return int(dp.parse(time).timestamp()*1000)
-			except ParserError:
+			except (dp.ParserError, OverflowError):
 				abort(400, 'Invalid time: ' + time)
 	return defaultValue
 
@@ -27,12 +27,12 @@ def parseLimit(limit, defaultValue):
 		try:
 			l = int(limit)
 			if l < 0:
-				abort(400, 'Invalid limit: ' + limit)
+				abort(400, 'Invalid limit: ' + str(limit))
 			elif l == 0:
 				return None
 			return l
 		except ValueError:
-			abort(400, 'Invalid limit: ' + limit)
+			abort(400, 'Invalid limit: ' + str(limit))
 	return defaultValue
 
 def createReadings(auth, datasetName, nodeName, sensorName):
@@ -47,18 +47,26 @@ def createReadings(auth, datasetName, nodeName, sensorName):
 	if sensorName:
 		sensor = finder.findSensor(node['id'], sensorName, create=True)
 
-	cache = DbCache()
+	cache = {}
+	def cached(key, find):
+		if key not in cache:
+			cache[key] = find()
+		return cache[key]
+
 	readings = []
 	for reading in api.payload:
 		value = reading['value']
 		time = reading['time'] if 'time' in reading else None
 
 		if not datasetName:
-			dataset = cache.getDatasetByName(auth, reading['datasetName'], create=True)
+			name = reading['datasetName']
+			dataset = cached(('dataset', name), lambda: finder.findDataset(auth, name, create=True))
 		if not nodeName:
-			node = cache.getNodeByName(dataset['id'], reading['nodeName'], create=True)
+			name = reading['nodeName']
+			node = cached(('node', dataset['id'], name), lambda: finder.findNode(dataset['id'], name, create=True))
 		if not sensorName:
-			sensor = cache.getSensorByName(node['id'], reading['sensorName'], create=True)
+			name = reading['sensorName']
+			sensor = cached(('sensor', node['id'], name), lambda: finder.findSensor(node['id'], name, create=True))
 
 		cleanedReading = createReading(dataset, node, sensor, value, time=time)
 		readings.append(cleanedReading)
@@ -68,28 +76,15 @@ def createReadings(auth, datasetName, nodeName, sensorName):
 def createReading(dataset, node, sensor, value, time=None):
 	timestamp = parseTime(time, '*')
 
-	key = Keys.getReadings(sensor['id'])
-	ts.add(key, timestamp, value)
-	reading = ts.get(key)
-	cleanedReading = cleaner.cleanReading(reading, dataset, node, sensor)
+	storedTimestamp = tsdb.ts.add(tsdb.readingsKey(sensor['id']), timestamp, value)
+	cleanedReading = cleaner.cleanReading((storedTimestamp, float(value)), dataset['name'], node['name'], sensor)
 	message = json.dumps(cleanedReading)
-	db.publish(Keys.getReadingsTopic(), message)
+	tsdb.redisDb.publish(tsdb.READINGS_TOPIC, message)
 	global_vars.mqttClient.publish(message)
 	return cleanedReading
 
 def getReadings(auth, datasetName, nodeName, sensorName):
-	dataset = None
-	node = None
-	sensor = None
-
-	if datasetName:
-		dataset = finder.findDataset(auth, datasetName)
-	if nodeName:
-		node = finder.findNode(dataset['id'], nodeName)
-	if sensorName:
-		sensor = finder.findSensor(node['id'], sensorName)
-
-	requestedSensors = findRequestedSensors(auth, dataset, node, sensor)
+	requestedSensors = findRequestedSensors(auth, datasetName, nodeName, sensorName)
 
 	after = request.args.get('after')
 	before = request.args.get('before')
@@ -99,7 +94,6 @@ def getReadings(auth, datasetName, nodeName, sensorName):
 	toTime = parseTime(before, '+')
 	count = parseLimit(limit, 1000)
 
-	cache = DbCache()
 	readings = []
 	c = None
 	for requestedSensor in requestedSensors:
@@ -108,19 +102,31 @@ def getReadings(auth, datasetName, nodeName, sensorName):
 			if c <= 0:
 				break
 
-		if not datasetName:
-			dataset = cache.getDatasetById(requestedSensor['datasetId'])
-		if not nodeName:
-			node = cache.getNodeById(requestedSensor['nodeId'])
-		if not sensorName:
-			sensor = cache.getSensorById(requestedSensor['sensorId'])
-
-		items = ts.revrange(Keys.getReadings(requestedSensor['sensorId']), fromTime, toTime, count=c)
-		readings.extend(cleaner.cleanReadings(items, dataset, node, sensor))
+		try:
+			items = tsdb.ts.revrange(tsdb.readingsKey(requestedSensor['id']), fromTime, toTime, count=c)
+		except Exception as e:
+			if not tsdb.isMissingKeyError(e):
+				raise
+			items = []
+		readings.extend(cleaner.cleanReadings(items, requestedSensor['dataset_name'], requestedSensor['node_name'], requestedSensor))
 
 	return readings
 
 def deleteReadings(auth, datasetName, nodeName, sensorName):
+	requestedSensors = findRequestedSensors(auth, datasetName, nodeName, sensorName)
+
+	after = request.args.get('after')
+	before = request.args.get('before')
+
+	fromTime = parseTime(after, '-')
+	toTime = parseTime(before, '+')
+
+	results = runPerSensor([s['id'] for s in requestedSensors], lambda pipe, key: pipe.delete(key, fromTime, toTime))
+	n = sum(r for r in results.values() if r)
+
+	return "Removed " + str(n) + " readings"
+
+def findRequestedSensors(auth, datasetName, nodeName, sensorName):
 	dataset = None
 	node = None
 	sensor = None
@@ -132,126 +138,62 @@ def deleteReadings(auth, datasetName, nodeName, sensorName):
 	if sensorName:
 		sensor = finder.findSensor(node['id'], sensorName)
 
-	requestedSensors = findRequestedSensors(auth, dataset, node, sensor)
-
-	after = request.args.get('after')
-	before = request.args.get('before')
-
-	fromTime = parseTime(after, '-')
-	toTime = parseTime(before, '+')
-
-	n = 0
-	for requestedSensor in requestedSensors:
-		n += ts.delete(Keys.getReadings(requestedSensor['sensorId']), fromTime, toTime)
-
-	return "Removed " + str(n) + " readings"
-
-def findRequestedSensors(auth, dataset, node, sensor):
-	requestedSensors = []
+	sql = '''
+		SELECT s.id, s.name, s.unit, n.name AS node_name, d.name AS dataset_name
+		FROM sensors s
+		JOIN nodes n ON n.id = s.node_id
+		JOIN datasets d ON d.id = n.dataset_id
+	'''
 	if sensor:
-		requestedSensors.append({
-			'sensorId': sensor['id'],
-			'nodeId': node['id'],
-			'datasetId': dataset['id']
-		})
+		sql += ' WHERE s.id = ?'
+		params = (sensor['id'],)
 	elif node:
-		sensorIds = db.smembers(Keys.getNodeSensorIds(node['id']))
-		for sensorId in sensorIds:
-			requestedSensors.append({
-				'sensorId': sensorId,
-				'nodeId': node['id'],
-				'datasetId': dataset['id']
-			})
+		sql += ' WHERE n.id = ?'
+		params = (node['id'],)
 	elif dataset:
-		nodeIds = db.smembers(Keys.getDatasetNodeIds(dataset['id']))
-		for nodeId in nodeIds:
-			sensorIds = db.smembers(Keys.getNodeSensorIds(nodeId))
-			for sensorId in sensorIds:
-				requestedSensors.append({
-					'sensorId': sensorId,
-					'nodeId': nodeId,
-					'datasetId': dataset['id']
-				})
+		sql += ' WHERE d.id = ?'
+		params = (dataset['id'],)
 	else:
-		datasetIds = db.smembers(Keys.getUserDatasetIds(auth['username']))
-		for datasetId in datasetIds:
-			nodeIds = db.smembers(Keys.getDatasetNodeIds(datasetId))
-			for nodeId in nodeIds:
-				sensorIds = db.smembers(Keys.getNodeSensorIds(nodeId))
-				for sensorId in sensorIds:
-					requestedSensors.append({
-						'sensorId': sensorId,
-						'nodeId': nodeId,
-						'datasetId': datasetId
-					})
+		sql += '''
+			JOIN dataset_users du ON du.dataset_id = d.id
+			JOIN users u ON u.id = du.user_id
+			WHERE u.username = ?
+		'''
+		params = (auth['username'],)
 
-	return requestedSensors
+	return db.query(sql + ' ORDER BY d.name, n.name, s.name', params)
 
-def getLastReading(sensorId):
-	return ts.get(Keys.getReadings(sensorId))
+def runPerSensor(sensorIds, command):
+	"""Run a time series command for each sensor in one round trip. Missing series give None."""
+	pipe = tsdb.ts.pipeline(transaction=False)
+	for sensorId in sensorIds:
+		command(pipe, tsdb.readingsKey(sensorId))
+	results = pipe.execute(raise_on_error=False) if sensorIds else []
+
+	resultBySensorId = {}
+	for sensorId, result in zip(sensorIds, results):
+		if isinstance(result, Exception):
+			if not tsdb.isMissingKeyError(result):
+				raise result
+			result = None
+		resultBySensorId[sensorId] = result
+	return resultBySensorId
+
+def getLastReadings(sensorIds):
+	return runPerSensor(sensorIds, lambda pipe, key: pipe.get(key))
+
+def getReadingStatsMany(sensorIds):
+	infos = runPerSensor(sensorIds, lambda pipe, key: pipe.info(key))
+	stats = {}
+	for sensorId, info in infos.items():
+		stats[sensorId] = {
+			'memory': info.memory_usage if info else 0,
+			'count': info.total_samples if info else 0,
+			'retention': int(info.retention_msecs / 1000) if info else 0
+			#'lastTimestamp': info.last_time_stamp,
+			#'firstTimestamp': info.first_time_stamp
+		}
+	return stats
 
 def getReadingStats(sensorId):
-	info = ts.info(Keys.getReadings(sensorId))
-	return {
-		'memory': info.memory_usage,
-		'count': info.total_samples,
-		'retention': int(info.retention_msecs / 1000)
-		#'lastTimestamp': info.last_time_stamp,
-		#'firstTimestamp': info.first_time_stamp
-	}
-
-class DbCache:
-	def __init__(self):
-		self.datasets = {}
-		self.nodes = {}
-		self.sensors = {}
-
-	def getDatasetByName(self, auth, datasetName, create=False):
-		if datasetName in self.datasets:
-			dataset = self.datasets[datasetName]
-		else:
-			dataset = finder.findDataset(auth, datasetName, create=create)
-			self.datasets[datasetName] = dataset
-		return dataset
-
-	def getNodeByName(self, datasetId, nodeName, create=False):
-		key = Keys.getNodeIdByName(datasetId, nodeName)
-		if key in self.nodes:
-			node = self.nodes[key]
-		else:
-			node = finder.findNode(datasetId, nodeName, create=create)
-			self.nodes[key] = node
-		return node
-
-	def getSensorByName(self, nodeId, sensorName, create=False):
-		key = Keys.getSensorIdByName(nodeId, sensorName)
-		if key in self.sensors:
-			sensor = self.sensors[key]
-		else:
-			sensor = finder.findSensor(nodeId, sensorName, create=create)
-			self.sensors[key] = sensor
-		return sensor
-
-	def getDatasetById(self, datasetId):
-		if datasetId in self.datasets:
-			dataset = self.datasets[datasetId]
-		else:
-			dataset = db.hgetall(Keys.getDatasetById(datasetId))
-			self.datasets[datasetId] = dataset
-		return dataset
-
-	def getNodeById(self, nodeId):
-		if nodeId in self.nodes:
-			node = self.nodes[nodeId]
-		else:
-			node = db.hgetall(Keys.getNodeById(nodeId))
-			self.nodes[nodeId] = node
-		return node
-
-	def getSensorById(self, sensorId):
-		if sensorId in self.sensors:
-			sensor = self.sensors[sensorId]
-		else:
-			sensor = db.hgetall(Keys.getSensorById(sensorId))
-			self.sensors[sensorId] = sensor
-		return sensor
+	return getReadingStatsMany([sensorId])[sensorId]

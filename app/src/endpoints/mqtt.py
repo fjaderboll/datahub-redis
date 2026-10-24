@@ -23,12 +23,8 @@ class Authenticate(Resource):
 		if username == settings_service.getMqttUsername():
 			if password == settings_service.getMqttPassword():
 				allow = True
-		else:
-			try:
-				tokenInfo = user_service.login(username, password, 60, 'MQTT login', enabled=False)
-				allow = True
-			except:
-				pass
+		elif user_service.authenticate(username, password):
+			allow = True
 
 		return {
 			"result": 'allow' if allow else 'ignore'

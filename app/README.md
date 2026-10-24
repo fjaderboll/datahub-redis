@@ -2,11 +2,12 @@
 
 ## Doc
 
-* https://redis.io/docs/getting-started/
-* https://redis.io/docs/stack/timeseries/
+* https://redis.io/docs/latest/develop/data-types/timeseries/
 * https://redis-py.readthedocs.io/en/stable/examples/timeseries_examples.html
+* https://www.sqlite.org/lang.html
 
 ## Setup
+Requires Python 3.10 or newer (the Docker image uses Python 3.15).
 
 ```shell
 sudo apt install python3-venv python3-pip docker.io
@@ -16,11 +17,35 @@ pip3 install -r requirements.txt
 ```
 
 ## Database
+Data is split between two databases:
+* **SQLite** holds users, tokens, settings, datasets, nodes and sensors.
+  The file is `app/datahub.db` by default, set `SQLITE_PATH` to change it.
+  It is created on first start.
+* **Redis** (with its built-in time series support) holds the readings,
+  one time series per sensor with the key `sensor-readings:<sensor id>`.
 
 ```shell
-docker run -d --rm --name datahub-redis -p 6379:6379 -v datahub-redis-data:/data redislabs/redistimeseries:1.10.11
-docker exec -it datahub-redis redis-cli   # interact with database
+docker run -d --rm --name datahub-redis -p 6379:6379 -v datahub-redis-data:/data redis:8.10.2
+docker exec -it datahub-redis redis-cli   # interact with Redis
+sqlite3 datahub.db                        # interact with SQLite
 ```
+
+### Maintenance
+Run from the `src` folder (or `docker exec <app container> python3 maintenance.py ...`):
+```shell
+python3 maintenance.py check               # compare sensors in SQLite with time series in Redis
+python3 maintenance.py repair              # create missing time series and delete orphaned ones
+python3 maintenance.py remove-legacy-keys  # delete data left in Redis by the Redis-only version
+```
+
+### Upgrading from the Redis-only version
+When the application starts with an empty SQLite database and Redis still contains
+users, datasets, nodes and sensors from the Redis-only version, these are imported
+automatically. Ids are kept, so the existing readings stay connected to their sensors.
+Orphaned entries are skipped and duplicates (such as two sensors with the same name on
+the same node) are merged; everything skipped or merged is logged as a warning.
+Once the application works as expected, run `maintenance.py check` followed by
+`maintenance.py remove-legacy-keys`.
 
 ## MQ broker
 

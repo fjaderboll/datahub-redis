@@ -1,5 +1,5 @@
 import re
-import random
+import secrets
 import string
 import hashlib
 from flask_restx import abort
@@ -20,7 +20,7 @@ def verifyAdminOrUser(auth, username):
 		abort(403, "Forbidden")
 
 def verifyValidName(name, attributeName="Attribute", fail=True):
-	regex = "^[a-z0-9][a-z0-9_\-@.]*[a-z0-9]$"
+	regex = r"^[a-z0-9][a-z0-9_\-@.]*[a-z0-9]$"
 	if re.search(regex, name) is None:
 		if fail:
 			abort(400, attributeName + " '" + name + "' does not match pattern " + regex)
@@ -32,30 +32,20 @@ def verifyNoneEmpty(value, attributeName):
 		abort(400, attributeName + " cannot be empty")
 
 def createPasswordSalt():
-	return random.randint(1000, 9999)
+	return str(1000 + secrets.randbelow(9000))
 
 def createPasswordHash(password, salt):
 	s = str(password) + str(salt)
 	return hashlib.md5(s.encode('utf-8')).hexdigest()
 
 def getRandomString(length):
-	return ''.join(random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(length))
+	alphabet = string.ascii_uppercase + string.ascii_lowercase + string.digits
+	return ''.join(secrets.choice(alphabet) for _ in range(length))
 
-def copy(obj, attributes):
+def cleanObject(obj, fields):
+	"""Copy 'fields' (API name -> internal name) that are present in 'obj'."""
 	newObj = {}
-	for attr in attributes:
-		if attr in obj:
-			if len(attr) >= 3 and attr[0:2] == 'is' and attr[2:3].isupper():
-				newObj[attr] = int(obj[attr]) != 0
-			else:
-				newObj[attr] = obj[attr]
-		else:
-			newObj[attr] = None
-	return newObj
-
-def cleanObject(obj, fieldsToKeep):
-	newObj = {}
-	for field in fieldsToKeep:
-		if field in obj:
-			newObj[field] = obj[field]
+	for apiName, internalName in fields.items():
+		if internalName in obj:
+			newObj[apiName] = obj[internalName]
 	return newObj

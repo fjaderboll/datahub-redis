@@ -2,10 +2,10 @@ version: "3.9"
 
 services:
   redis:
-    image: redislabs/redistimeseries:1.10.11
+    image: redis:8.10.2
     volumes:
       - "redis-data:/data"
-    command: redis-server --loadmodule /usr/lib/redis/modules/redistimeseries.so --save "86400 1 21600 20000" # https://github.com/RedisTimeSeries/RedisTimeSeries/blob/master/Dockerfile
+    command: redis-server --save "86400 1 21600 20000"
   emqx:
     image: emqx:5.5.0
     volumes:
@@ -30,9 +30,12 @@ services:
       - "MQTT_BROKER_PORT=1883"
       - "MQTT_USERNAME=mqtt"
       - "MQTT_PASSWORD=mqtt123"
+    volumes:
+      - "app-data:/data"
   web:
     image: datahub-web
     ports:
       - "8080:80"
 volumes:
   redis-data:
+  app-data:

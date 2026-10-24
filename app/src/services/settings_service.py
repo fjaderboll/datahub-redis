@@ -1,14 +1,14 @@
 import os
 
-from db import db, Keys
+import db
 
 def setProperty(property, value):
-	db.hset(Keys.getSettings(), property, value)
+	db.execute('INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT (key) DO UPDATE SET value = excluded.value', (property, str(value)))
 
 def getProperty(property, defaultValue):
-	value = db.hget(Keys.getSettings(), property)
-	if value:
-		return value
+	row = db.queryOne('SELECT value FROM settings WHERE key = ?', (property,))
+	if row and row['value']:
+		return row['value']
 	return defaultValue
 
 def getReadingsRetention():

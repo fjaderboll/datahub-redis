@@ -1,7 +1,6 @@
 from flask_restx import Resource
 
 from api import api, auth_required
-from db import db, Keys
 from services import util, finder, cleaner, swagger_service, dataset_service, node_service, user_service
 
 ns = api.namespace('datasets', description='List, view, create and delete datasets')
@@ -11,12 +10,7 @@ class DatasetsList(Resource):
 	@ns.response(200, 'Success')
 	@auth_required
 	def get(auth, self):
-		datasetIds = db.smembers(Keys.getUserDatasetIds(auth['username']))
-		datasets = []
-		for datasetId in datasetIds:
-			dataset = db.hgetall(Keys.getDatasetById(datasetId))
-			datasets.append(dataset)
-		return cleaner.cleanDatasets(datasets)
+		return cleaner.cleanDatasets(dataset_service.getUserDatasets(auth['username']))
 
 	@ns.response(200, 'Success')
 	@ns.response(400, 'Bad request')
@@ -47,18 +41,7 @@ class DatasetsView(Resource):
 	@api.expect(swagger_service.updateDatasetData)
 	def put(auth, self, datasetName):
 		dataset = finder.findDataset(auth, datasetName)
-		dKey = Keys.getDatasetById(dataset['id'])
-
-		if 'name' in api.payload:
-			newName = api.payload['name']
-			dataset_service.verifyValidDatasetName(newName)
-			db.rename(Keys.getDatasetIdByName(datasetName), Keys.getDatasetIdByName(newName))
-			db.hset(dKey, 'name', newName)
-
-		if 'desc' in api.payload:
-			db.hset(dKey, 'desc', api.payload['desc'])
-
-		dataset = db.hgetall(dKey)
+		dataset = dataset_service.updateDataset(dataset, name=util.getPayload('name'), desc=util.getPayload('desc'))
 		return cleaner.cleanDataset(dataset)
 
 	@ns.response(200, 'Success')

@@ -30,7 +30,7 @@ def create(app):
 					else:
 						logger.error('Unable to subscribe to: ' + topic)
 			else:
-				logger.info('Bad connection. Code:', rc)
+				logger.warning('Bad connection. Code: %s', rc)
 
 		@mqtt.on_message()
 		def on_message(client, userdata, message):
