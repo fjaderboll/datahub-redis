@@ -1,0 +1,3 @@
+#!/bin/sh
+# ready when the dataset is loaded
+[ "$(redis-cli ping)" = "PONG" ]

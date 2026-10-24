@@ -1,0 +1,11 @@
+#!/command/with-contenv sh
+# The broker checks the app's own MQTT login with the app itself, so any password works as
+# long as all gunicorn workers share it. A random one keeps others from using the account.
+if [ -z "$MQTT_PASSWORD" ]; then
+	export MQTT_PASSWORD="$(python3 -c 'import secrets; print(secrets.token_hex(16))')"
+fi
+
+# a short graceful timeout keeps open reading streams from delaying Redis' save on shutdown
+cd /opt/datahub/app
+exec s6-setuidgid datahub \
+	gunicorn -b 0.0.0.0:8080 -w 4 -k gevent --worker-tmp-dir /dev/shm --graceful-timeout 5 --no-control-socket wsgi:app

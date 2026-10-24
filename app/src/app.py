@@ -5,8 +5,9 @@ import sys
 import secrets
 import logging
 #import signal
-from flask import Flask, Blueprint
+from flask import Flask, Blueprint, abort, send_from_directory
 from flask_cors import CORS
+from werkzeug.exceptions import NotFound
 
 from api import api
 import db
@@ -23,12 +24,15 @@ from services import global_vars
 
 from services import settings_service
 
+# built web frontend, served when present
+WEB_PATH = os.environ.get('WEB_PATH', os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'web', 'dist', 'web'))
+
 def createApp():
-	app = Flask(__name__)
+	app = Flask(__name__, static_folder=None)
 	app.logger.setLevel(logging.INFO)
 	cors = CORS(app, resources={r"/*": {"origins": "http://localhost:4200"}})
 
-	blueprint = Blueprint('api', __name__, url_prefix='')
+	blueprint = Blueprint('api', __name__, url_prefix='/api')
 	api.init_app(blueprint)
 	api.add_namespace(namespace_state)
 	api.add_namespace(namespace_users)
@@ -37,6 +41,9 @@ def createApp():
 	api.add_namespace(namespace_datasets)
 	api.add_namespace(namespace_mqtt)
 	app.register_blueprint(blueprint)
+
+	if os.path.isdir(WEB_PATH):
+		registerWeb(app)
 
 	maintenance.initialize(app.logger)
 
@@ -63,6 +70,17 @@ def createApp():
 	#	mqttPubThread.start()
 
 	return app
+
+def registerWeb(app):
+	@app.route('/', defaults={'path': ''})
+	@app.route('/<path:path>')
+	def web(path):
+		if path == 'api' or path.startswith('api/'):
+			abort(404) # unknown API endpoint, not a page
+		try:
+			return send_from_directory(WEB_PATH, path)
+		except NotFound:
+			return send_from_directory(WEB_PATH, 'index.html') # routes handled by the frontend
 
 if __name__ == '__main__': # running from command line
 	port = 2070

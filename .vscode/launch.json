@@ -61,8 +61,8 @@
 			"type": "node-terminal"
 		},
 		{
-			"name": "Docker - EMQX",
-			"command": "docker run -it --rm --name datahub-emqx -p 18083:18083 -p 1883:1883 -v ${workspaceFolder}/docker/emqx/cluster.hocon.local:/opt/emqx/data/configs/cluster.hocon -e 'EMQX_dashboard__default_username=admin' -e 'EMQX_dashboard__default_password=admin123' emqx:5.5.0",
+			"name": "Docker - NanoMQ",
+			"command": "docker run -it --rm --name datahub-nanomq -p 1883:1883 --add-host=host.docker.internal:host-gateway -v ${workspaceFolder}/docker/nanomq.dev.conf:/etc/nanomq.conf emqx/nanomq:0.25.6-slim",
 			"request": "launch",
 			"type": "node-terminal"
 		},

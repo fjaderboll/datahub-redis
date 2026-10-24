@@ -46,8 +46,8 @@ mqttAuthenticateData = api.model('MqttAuthenticateData', {
 })
 mqttAuthorizeData = api.model('MqttAuthorizeData', {
 	'username': fields.String(description='Username', required=True),
-	'topic': fields.String(description='Topic', required=True),
-	'action': fields.String(description='Action', required=True)
+	'topic': fields.String(description='Topic, or several separated by comma', required=True),
+	'access': fields.String(description='1 for subscribe, 2 for publish', required=True, enum=['1', '2'])
 })
 
 createDatasetData = api.model('CreateDatasetData', {

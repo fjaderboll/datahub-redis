@@ -1,6 +1,7 @@
 import os
 import sqlite3
 import threading
+import time
 from contextlib import contextmanager
 
 SQLITE_PATH = os.environ.get('SQLITE_PATH', os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'datahub.db'))
@@ -118,7 +119,15 @@ def getSchemaVersion():
 def initSchema(populate=None):
 	"""Create or upgrade the schema. 'populate(conn)' runs in the same transaction when the database is new."""
 	conn = getDb()
-	conn.execute('PRAGMA journal_mode = WAL')
+	# changing the journal mode fails at once, instead of waiting, while another worker holds a lock
+	for attempt in range(50):
+		try:
+			conn.execute('PRAGMA journal_mode = WAL')
+			break
+		except sqlite3.OperationalError:
+			if attempt == 49:
+				raise
+			time.sleep(0.1)
 
 	if getSchemaVersion() == len(MIGRATIONS):
 		return False

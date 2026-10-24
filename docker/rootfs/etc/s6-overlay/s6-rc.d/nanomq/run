@@ -1,0 +1,6 @@
+#!/command/with-contenv sh
+# a pid file left from before a container restart can make NanoMQ believe it is already running
+rm -f /tmp/nanomq/nanomq.pid
+exec s6-notifyoncheck -d -n 0 -w 200 \
+	s6-setuidgid datahub \
+	nanomq start --conf /etc/nanomq.conf

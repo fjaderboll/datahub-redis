@@ -18,10 +18,11 @@ def create(app):
 		def on_connect(client, userdata, flags, rc):
 			if rc == 0:
 				logger.info('Connected successfully')
+				# shared subscriptions, so each reading is handled by only one of the gunicorn workers
 				topics = [
-					'$queue/in/datasets/+/nodes/+/sensors/+/readings',
-					'$queue/in/datasets/+/nodes/+/readings',
-					'$queue/in/datasets/+/readings'
+					'$share/datahub/in/datasets/+/nodes/+/sensors/+/readings',
+					'$share/datahub/in/datasets/+/nodes/+/readings',
+					'$share/datahub/in/datasets/+/readings'
 				]
 				for topic in topics:
 					(result, mid) = mqtt.subscribe(topic)

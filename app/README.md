@@ -31,27 +31,25 @@ sqlite3 datahub.db                        # interact with SQLite
 ```
 
 ### Maintenance
-Run from the `src` folder (or `docker exec <app container> python3 maintenance.py ...`):
+Run from the `src` folder (or `docker exec -u datahub datahub python3 maintenance.py ...`):
 ```shell
 python3 maintenance.py check               # compare sensors in SQLite with time series in Redis
 python3 maintenance.py repair              # create missing time series and delete orphaned ones
 ```
 
 ## MQ broker
+NanoMQ checks logins and topic permissions with the app (`/api/mqtt/authenticate` and `/api/mqtt/authorize`),
+here running on the host at port 2070:
 
 ```shell
 docker run \
 	-d \
 	--rm \
-	--name datahub-emqx \
-	-p 18083:18083 \
+	--name datahub-nanomq \
 	-p 1883:1883 \
-	-v $PWD/../docker/emqx/cluster.hocon.local:/opt/emqx/data/configs/cluster.hocon \
-	-e "EMQX_dashboard__default_username=admin" \
-    -e "EMQX_dashboard__default_password=admin123" \
-	emqx:5.5.0
-	#-e "EMQX_AUTHENTICATION__1__URL=http://172.16.1.5:2070/mqtt/authenticate" \
-    #-e "EMQX_AUTHORIZATION__SOURCES__1__URL=http://172.16.1.5:2070/mqtt/authorize" \
+	--add-host=host.docker.internal:host-gateway \
+	-v $PWD/../docker/nanomq.dev.conf:/etc/nanomq.conf \
+	emqx/nanomq:0.25.6-slim
 ```
 
 ## Application
@@ -68,6 +66,9 @@ flask --app src/app.py --debug run                           # development (pref
 #./src/app.py 2070                                           # development
 gunicorn --workers 4 --bind 0.0.0.0:2070 -k gevent wsgi:app  # production
 ```
+
+The API is served under `/api` (Swagger doc at `/api/`) and, if built, the web frontend
+from `web/dist/web` (set `WEB_PATH` to change it) at `/`.
 
 ### Add new dependency
 
@@ -89,5 +90,5 @@ Tests are located in `test` folder.
 Tests files must contain `test` to be discovered.
 
 ```shell
-BASE_URL=http://localhost:2070/ python3 -m unittest discover -s test -vv
+BASE_URL=http://localhost:2070/api/ python3 -m unittest discover -s test -vv
 ```
