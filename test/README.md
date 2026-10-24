@@ -32,3 +32,31 @@ out/datasets/test/nodes/garage/sensors/temperature/readings {"timestamp": "2026-
 out/datasets/test/nodes/kitchen/sensors/humidity/readings {"timestamp": "2026-10-24T16:43:49.427000+00:00", "value": 59.2, "datasetName": "test", "nodeName": "kitchen", "sensorName": "humidity", "unit": ""}
 All 4 readings received
 ```
+
+## Performance
+[performance.py](performance.py) measures how long it takes to insert readings
+over HTTP (one reading per request, and all in one request) and over MQTT
+(one reading per message, until all are published back out), and to load them.
+Each is run 3 times and the median is reported.
+It needs Python with `requests` and `mosquitto_sub`/`mosquitto_pub`.
+
+```shell
+./performance.py [-u|--user USER] [-p|--pass PASS] [-d|--dataset NAME] [-c|--count N]
+```
+
+The user and dataset are created as for `test.sh`, and `--count` defaults to 10000.
+The readings are put in the node `performance`, which is removed afterwards.
+If the dataset already has a node with that name, nothing is run.
+
+Example output (end of it):
+```shell
+$ ./performance.py
+...
+Median of 3 runs, inserting 10000 readings:
+  HTTP, one reading per request         24.162 seconds (414 readings/s)
+  HTTP, all readings in one request      4.314 seconds (2318 readings/s)
+  MQTT, one reading per message          9.511 seconds (1051 readings/s)
+Median of 45 loads, loading 10000 readings:
+  HTTP, all readings in one request      0.049 seconds (204903 readings/s)
+Removing node 'performance'
+```

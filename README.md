@@ -45,9 +45,6 @@ Readings are stored in [Redis](https://redis.io/) time series, which keeps them 
 for fast access and avoids unnecessary disk writes.
 Users, datasets, nodes and sensors are stored in [SQLite](https://www.sqlite.org/).
 
-### Performance
-TODO some numbers how fast inserting and retrieving values is
-
 ### Entities
 Structure of entities with examples:
 
@@ -63,3 +60,15 @@ Structure of entities with examples:
 See [test](test/README.md) for a simple test script.
 This is also a good way to create an user and some example
 data and have a look in the UI.
+
+### Performance
+Inserting 1000 readings takes:
+* 2.4 seconds over HTTP, one reading per request
+* 0.4 seconds over HTTP, all readings in one request
+* 1.1 seconds over MQTT, one reading per message (until all are published back out)
+This scales quite linearly with the number of readings.
+
+Loading those 1000 readings takes 0.01 seconds, in a single request.
+
+Measured with [performance.py](test/performance.py) and the Docker image on an AMD Ryzen 7 5800X,
+with one client on the same machine sending one request at a time.
