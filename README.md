@@ -1,18 +1,19 @@
 # datahub (Redis version)
 
 ## About
-A fast database with a Web UI to hold your IoT data.
+A fast database with to hold your IoT data and a Web UI
+to view it, both in table form and graphs.
 Use the REST API to store and retrieve time series
 of numbers or use the built-in MQ broker to publish
 or subscribe to your data.
 
-## Background
+### Background
 I have many IoT devices generating data and need to store that
 data somewhere. After searching I did not find any existing
 projects or free/cheap services the offered the simplicity I
 was looking for so I decided to write my own IoT database.
 
-## History
+### History
 This is a re-design of my previous project [datahub](https://github.com/fjaderboll/datahub), which is based on SQLite and PHP.
 Check that out if you want something that can be deployed simply on a web server.
 
@@ -26,7 +27,7 @@ docker run \
 	-p 8080:8080 \
 	-p 1883:1883 \
 	-v datahub-data:/data \
-	ghcr.io/fjaderboll/datahub:latest
+	ghcr.io/fjaderboll/datahub-redis:latest
 ```
 
 * Navigate to [http://localhost:8080/](http://localhost:8080/) and create the first user, which becomes administrator.
@@ -44,6 +45,8 @@ Readings are stored in [Redis](https://redis.io/) time series, which keeps them 
 for fast access and avoids unnecessary disk writes.
 Users, datasets, nodes and sensors are stored in [SQLite](https://www.sqlite.org/).
 
+### Performance
+TODO some numbers how fast inserting and retrieving values is
 
 ### Entities
 Structure of entities with examples:
@@ -55,3 +58,8 @@ Structure of entities with examples:
 * [app](app/README.md) - The application backend (where it all happens)
 * [web](web/README.md) - The web frontend (administration and viewing data)
 * [docker](docker/README.md) building the image yourself.
+
+## Testing
+See [test](test/README.md) for a simple test script.
+This is also a good way to create an user and some example
+data and have a look in the UI.
