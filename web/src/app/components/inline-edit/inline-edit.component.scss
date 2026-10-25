@@ -10,36 +10,35 @@
 	text-decoration: underline;
 }
 
-.edit-container {
-	position: relative;
-	z-index: 2;
-}
-.edit-container:before{
-    content: "";
-    position: absolute;
-    top: -10px;
-    left: 10px;
-    z-index: 1;
-    border: solid 10px transparent;
-    border-bottom-color: #ff4081;
-}
 .edit {
-	position: absolute;
-	top: 10px;
-	left: 5px;
+	position: relative;
+	max-width: calc(100vw - 16px);
+	box-sizing: border-box;
 	border: 1px solid #ff4081;
-	padding: 0 10px 0 10px;
+	padding: 10px;
 	box-shadow: 5px 5px 4px #888;
 	border-radius: 3px;
 	background-color: white;
 }
-.edit .type-boolean {
-	padding: 10px;
+// arrow pointing at the edited value
+.edit:before {
+	content: "";
+	position: absolute;
+	top: -20px;
+	left: 10px;
+	border: solid 10px transparent;
+	border-bottom-color: #ff4081;
 }
-.edit .type-boolean .mat-radio-group {
+.edit.align-end:before {
+	left: auto;
+	right: 10px;
+}
+.edit .mat-mdc-form-field {
+	width: 260px;
+	max-width: 100%;
+}
+.edit .type-boolean .mat-mdc-radio-group {
+	display: flex;
+	gap: 0.5em;
 	white-space: nowrap;
-}
-
-.not-set {
-	color: unset;
 }

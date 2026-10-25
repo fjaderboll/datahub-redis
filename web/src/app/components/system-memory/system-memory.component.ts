@@ -1,28 +1,30 @@
-import { Component, OnInit } from '@angular/core';
-import { Chart } from 'angular-highcharts';
-import { ServerService } from 'src/app/services/server.service';
-import { UtilsService } from 'src/app/services/utils.service';
+import { Component, OnInit, ChangeDetectionStrategy, inject } from '@angular/core';
+import type Highcharts from 'highcharts/esm/highcharts';
+import { ServerService } from '../../services/server.service';
+import { UtilsService } from '../../services/utils.service';
+import { ChartDirective } from '../chart/chart.directive';
+import { SystemState } from '../../models';
 
 @Component({
 	selector: 'app-system-memory',
 	templateUrl: './system-memory.component.html',
-	styleUrls: ['./system-memory.component.scss']
+	changeDetection: ChangeDetectionStrategy.Eager,
+	styleUrls: ['./system-memory.component.scss'],
+	imports: [ChartDirective]
 })
 export class SystemMemoryComponent implements OnInit {
-	public memoryChart!: Chart;
+	private server = inject(ServerService);
+	utils = inject(UtilsService);
 
-	constructor(
-		private server: ServerService,
-		public utils: UtilsService
-	) { }
+	public memoryChart?: Highcharts.Options;
 
 	ngOnInit(): void {
 		this.loadSystem();
-  	}
+	}
 
 	private loadSystem() {
 		this.server.getStateSystem().subscribe({
-			next: (system: any) => {
+			next: (system) => {
 				this.createMemoryChart(system);
 			},
 			error: (e) => {
@@ -31,21 +33,24 @@ export class SystemMemoryComponent implements OnInit {
 		});
 	}
 
-	private createMemoryChart(system: any) {
-		const mem =  system.memory;
+	private createMemoryChart(system: SystemState) {
+		const mem = system.memory;
 		const utils = this.utils;
+		const other = Math.max(0, mem.total - mem.application - mem.database - mem.available);
 
-		this.memoryChart = new Chart({
+		this.memoryChart = {
 			chart: {
+				height: 260,
 				plotBackgroundColor: undefined,
 				plotBorderWidth: 0,
-				plotShadow: false
+				plotShadow: false,
+				spacing: [0, 0, 10, 0]
 			},
 			title: {
-				text: 'Memory<br/>' + system.memory.percent + '%',
+				text: 'Memory<br/>' + mem.percent + '%',
 				align: 'center',
 				verticalAlign: 'middle',
-				y: -20
+				y: 40
 			},
 			tooltip: {
 				pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
@@ -63,7 +68,7 @@ export class SystemMemoryComponent implements OnInit {
 					showInLegend: true,
 					dataLabels: {
 						enabled: true,
-						distance: -50,
+						distance: -40,
 						style: {
 							fontWeight: 'bold',
 							color: 'white'
@@ -71,8 +76,8 @@ export class SystemMemoryComponent implements OnInit {
 					},
 					startAngle: -90,
 					endAngle: 90,
-					//center: ['50%', '75%'],
-					size: '110%',
+					center: ['50%', '85%'],
+					size: '160%',
 					colors: [
 						'#bfbfbf',
 						'#db802a',
@@ -86,9 +91,7 @@ export class SystemMemoryComponent implements OnInit {
 				labelFormatter: function() {
 					const thiz = this as any;
 					return this.name + ' ' + utils.printFilesize(thiz.y);
-				},
-				floating: true,
-				y: -150
+				}
 			},
 			series: [
 				{
@@ -96,14 +99,23 @@ export class SystemMemoryComponent implements OnInit {
 					name: 'Memory usage',
 					innerSize: '50%',
 					data: [
-						['Other', mem.total - mem.application - mem.database - mem.available],
+						['Other', other],
 						['Application', mem.application],
 						['Database', mem.database],
 						['Available', mem.available]
 					]
 				}
-			]
-		});
+			],
+			responsive: {
+				rules: [{
+					// slice labels don't fit on small screens, the legend has the same information
+					condition: { maxWidth: 500 },
+					chartOptions: {
+						plotOptions: { pie: { dataLabels: { enabled: false } } }
+					}
+				}]
+			}
+		};
 	}
 
 }

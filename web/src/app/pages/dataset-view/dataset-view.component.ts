@@ -1,47 +1,54 @@
-import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, DestroyRef, OnInit, ViewChild, ChangeDetectionStrategy, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatDialog } from '@angular/material/dialog';
 import { MatPaginator } from '@angular/material/paginator';
-import { MatSort } from '@angular/material/sort';
-import { MatTableDataSource } from '@angular/material/table';
-import { ActivatedRoute, Router } from '@angular/router';
-import { Observable } from 'rxjs';
-import { ConfirmDialogComponent } from 'src/app/dialogs/confirm-dialog/confirm-dialog.component';
-import { CreateNodeDialogComponent } from 'src/app/dialogs/create-node-dialog/create-node-dialog.component';
-import { ShareDatasetDialogComponent } from 'src/app/dialogs/share-dataset-dialog/share-dataset-dialog.component';
-import { VisualizeReadingsDialogComponent } from 'src/app/dialogs/visualize-readings-dialog/visualize-readings-dialog.component';
-import { AuthenticationService } from 'src/app/services/authentication.service';
-import { ServerService } from 'src/app/services/server.service';
-import { UtilsService } from 'src/app/services/utils.service';
+import { MatSort, MatSortHeader } from '@angular/material/sort';
+import { MatTableDataSource, MatTable, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow } from '@angular/material/table';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ConfirmDialogComponent } from '../../dialogs/confirm-dialog/confirm-dialog.component';
+import { CreateNodeDialogComponent } from '../../dialogs/create-node-dialog/create-node-dialog.component';
+import { ShareDatasetDialogComponent } from '../../dialogs/share-dataset-dialog/share-dataset-dialog.component';
+import { VisualizeReadingsDialogComponent } from '../../dialogs/visualize-readings-dialog/visualize-readings-dialog.component';
+import { AuthenticationService } from '../../services/authentication.service';
+import { ServerService } from '../../services/server.service';
+import { BreadcrumbComponent } from '../../components/breadcrumb/breadcrumb.component';
+import { InlineEditComponent } from '../../components/inline-edit/inline-edit.component';
+import { MatButton } from '@angular/material/button';
+import { MatIcon } from '@angular/material/icon';
+import { MatChipSet, MatChip, MatChipRemove } from '@angular/material/chips';
+import { Dataset, DatasetNode } from '../../models';
 
 @Component({
-  selector: 'app-dataset-view',
-  templateUrl: './dataset-view.component.html',
-  styleUrls: ['./dataset-view.component.scss']
+	selector: 'app-dataset-view',
+	templateUrl: './dataset-view.component.html',
+	changeDetection: ChangeDetectionStrategy.Eager,
+	styleUrls: ['./dataset-view.component.scss'],
+	imports: [BreadcrumbComponent, InlineEditComponent, RouterLink, MatButton, MatIcon, MatChipSet, MatChip, MatChipRemove, MatTable, MatSort, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatSortHeader, MatCellDef, MatCell, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, MatPaginator]
 })
 export class DatasetViewComponent implements OnInit, AfterViewInit {
+	auth = inject(AuthenticationService);
+	private server = inject(ServerService);
+	private route = inject(ActivatedRoute);
+	private dialog = inject(MatDialog);
+	private router = inject(Router);
+	private destroyRef = inject(DestroyRef);
+
 	public datasetName!: string;
-	public dataset: any;
-	public datasetUsers!: string[];
+	public dataset?: Dataset;
+	public datasetUsers: string[] = [];
 
 	public displayedColumns: string[] = ['name', 'desc'];
-	public dataSource = new MatTableDataSource<any>();
+	public dataSource = new MatTableDataSource<DatasetNode>();
 	@ViewChild(MatPaginator) paginator!: MatPaginator;
 	@ViewChild(MatSort) sort!: MatSort;
 
-	constructor(
-		public auth: AuthenticationService,
-		public utils: UtilsService,
-		private server: ServerService,
-		private route: ActivatedRoute,
-		private dialog: MatDialog,
-		private router: Router
-	) { }
-
 	ngOnInit(): void {
-		this.datasetName = this.route.snapshot.paramMap.get('datasetName') || 'this should never happen';
-
-		this.loadDataset();
-		this.loadDatasetUsers();
+		// the component is reused when only the URL changes, e.g. after a rename
+		this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(params => {
+			this.datasetName = params.get('datasetName')!;
+			this.loadDataset();
+			this.loadDatasetUsers();
+		});
 	}
 
 	ngAfterViewInit() {
@@ -51,9 +58,9 @@ export class DatasetViewComponent implements OnInit, AfterViewInit {
 
 	private loadDataset() {
 		this.server.getDataset(this.datasetName).subscribe({
-			next: (dataset: any) => {
+			next: (dataset) => {
 				this.dataset = dataset;
-				this.dataSource.data = dataset.nodes;
+				this.dataSource.data = dataset.nodes ?? [];
 			},
 			error: (e) => {
 				this.server.showHttpError(e);
@@ -63,7 +70,7 @@ export class DatasetViewComponent implements OnInit, AfterViewInit {
 
 	private loadDatasetUsers() {
 		this.server.getDatasetUsers(this.datasetName).subscribe({
-			next: (datasetUsers: any) => {
+			next: (datasetUsers) => {
 				this.datasetUsers = datasetUsers;
 			},
 			error: (e) => {
@@ -72,12 +79,12 @@ export class DatasetViewComponent implements OnInit, AfterViewInit {
 		});
 	}
 
-	public changedValue(property: string, newValue: any) {
-		this.server.updateDataset(this.dataset.name, property, newValue).subscribe({
-			next: (response: any) => {
-				this.dataset[property] = newValue;
+	public changedValue(property: 'name' | 'desc', newValue: string) {
+		this.server.updateDataset(this.datasetName, property, newValue).subscribe({
+			next: () => {
+				this.dataset![property] = newValue;
 				if(property == "name") {
-					this.router.navigate(['/datasets/' + this.dataset.name]);
+					this.router.navigate(['/datasets', newValue], { replaceUrl: true });
 				}
 			},
 			error: (e) => {
@@ -91,21 +98,7 @@ export class DatasetViewComponent implements OnInit, AfterViewInit {
 			data: {
 				title: "Delete Dataset",
 				text: "This will remove this dataset and all its nodes, sensors and readings. Are you sure?",
-				action: new Observable(
-					observer => {
-						this.server.deleteDataset(this.dataset.name).subscribe({
-							next: (v: any) => {
-								observer.next(v);
-							},
-							error: (e) => {
-								observer.error(e);
-							},
-							complete: () => {
-								observer.complete();
-							}
-						});
-					}
-				)
+				action: this.server.deleteDataset(this.datasetName)
 			}
 		});
 		dialog.afterClosed().subscribe(confirmed => {
@@ -116,17 +109,15 @@ export class DatasetViewComponent implements OnInit, AfterViewInit {
 	}
 
 	public visualizeReadings() {
-		this.dialog.open(VisualizeReadingsDialogComponent, {
-			data: {
-				datasetName: this.datasetName
-			}
+		VisualizeReadingsDialogComponent.open(this.dialog, {
+			datasetName: this.datasetName
 		});
 	}
 
 	public createNode() {
 		const dialog = this.dialog.open(CreateNodeDialogComponent, {
 			data: {
-				datasetName: this.dataset.name
+				datasetName: this.datasetName
 			}
 		});
 		dialog.afterClosed().subscribe(node => {
@@ -139,7 +130,7 @@ export class DatasetViewComponent implements OnInit, AfterViewInit {
 	public shareDataset() {
 		const dialog = this.dialog.open(ShareDatasetDialogComponent, {
 			data: {
-				datasetName: this.dataset.name
+				datasetName: this.datasetName
 			}
 		});
 		dialog.afterClosed().subscribe(username => {
@@ -155,21 +146,7 @@ export class DatasetViewComponent implements OnInit, AfterViewInit {
 			data: {
 				title: "Unshare Dataset",
 				text: "This will remove access to this dataset for user '" + username + "'"+(self ? " (yourself!)" : "")+". Are you sure?",
-				action: new Observable(
-					observer => {
-						this.server.unshareDataset(this.dataset.name, username).subscribe({
-							next: (v: any) => {
-								observer.next(v);
-							},
-							error: (e) => {
-								observer.error(e);
-							},
-							complete: () => {
-								observer.complete();
-							}
-						});
-					}
-				)
+				action: this.server.unshareDataset(this.datasetName, username)
 			}
 		});
 		dialog.afterClosed().subscribe(confirmed => {

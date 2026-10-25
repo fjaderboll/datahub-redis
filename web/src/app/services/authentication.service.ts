@@ -1,92 +1,109 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { UtilsService } from './utils.service';
 import { Router } from '@angular/router';
 import { ServerService } from './server.service';
-import { Observable } from 'rxjs';
+import { tap } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
+import { Token } from '../models';
+
+// setTimeout fires immediately for longer delays (about 24.8 days)
+const MAX_TIMEOUT = 2 ** 31 - 1;
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthenticationService {
-	private token: string | null = null;
-	private username!: string;
-	private admin: boolean = false;
-	private expireTimer: any;
+	private server = inject(ServerService);
+	private utils = inject(UtilsService);
+	private router = inject(Router);
+	private dialog = inject(MatDialog);
 
-	constructor(
-		public server: ServerService,
-		private utils: UtilsService,
-		private router: Router,
-		private dialog: MatDialog
-	) {
-		this.setToken(
-			localStorage.getItem('token'),
-			localStorage.getItem('username'),
-			localStorage.getItem('admin') == "true",
-			localStorage.getItem('expire')
-		);
+	private token: string | null = null;
+	private username: string | null = null;
+	private admin: boolean = false;
+	private expire: string | null = null;
+	private expireTimer?: ReturnType<typeof setTimeout>;
+
+	constructor() {
+		const token = localStorage.getItem('token');
+		const username = localStorage.getItem('username');
+		const expire = localStorage.getItem('expire');
+
+		if(token && username && !this.hasExpired(expire)) {
+			this.setSession(token, username, localStorage.getItem('admin') == "true", expire);
+		} else {
+			this.clearSession();
+		}
 	}
 
 	public login(username: string, password: string) {
-		return new Observable(
-			observer => {
-				this.server.login(username, password).subscribe({
-					next: (v: any) => {
-						this.setToken(v.token, v.username, v.isAdmin, v.expire);
-						observer.next(v);
-					},
-					error: (e) => {
-						observer.error(e);
-					},
-					complete: () => {
-						observer.complete();
-					}
-				});
-			}
+		return this.server.login(username, password).pipe(
+			tap(t => this.startSession(t))
 		);
 	}
 
 	public impersonate(username: string) {
-		return new Observable(
-			observer => {
-				this.server.impersonate(username).subscribe({
-					next: (v: any) => {
-						this.setToken(v.token, v.username, v.isAdmin, v.expire);
-						observer.next(v);
-					},
-					error: (e) => {
-						observer.error(e);
-					},
-					complete: () => {
-						observer.complete();
-					}
-				});
-			}
+		return this.server.impersonate(username).pipe(
+			tap(t => this.startSession(t))
 		);
 	}
 
-	public setToken(token: string | null, username: string | null, isAdmin: boolean, expire: string | null) {
-		if(token && token.length > 0 && username && username.length > 0) {
-			this.token = token;
-			this.username = username;
-			this.admin = isAdmin;
-			localStorage.setItem('token', this.token);
-			localStorage.setItem('username', this.username);
-			localStorage.setItem('admin', this.admin + "");
-			this.server.setToken(this.token);
-			if(expire) {
-				localStorage.setItem('expire', expire);
-				this.expireTimer = setTimeout(() => {
-					this.logout(false);
-					this.dialog.closeAll();
-					this.utils.toastWarn("You session has expired, please sign in again.");
-				}, new Date(expire).getTime() - new Date().getTime());
-			}
+	private startSession(t: Token) {
+		this.setSession(t.token, t.username, t.isAdmin, t.expire);
+	}
+
+	private setSession(token: string, username: string, isAdmin: boolean, expire: string | null) {
+		this.token = token;
+		this.username = username;
+		this.admin = isAdmin;
+		this.expire = expire;
+
+		localStorage.setItem('token', token);
+		localStorage.setItem('username', username);
+		localStorage.setItem('admin', isAdmin + "");
+		if(expire) {
+			localStorage.setItem('expire', expire);
 		} else {
-			this.token = null;
-			localStorage.removeItem('token');
-			this.server.setToken(null);
+			localStorage.removeItem('expire'); // never expires, don't keep the previous session's time
+		}
+
+		this.scheduleExpire();
+	}
+
+	private clearSession() {
+		clearTimeout(this.expireTimer);
+		this.token = null;
+		this.username = null;
+		this.admin = false;
+		this.expire = null;
+		['token', 'username', 'admin', 'expire'].forEach(key => localStorage.removeItem(key));
+	}
+
+	private scheduleExpire() {
+		clearTimeout(this.expireTimer);
+		if(this.expire) {
+			const delay = new Date(this.expire).getTime() - Date.now();
+			this.expireTimer = setTimeout(() => {
+				if(this.hasExpired(this.expire)) {
+					this.sessionExpired();
+				} else {
+					this.scheduleExpire();
+				}
+			}, Math.min(Math.max(delay, 0), MAX_TIMEOUT));
+		}
+	}
+
+	private hasExpired(expire: string | null) {
+		return !!expire && new Date(expire).getTime() <= Date.now();
+	}
+
+	/** Called when the token has expired or the backend rejects it. */
+	public sessionExpired() {
+		if(this.isLoggedIn()) {
+			this.clearSession();
+			this.dialog.closeAll();
+			this.utils.toastWarn("Your session has expired, please sign in again.");
+			this.router.navigate(['/login'], { queryParams: { returnUrl: this.router.url } });
 		}
 	}
 
@@ -98,26 +115,20 @@ export class AuthenticationService {
 		return !!this.token;
 	}
 
-	public logout(signout: boolean) {
-        if(this.expireTimer) {
-            clearTimeout(this.expireTimer);
-            this.expireTimer = null;
-        }
-        this.router.navigate(['/login']);
+	public logout() {
+		const token = this.token;
+		const username = this.username;
 
-        if(signout) {
-            this.server.logout(this.username).subscribe({
-                next: (v: any) => {
-                    this.setToken(null, this.username, this.admin, null);
-                    this.utils.toastSuccess("Signed out");
-                },
-                error: (e) => {
-                    this.setToken(null, this.username, this.admin, null);
-                    this.server.showHttpError(e);
-                }
-            });
-        } else {
-			this.setToken(null, this.username, this.admin, null);
+		this.clearSession();
+		this.dialog.closeAll();
+		this.router.navigate(['/login']);
+
+		if(token && username) {
+			// revoke the token, signed out locally either way
+			this.server.logout(username, token).subscribe({
+				next: () => this.utils.toastSuccess("Signed out"),
+				error: () => this.utils.toastSuccess("Signed out")
+			});
 		}
 	}
 

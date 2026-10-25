@@ -1,43 +1,42 @@
-import { Component, Inject, OnInit } from '@angular/core';
-import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { ServerService } from 'src/app/services/server.service';
-import { UtilsService } from 'src/app/services/utils.service';
+import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
+import { MatDialogRef, MAT_DIALOG_DATA, MatDialogTitle, MatDialogContent, MatDialogActions, MatDialogClose } from '@angular/material/dialog';
+import { ServerService } from '../../services/server.service';
+import { NAME_PATTERN, UtilsService } from '../../services/utils.service';
+import { MatFormField, MatLabel, MatHint, MatError } from '@angular/material/form-field';
+import { MatInput } from '@angular/material/input';
+import { FormsModule } from '@angular/forms';
+import { MatButton } from '@angular/material/button';
+import { MatIcon } from '@angular/material/icon';
 
 @Component({
 	selector: 'app-create-sensor-dialog',
 	templateUrl: './create-sensor-dialog.component.html',
-	styleUrls: ['./create-sensor-dialog.component.scss']
+	changeDetection: ChangeDetectionStrategy.Eager,
+	styleUrls: ['./create-sensor-dialog.component.scss'],
+	imports: [MatDialogTitle, MatDialogContent, MatFormField, MatLabel, MatHint, MatError, MatInput, FormsModule, MatDialogActions, MatButton, MatDialogClose, MatIcon]
 })
-export class CreateSensorDialogComponent implements OnInit {
-	private inputData: any;
-    public name: string = "";
+export class CreateSensorDialogComponent {
+	dialogRef = inject<MatDialogRef<CreateSensorDialogComponent>>(MatDialogRef);
+	private server = inject(ServerService);
+	private utils = inject(UtilsService);
+	data = inject<{ datasetName: string, nodeName: string }>(MAT_DIALOG_DATA);
+
+	public readonly namePattern = NAME_PATTERN;
+	public name: string = "";
 	public description: string = "";
 	public unit: string = "";
-
-	constructor(
-		public dialogRef: MatDialogRef<CreateSensorDialogComponent>,
-		private server: ServerService,
-		private utils: UtilsService,
-        @Inject(MAT_DIALOG_DATA) public data: any
-	) {
-        this.inputData = data;
-    }
-
-	ngOnInit(): void {
-	}
-
-	public isFormValid() {
-		return this.name.length > 0;
-	}
+	public busy = false;
 
 	public create() {
-		this.server.createSensor(this.inputData.datasetName, this.inputData.nodeName, this.name, this.description, this.unit).subscribe({
-			next: (v: any) => {
+		this.busy = true;
+		this.server.createSensor(this.data.datasetName, this.data.nodeName, this.name, this.description, this.unit).subscribe({
+			next: (v) => {
 				this.utils.toastSuccess("Created sensor '" + v.name + "'");
 				this.dialogRef.close(v);
 			},
 			error: (e) => {
 				this.server.showHttpError(e);
+				this.busy = false;
 			}
 		});
 	}

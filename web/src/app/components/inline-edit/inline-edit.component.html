@@ -1,37 +1,56 @@
-<span (click)="startEdit()" class="view" [class.editable]="!disabled">
-	<ng-container *ngIf="type == 'text' || type == 'number'">
-		<span [class.not-set]="!value">{{ value || 'Not set' }}</span>
-	</ng-container>
-	<ng-container *ngIf="type == 'boolean'">
-		<span *ngIf="value === true">Yes</span>
-		<span *ngIf="value === false">No</span>
-		<span *ngIf="value === undefined || value === null" class="not-set">Not set</span>
-	</ng-container>
+<span
+	class="view"
+	cdkOverlayOrigin
+	#origin="cdkOverlayOrigin"
+	[class.editable]="!disabled"
+	[attr.role]="disabled ? null : 'button'"
+	[attr.tabindex]="disabled ? null : 0"
+	(click)="startEdit()"
+	(keydown.enter)="startEdit()"
+	(keydown.space)="startEdit(); $event.preventDefault()"
+>
+	@if (type == 'boolean') {
+		@if (value === true) {
+			<span>Yes</span>
+		} @else if (value === false) {
+			<span>No</span>
+		} @else {
+			<span class="not-set">Not set</span>
+		}
+	} @else {
+		<span [class.not-set]="value == null || value === ''">{{ (value == null || value === '') ? (placeholder || 'Not set') : value }}</span>
+	}
 </span>
 
-<div *ngIf="editMode" class="edit-container">
-	<div class="edit">
-		<ng-container *ngIf="type == 'text' || type == 'number'">
-			<mat-form-field>
+<ng-template
+	cdkConnectedOverlay
+	[cdkConnectedOverlayOrigin]="origin"
+	[cdkConnectedOverlayOpen]="editMode"
+	[cdkConnectedOverlayPositions]="positions"
+	[cdkConnectedOverlayPush]="true"
+	[cdkConnectedOverlayViewportMargin]="8"
+	(positionChange)="positionChange($event)"
+>
+	<div #edit class="edit" [class.align-end]="alignEnd" (focusout)="focusOut($event)" (keydown.escape)="stopEdit(false)">
+		@if (type == 'boolean') {
+			<div class="type-boolean">
+				<mat-radio-group [(ngModel)]="newValue">
+					<mat-radio-button (click)="setBoolean(true)" [value]="true">Yes</mat-radio-button>
+					<mat-radio-button (click)="setBoolean(false)" [value]="false">No</mat-radio-button>
+				</mat-radio-group>
+			</div>
+		} @else {
+			<mat-form-field subscriptSizing="dynamic">
 				<input
-					#input
 					matInput
-					(focusout)="stopEdit(true)"
 					(keydown.enter)="stopEdit(true)"
-					(keydown.escape)="stopEdit(false)"
 					[(ngModel)]="newValue"
-					[autofocus]="true"
 					[type]="type"
 				/>
+				@if (hint) {
+					<mat-hint>{{ hint }}</mat-hint>
+				}
 			</mat-form-field>
-		</ng-container>
-
-		<div class="type-boolean" *ngIf="type == 'boolean'">
-			<mat-radio-group [(ngModel)]="newValue">
-				<mat-radio-button (click)="newValue=true; stopEdit(true)" [value]="true">Yes</mat-radio-button>
-				&nbsp;
-				<mat-radio-button (click)="newValue=false; stopEdit(true)" [value]="false">No</mat-radio-button>
-			</mat-radio-group>
-		</div>
+		}
 	</div>
-</div>
+</ng-template>

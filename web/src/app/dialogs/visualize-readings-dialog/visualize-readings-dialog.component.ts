@@ -1,31 +1,52 @@
-import { Component, Inject, OnInit } from '@angular/core';
-import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { ServerService } from 'src/app/services/server.service';
-import { UtilsService } from 'src/app/services/utils.service';
-import { Chart } from 'angular-highcharts';
+import { Component, OnInit, ChangeDetectionStrategy, inject } from '@angular/core';
+import { MatDialog, MatDialogRef, MAT_DIALOG_DATA, MatDialogTitle, MatDialogContent, MatDialogActions, MatDialogClose } from '@angular/material/dialog';
+import type Highcharts from 'highcharts/esm/highcharts';
+import { ServerService } from '../../services/server.service';
+import { UtilsService } from '../../services/utils.service';
+import { MatButton } from '@angular/material/button';
+import { MatIcon } from '@angular/material/icon';
+import { ChartDirective } from '../../components/chart/chart.directive';
+import { Reading } from '../../models';
+
+export interface VisualizeReadingsData {
+	datasetName?: string;
+	nodeName?: string;
+	sensorName?: string;
+	/** Already loaded readings, newest first */
+	readings?: Reading[];
+}
 
 @Component({
 	selector: 'app-visualize-readings-dialog',
 	templateUrl: './visualize-readings-dialog.component.html',
-	styleUrls: ['./visualize-readings-dialog.component.scss']
+	changeDetection: ChangeDetectionStrategy.Eager,
+	styleUrls: ['./visualize-readings-dialog.component.scss'],
+	imports: [MatDialogTitle, MatDialogContent, ChartDirective, MatDialogActions, MatButton, MatDialogClose, MatIcon]
 })
-export class VisualizeReadingsDialogComponent  implements OnInit {
-	private inputData: any;
+export class VisualizeReadingsDialogComponent implements OnInit {
+	dialogRef = inject<MatDialogRef<VisualizeReadingsDialogComponent>>(MatDialogRef);
+	private server = inject(ServerService);
+	utils = inject(UtilsService);
+	data = inject<VisualizeReadingsData>(MAT_DIALOG_DATA);
+
 	public after: number = -3*3600;
-	public readingsChart!: Chart;
+	private readings: Reading[] = [];
+	public readingsChart?: Highcharts.Options;
 	public loading: boolean = false;
 
-	constructor(
-		public dialogRef: MatDialogRef<VisualizeReadingsDialogComponent>,
-		private server: ServerService,
-		public utils: UtilsService,
-        @Inject(MAT_DIALOG_DATA) public data: any
-	) {}
+	public static open(dialog: MatDialog, data: VisualizeReadingsData) {
+		return dialog.open(VisualizeReadingsDialogComponent, {
+			data,
+			width: '1000px',
+			maxWidth: 'calc(100vw - 16px)'
+		});
+	}
 
 	ngOnInit(): void {
 		if(this.data.readings) {
-			this.updateRange(this.data.readings);
-			this.createMemoryChart();
+			this.readings = this.data.readings;
+			this.updateRange(this.readings);
+			this.createReadingsChart();
 		} else {
 			this.loadReadings();
 		}
@@ -46,10 +67,10 @@ export class VisualizeReadingsDialogComponent  implements OnInit {
 		if(names.length == 0) {
 			names.push('all datasets');
 		}
-		return names.join(' &rarr; ');
+		return names.join(' → ');
 	}
 
-	private getSerieName(reading: any) {
+	private getSerieName(reading: Reading) {
 		const divider = ' - ';
 		if(this.data.sensorName) {
 			return reading.sensorName;
@@ -62,27 +83,29 @@ export class VisualizeReadingsDialogComponent  implements OnInit {
 		}
 	}
 
-	private createMemoryChart() {
-		let yAxis: any = [];
-		let series: any = [];
-		this.data.readings.forEach((reading: any) => {
-			let serie: any = series.find((s: any) => {
+	private createReadingsChart() {
+		let yAxis: Highcharts.YAxisOptions[] = [];
+		let series: { type: 'line', name: string, yAxis: number, tooltip: Highcharts.SeriesTooltipOptionsObject, data: [number, number][] }[] = [];
+		this.readings.forEach((reading) => {
+			let serie = series.find((s) => {
 				return s.name == this.getSerieName(reading);
 			});
 			if(!serie) {
-				let i: any = yAxis.findIndex((ya: any) => {
-					return ya.title.text == reading.unit;
+				let i = yAxis.findIndex((ya) => {
+					return ya.title?.text == reading.unit;
 				});
 				if(i < 0) {
 					yAxis.push({
 						title: {
 							text: reading.unit
-						}
+						},
+						opposite: yAxis.length % 2 == 1
 					});
 					i = yAxis.length - 1;
 				}
 
 				serie = {
+					type: 'line',
 					name: this.getSerieName(reading),
 					yAxis: i,
 					tooltip: {
@@ -97,39 +120,41 @@ export class VisualizeReadingsDialogComponent  implements OnInit {
 			serie.data.push([t, reading.value]);
 		});
 
-		series.forEach((serie: any) => {
-			serie.data.sort((r1: any, r2: any) => {
+		series.forEach((serie) => {
+			serie.data.sort((r1, r2) => {
 				return r1[0] - r2[0];
 			});
 		});
 
-		this.readingsChart = new Chart({
+		this.readingsChart = {
 			chart: {
-				type: 'line',
 				zooming: {
 					type: 'x'
 				}
 			},
 			title: {
-				text: (this.data.sensorName || this.data.nodeName || this.data.datasetName || 'all readings') + ' - ' + this.data.readings.length + ' readings in the last ' + this.utils.getDeltaTime(-this.after*1000)
+				text: this.readings.length + ' readings in the last ' + this.utils.getDeltaTime(-this.after*1000)
+			},
+			credits: {
+				enabled: false
 			},
 			xAxis: {
-                type: 'datetime'
-            },
+				type: 'datetime'
+			},
 			yAxis: yAxis,
-            time: {
-				useUTC: false
+			time: {
+				timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
 			},
 			series: series
-		});
+		};
 	}
 
 	private loadReadings() {
 		this.loading = true;
 		const observer = {
-			next: (readings: any) => {
-				this.data.readings = readings;
-				this.createMemoryChart();
+			next: (readings: Reading[]) => {
+				this.readings = readings;
+				this.createReadingsChart();
 				this.loading = false;
 			},
 			error: (e: any) => {
@@ -138,12 +163,12 @@ export class VisualizeReadingsDialogComponent  implements OnInit {
 			}
 		};
 
-		const limit = 0;
+		const limit = 0; // all within the time range
 		const after = this.after + '';
 		if(this.data.sensorName) {
-			this.server.getSensorReadings(this.data.datasetName, this.data.nodeName, this.data.sensorName, limit, after).subscribe(observer);
+			this.server.getSensorReadings(this.data.datasetName!, this.data.nodeName!, this.data.sensorName, limit, after).subscribe(observer);
 		} else if(this.data.nodeName) {
-			this.server.getNodeReadings(this.data.datasetName, this.data.nodeName, limit, after).subscribe(observer);
+			this.server.getNodeReadings(this.data.datasetName!, this.data.nodeName, limit, after).subscribe(observer);
 		} else if(this.data.datasetName) {
 			this.server.getDatasetReadings(this.data.datasetName, limit, after).subscribe(observer);
 		} else {
@@ -156,22 +181,16 @@ export class VisualizeReadingsDialogComponent  implements OnInit {
 		this.loadReadings();
 	}
 
-	private updateRange(readings: any | null) {
-		/*if(this.limit % 1000 != 0) {
-			this.limit = (Math.floor(this.data.readings.length / 1000) + 1) * 1000;
-		}
-		this.readingsLimit *= 2;*/
-
+	private updateRange(readings: Reading[] | null) {
 		this.after *= 2;
 
+		// readings given by the caller: start from the oldest of them
 		if(readings) {
 			const n = readings.length;
 			if(n > 0) {
-				const lastReading = readings[n - 1];
-				const t = new Date(lastReading.timestamp).getTime();
-				console.log(new Date(lastReading.timestamp));
-				const age = new Date().getTime() - t;
-				this.after = -Math.round(age/1000);
+				const oldestReading = readings[n - 1];
+				const age = Date.now() - new Date(oldestReading.timestamp).getTime();
+				this.after = -Math.max(Math.round(age/1000), 1);
 			}
 		}
 	}

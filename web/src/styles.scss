@@ -1,17 +1,29 @@
-
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 
-.mat-table .mat-header-cell,
-.mat-table .mat-cell {
-	padding: 1em;
-}
-.mat-tab-body {
-	padding: 1em;
+// the font is self hosted, so this class (normally in Google's stylesheet) is defined here
+.material-icons {
+	font-family: 'Material Icons';
+	font-weight: normal;
+	font-style: normal;
+	font-size: 24px;
+	line-height: 1;
+	letter-spacing: normal;
+	text-transform: none;
+	display: inline-block;
+	white-space: nowrap;
+	word-wrap: normal;
+	direction: ltr;
+	-webkit-font-smoothing: antialiased;
+	text-rendering: optimizeLegibility;
+	-moz-osx-font-smoothing: grayscale;
+	font-feature-settings: 'liga';
 }
 
-.mat-button-base .mat-icon {
-	margin-right: 0.25em;
+// let wide children of the page (tables, charts) shrink to the screen and scroll on their own
+.content > * {
+	max-width: 100%;
+	min-width: 0;
 }
 
 .align-center {
@@ -45,6 +57,27 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 	margin: auto;
 }
 
+// a row of buttons, wrapping onto more lines when narrow
+.actions {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: flex-end;
+	gap: 0.75em 1em;
+}
+.actions.align-left {
+	justify-content: flex-start;
+}
+
+.table-container {
+	overflow-x: auto;
+	border-radius: 4px;
+	box-shadow: 0 5px 5px -3px rgba(0, 0, 0, 0.2), 0 8px 10px 1px rgba(0, 0, 0, 0.14), 0 3px 14px 2px rgba(0, 0, 0, 0.12);
+	background-color: white;
+}
+.table-container .mat-mdc-table {
+	min-width: 100%;
+}
+
 .not-set {
 	font-style: italic;
 	color: gray;
@@ -55,6 +88,7 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 	padding-right: 5px;
 	font-style: italic;
 	color: gray;
+	white-space: nowrap;
 }
 
 a {
@@ -67,7 +101,7 @@ a:hover {
 
 dl.list {
 	display: grid;
-	grid-template-columns: max-content auto;
+	grid-template-columns: max-content minmax(0, auto);
 	grid-column-gap: 15px;
 }
 dl.list > dt {
@@ -85,6 +119,8 @@ dl.list dt.sub:before {
 }
 dl.list > dd {
 	font-weight: normal;
+	margin-left: 0;
+	overflow-wrap: anywhere;
 }
 dl.list > dd:empty::after {
 	content: "-";
@@ -138,14 +174,53 @@ pre.shell .fail {
 	color: #ec7c7c;
 }
 
-.mat-elevation-z8 {
-	display: inline-block;
-}
-
 .mat-mdc-dialog-container .mat-mdc-dialog-title.mdc-dialog__title {
+	--mat-dialog-subhead-color: white;
     background-color: #303f9f;
-    color: white;
 }
 .mat-mdc-dialog-content.mdc-dialog__content > :first-child {
     margin-top: 1em;
+}
+.mat-mdc-dialog-content .mat-mdc-form-field {
+	width: 100%;
+}
+// a form around title, content and actions should not affect the dialog layout
+form.dialog-form {
+	display: contents;
+}
+
+.mat-mdc-snack-bar-container {
+	--mat-snack-bar-supporting-text-color: white;
+	--mat-snack-bar-button-color: white;
+}
+.mat-mdc-snack-bar-container.toast-success {
+	--mat-snack-bar-container-color: #2e7d32;
+}
+.mat-mdc-snack-bar-container.toast-warn {
+	--mat-snack-bar-container-color: #b26a00;
+}
+.mat-mdc-snack-bar-container.toast-error {
+	--mat-snack-bar-container-color: #c62828;
+}
+
+@media (max-width: 599px) {
+	.margin-top {
+		margin-top: 1em;
+	}
+	.margin-left {
+		margin-left: 1em;
+	}
+
+	.mat-mdc-table .mat-mdc-header-cell,
+	.mat-mdc-table .mat-mdc-cell {
+		padding: 0 8px;
+	}
+
+	// labels above their values
+	dl.list {
+		grid-template-columns: minmax(0, 1fr);
+	}
+	dl.list > dd {
+		margin-bottom: 0.75em;
+	}
 }

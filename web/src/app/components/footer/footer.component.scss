@@ -5,5 +5,15 @@ svg#clouds {
 	left: -230px;
 	z-index: -10;
 	width: 1920px;
+	height: auto;
 	fill: #c3c5f3;
+	pointer-events: none;
+}
+
+@media (max-width: 599px) {
+	svg#clouds {
+		bottom: -70px;
+		left: -120px;
+		width: 900px;
+	}
 }

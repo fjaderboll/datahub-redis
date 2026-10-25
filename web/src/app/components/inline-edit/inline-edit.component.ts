@@ -1,41 +1,78 @@
-import { Component, ElementRef, EventEmitter, Input, OnInit, Output, ViewChild } from '@angular/core';
+import { Component, ElementRef, EventEmitter, Injector, Input, NgZone, Output, ViewChild, ChangeDetectionStrategy, afterNextRender, inject } from '@angular/core';
+import { MatFormField, MatHint } from '@angular/material/form-field';
+import { MatInput } from '@angular/material/input';
+import { FormsModule } from '@angular/forms';
+import { MatRadioGroup, MatRadioButton } from '@angular/material/radio';
+import { CdkConnectedOverlay, CdkOverlayOrigin, ConnectedOverlayPositionChange, ConnectedPosition } from '@angular/cdk/overlay';
 
 @Component({
-  selector: 'app-inline-edit',
-  templateUrl: './inline-edit.component.html',
-  styleUrls: ['./inline-edit.component.scss']
+	selector: 'app-inline-edit',
+	templateUrl: './inline-edit.component.html',
+	changeDetection: ChangeDetectionStrategy.Eager,
+	styleUrls: ['./inline-edit.component.scss'],
+	imports: [MatFormField, MatHint, MatInput, FormsModule, MatRadioGroup, MatRadioButton, CdkConnectedOverlay, CdkOverlayOrigin]
 })
-export class InlineEditComponent implements OnInit {
-	@Input() type: string = "text";
+export class InlineEditComponent {
+	private injector = inject(Injector);
+	private zone = inject(NgZone);
+
+	// the popup is an overlay, so tables that scroll sideways don't cut it off
+	public readonly positions: ConnectedPosition[] = [
+		{ originX: 'start', originY: 'bottom', overlayX: 'start', overlayY: 'top', offsetY: 10 },
+		{ originX: 'end', originY: 'bottom', overlayX: 'end', overlayY: 'top', offsetY: 10 }
+	];
+	public alignEnd = false;
+
+	@Input() type: 'text' | 'number' | 'boolean' = "text";
 	@Input() disabled: boolean = false;
 	@Input() value: any;
-	@Output() onChange: EventEmitter<number> = new EventEmitter<number>();
-	@ViewChild('input') inputElement!: ElementRef;
+	@Input() placeholder: string = "";
+	/** What to edit, when it differs from the displayed value */
+	@Input() editValue: any;
+	@Input() hint: string = "";
+	@Output() onChange = new EventEmitter<any>();
+	@ViewChild('edit') editElement?: ElementRef<HTMLElement>;
 	public editMode: boolean = false;
 	public newValue: any;
-
-	constructor() { }
-
-	ngOnInit(): void {
-	}
+	private startValue: any;
 
 	startEdit() {
-		if(!this.disabled) {
+		if(!this.disabled && !this.editMode) {
 			this.editMode = true;
-			this.newValue = this.value;
-			setTimeout(() => {
-				if(this.inputElement) {
-					this.inputElement.nativeElement.focus();
-				}
-			}, 100);
+			this.startValue = (this.editValue !== undefined ? this.editValue : this.value);
+			this.newValue = this.startValue;
+			afterNextRender(() => {
+				this.editElement?.nativeElement.querySelector('input')?.focus();
+			}, { injector: this.injector });
 		}
 	}
 
 	stopEdit(save: boolean) {
-		if(save && this.value != this.newValue) {
+		// removing the focused input fires focusout too, which must not save a second time
+		if(!this.editMode) {
+			return;
+		}
+		this.editMode = false;
+		if(save && this.startValue != this.newValue) {
 			const v = (this.type == 'number' ? Number(this.newValue) : this.newValue);
 			this.onChange.emit(v);
 		}
-		this.editMode = false;
+	}
+
+	// the arrow follows the side the popup is aligned to
+	positionChange(change: ConnectedOverlayPositionChange) {
+		this.zone.run(() => this.alignEnd = (change.connectionPair.overlayX == 'end'));
+	}
+
+	setBoolean(value: boolean) {
+		this.newValue = value;
+		this.stopEdit(true);
+	}
+
+	// leaving the popup saves text, but cancels a boolean choice not yet made
+	focusOut(event: FocusEvent) {
+		if(!this.editElement?.nativeElement.contains(event.relatedTarget as Node | null)) {
+			this.stopEdit(this.type != 'boolean');
+		}
 	}
 }

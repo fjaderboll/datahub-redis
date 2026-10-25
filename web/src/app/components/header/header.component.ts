@@ -1,35 +1,27 @@
-import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
-import { AuthenticationService } from 'src/app/services/authentication.service';
-import { ServerService } from 'src/app/services/server.service';
-import { UtilsService } from 'src/app/services/utils.service';
-import { environment } from 'src/environments/environment';
+import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
+import { AuthenticationService } from '../../services/authentication.service';
+import { environment } from '../../../environments/environment';
+import { MatToolbar } from '@angular/material/toolbar';
+import { MatAnchor, MatButton, MatIconButton } from '@angular/material/button';
+import { RouterLink, RouterLinkActive } from '@angular/router';
+import { MatIcon } from '@angular/material/icon';
+import { MatMenuTrigger, MatMenu, MatMenuItem } from '@angular/material/menu';
+import { MatDivider } from '@angular/material/divider';
 
 @Component({
-  selector: 'app-header',
-  templateUrl: './header.component.html',
-  styleUrls: ['./header.component.scss']
+	selector: 'app-header',
+	templateUrl: './header.component.html',
+	changeDetection: ChangeDetectionStrategy.Eager,
+	styleUrls: ['./header.component.scss'],
+	imports: [MatToolbar, MatAnchor, MatButton, MatIconButton, RouterLink, RouterLinkActive, MatIcon, MatMenuTrigger, MatMenu, MatMenuItem, MatDivider]
 })
-export class HeaderComponent implements OnInit {
-	public apiUrl: string = "";
-
-	constructor(
-		private router: Router,
-		private utils: UtilsService,
-		public auth: AuthenticationService,
-        private server: ServerService
-	) { }
-
-  	ngOnInit(): void {
-		this.apiUrl = environment.apiUrl;
-  	}
-
-	/*public showLoginLink() {
-		return !this.auth.isLoggedIn() && this.router.url != '/login';
-	}*/
+export class HeaderComponent {
+	public auth = inject(AuthenticationService);
+	public apiUrl = environment.apiUrl;
+	public docUrl = 'https://github.com/fjaderboll/datahub-redis';
 
 	public logout() {
-        this.auth.logout(true);
+		this.auth.logout();
 	}
 
 }

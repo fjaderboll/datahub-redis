@@ -1,0 +1,12 @@
+
+.breadcrumb {
+	display: flex;
+	flex-wrap: wrap;
+	margin-bottom: 1em;
+}
+
+.breadcrumb-link {
+	display: flex;
+	align-items: center;
+	overflow-wrap: anywhere;
+}

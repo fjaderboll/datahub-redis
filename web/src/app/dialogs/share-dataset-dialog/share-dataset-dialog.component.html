@@ -1,19 +1,20 @@
-<h1 mat-dialog-title>Share dataset</h1>
-<div mat-dialog-content>
-	<div>
-		<mat-form-field appearance="outline">
+<form class="dialog-form" #form="ngForm" (ngSubmit)="form.valid && !busy && share()">
+	<h1 mat-dialog-title>Share dataset</h1>
+	<mat-dialog-content>
+		<mat-form-field appearance="outline" subscriptSizing="dynamic">
 			<mat-label>Username</mat-label>
-			<input type="text" matInput required [(ngModel)]="username" placeholder="Username">
+			<input type="text" matInput required name="username" [pattern]="namePattern" [(ngModel)]="username" autocomplete="off" autocapitalize="none">
+			<mat-error>Not a valid username</mat-error>
 		</mat-form-field>
-	</div>
-</div>
-<div mat-dialog-actions>
-	<button mat-stroked-button color="primary" [mat-dialog-close]="false">
-		<mat-icon>close</mat-icon>
-		<span>Cancel</span>
-	</button>
-	<button mat-flat-button color="accent" (click)="share()" [disabled]="!isFormValid()">
-		<mat-icon>person_add</mat-icon>
-		<span>Share with</span>
-	</button>
-</div>
+	</mat-dialog-content>
+	<mat-dialog-actions>
+		<button type="button" mat-stroked-button color="primary" [mat-dialog-close]="false">
+			<mat-icon>close</mat-icon>
+			<span>Cancel</span>
+		</button>
+		<button type="submit" mat-flat-button color="accent" [disabled]="busy">
+			<mat-icon>person_add</mat-icon>
+			<span>Share with</span>
+		</button>
+	</mat-dialog-actions>
+</form>

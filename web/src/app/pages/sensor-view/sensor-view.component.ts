@@ -1,51 +1,57 @@
-import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, DestroyRef, OnInit, ViewChild, ChangeDetectionStrategy, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatDialog } from '@angular/material/dialog';
 import { MatPaginator } from '@angular/material/paginator';
-import { MatSort } from '@angular/material/sort';
-import { MatTableDataSource } from '@angular/material/table';
+import { MatSort, MatSortHeader } from '@angular/material/sort';
+import { MatTableDataSource, MatTable, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow } from '@angular/material/table';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Observable } from 'rxjs';
-import { ConfirmDialogComponent } from 'src/app/dialogs/confirm-dialog/confirm-dialog.component';
-import { CreateReadingDialogComponent } from 'src/app/dialogs/create-reading-dialog/create-reading-dialog.component';
-import { VisualizeReadingsDialogComponent } from 'src/app/dialogs/visualize-readings-dialog/visualize-readings-dialog.component';
-import { AuthenticationService } from 'src/app/services/authentication.service';
-import { ServerService } from 'src/app/services/server.service';
-import { UtilsService } from 'src/app/services/utils.service';
+import { ConfirmDialogComponent } from '../../dialogs/confirm-dialog/confirm-dialog.component';
+import { CreateReadingDialogComponent } from '../../dialogs/create-reading-dialog/create-reading-dialog.component';
+import { VisualizeReadingsDialogComponent } from '../../dialogs/visualize-readings-dialog/visualize-readings-dialog.component';
+import { ServerService } from '../../services/server.service';
+import { UtilsService } from '../../services/utils.service';
+import { BreadcrumbComponent } from '../../components/breadcrumb/breadcrumb.component';
+import { InlineEditComponent } from '../../components/inline-edit/inline-edit.component';
+import { MatButton } from '@angular/material/button';
+import { MatIcon } from '@angular/material/icon';
+import { Reading, Sensor } from '../../models';
 
 @Component({
 	selector: 'app-sensor-view',
 	templateUrl: './sensor-view.component.html',
-	styleUrls: ['./sensor-view.component.scss']
+	changeDetection: ChangeDetectionStrategy.Eager,
+	styleUrls: ['./sensor-view.component.scss'],
+	imports: [BreadcrumbComponent, InlineEditComponent, MatButton, MatIcon, MatTable, MatSort, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatSortHeader, MatCellDef, MatCell, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, MatPaginator]
 })
 export class SensorViewComponent implements OnInit, AfterViewInit {
+	utils = inject(UtilsService);
+	private server = inject(ServerService);
+	private route = inject(ActivatedRoute);
+	private dialog = inject(MatDialog);
+	private router = inject(Router);
+	private destroyRef = inject(DestroyRef);
+
 	public datasetName!: string;
-	public nodeName: any;
-	public sensorName: any;
-	public sensor: any;
-	public readings: any;
+	public nodeName!: string;
+	public sensorName!: string;
+	public sensor?: Sensor;
+	public readings?: Reading[];
 	private readingsLimit = 1000;
 
 	public displayedColumns: string[] = ['timestamp', 'value'];
-	public dataSource = new MatTableDataSource<any>();
+	public dataSource = new MatTableDataSource<Reading>();
 	@ViewChild(MatPaginator) paginator!: MatPaginator;
 	@ViewChild(MatSort) sort!: MatSort;
 
-	constructor(
-		public auth: AuthenticationService,
-		public utils: UtilsService,
-		private server: ServerService,
-		private route: ActivatedRoute,
-		private dialog: MatDialog,
-		private router: Router
-	) { }
-
 	ngOnInit(): void {
-		this.datasetName = this.route.snapshot.paramMap.get('datasetName') || 'this should never happen';
-		this.nodeName = this.route.snapshot.paramMap.get('nodeName') || 'this should never happen';
-		this.sensorName = this.route.snapshot.paramMap.get('sensorName') || 'this should never happen';
-
-		this.loadSensor();
-		this.loadReadings();
+		// the component is reused when only the URL changes, e.g. after a rename
+		this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(params => {
+			this.datasetName = params.get('datasetName')!;
+			this.nodeName = params.get('nodeName')!;
+			this.sensorName = params.get('sensorName')!;
+			this.loadSensor();
+			this.loadReadings();
+		});
 	}
 
 	ngAfterViewInit() {
@@ -55,7 +61,7 @@ export class SensorViewComponent implements OnInit, AfterViewInit {
 
 	private loadSensor() {
 		this.server.getSensor(this.datasetName, this.nodeName, this.sensorName).subscribe({
-			next: (sensor: any) => {
+			next: (sensor) => {
 				this.sensor = sensor;
 			},
 			error: (e) => {
@@ -66,7 +72,7 @@ export class SensorViewComponent implements OnInit, AfterViewInit {
 
 	private loadReadings() {
 		this.server.getSensorReadings(this.datasetName, this.nodeName, this.sensorName, this.readingsLimit, null).subscribe({
-			next: (readings: any) => {
+			next: (readings) => {
 				this.readings = readings;
 				this.dataSource.data = readings;
 			},
@@ -76,17 +82,21 @@ export class SensorViewComponent implements OnInit, AfterViewInit {
 		});
 	}
 
+	public hasMoreReadings() {
+		return !!this.readings && !!this.sensor?.readingStats && this.readings.length < this.sensor.readingStats.count;
+	}
+
 	public loadMore() {
 		this.readingsLimit *= 2;
 		this.loadReadings();
 	}
 
-	public changedValue(property: string, newValue: any) {
+	public changedValue(property: 'name' | 'desc' | 'unit', newValue: string) {
 		this.server.updateSensor(this.datasetName, this.nodeName, this.sensorName, property, newValue).subscribe({
-			next: (response: any) => {
-				this.sensor[property] = newValue;
+			next: () => {
+				this.sensor![property] = newValue;
 				if(property == "name") {
-					this.router.navigate(['/datasets/' + this.datasetName + '/nodes/' + this.nodeName + '/sensors/' + this.sensor.name]);
+					this.router.navigate(['/datasets', this.datasetName, 'nodes', this.nodeName, 'sensors', newValue], { replaceUrl: true });
 				}
 			},
 			error: (e) => {
@@ -100,26 +110,12 @@ export class SensorViewComponent implements OnInit, AfterViewInit {
 			data: {
 				title: "Delete Sensor",
 				text: "This will remove this sensor and all its readings. Are you sure?",
-				action: new Observable(
-					observer => {
-						this.server.deleteSensor(this.datasetName, this.nodeName, this.sensorName).subscribe({
-							next: (v: any) => {
-								observer.next(v);
-							},
-							error: (e) => {
-								observer.error(e);
-							},
-							complete: () => {
-								observer.complete();
-							}
-						});
-					}
-				)
+				action: this.server.deleteSensor(this.datasetName, this.nodeName, this.sensorName)
 			}
 		});
 		dialog.afterClosed().subscribe(confirmed => {
 			if(confirmed) {
-				this.router.navigate(['/datasets/' + this.datasetName + '/nodes/' + this.nodeName]);
+				this.router.navigate(['/datasets', this.datasetName, 'nodes', this.nodeName]);
 			}
 		});
 	}
@@ -128,12 +124,12 @@ export class SensorViewComponent implements OnInit, AfterViewInit {
 		const dialog = this.dialog.open(CreateReadingDialogComponent, {
 			data: {
 				datasetName: this.datasetName,
-                nodeName: this.nodeName,
+				nodeName: this.nodeName,
 				sensorName: this.sensorName
 			}
 		});
-		dialog.afterClosed().subscribe(sensor => {
-			if(sensor) {
+		dialog.afterClosed().subscribe(reading => {
+			if(reading) {
 				this.loadSensor();
 				this.loadReadings();
 			}
@@ -145,21 +141,7 @@ export class SensorViewComponent implements OnInit, AfterViewInit {
 			data: {
 				title: "Delete Readings",
 				text: "This will remove all readings for this sensor. Are you sure?",
-				action: new Observable(
-					observer => {
-						this.server.deleteReadings(this.datasetName, this.nodeName, this.sensorName).subscribe({
-							next: (v: any) => {
-								observer.next(v);
-							},
-							error: (e) => {
-								observer.error(e);
-							},
-							complete: () => {
-								observer.complete();
-							}
-						});
-					}
-				)
+				action: this.server.deleteReadings(this.datasetName, this.nodeName, this.sensorName)
 			}
 		});
 		dialog.afterClosed().subscribe(confirmed => {
@@ -171,13 +153,11 @@ export class SensorViewComponent implements OnInit, AfterViewInit {
 	}
 
 	public visualizeReadings() {
-		this.dialog.open(VisualizeReadingsDialogComponent, {
-			data: {
-				datasetName: this.datasetName,
-                nodeName: this.nodeName,
-				sensorName: this.sensorName,
-				readings: this.readings
-			}
+		VisualizeReadingsDialogComponent.open(this.dialog, {
+			datasetName: this.datasetName,
+			nodeName: this.nodeName,
+			sensorName: this.sensorName,
+			readings: this.readings
 		});
 	}
 

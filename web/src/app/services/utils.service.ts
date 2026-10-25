@@ -1,29 +1,36 @@
-import { Injectable } from '@angular/core';
-import { ToastrService } from 'ngx-toastr';
+import { Injectable, inject } from '@angular/core';
+import { MatSnackBar } from '@angular/material/snack-bar';
+
+/** Valid user, dataset, node and sensor names, as checked by the backend. */
+export const NAME_PATTERN = '[a-z0-9][a-z0-9_@.\\-]*[a-z0-9]';
 
 @Injectable({
   providedIn: 'root'
 })
 export class UtilsService {
-
-	constructor(
-		private toastr: ToastrService
-	) { }
+	private snackBar = inject(MatSnackBar);
 
 	public toastSuccess(message: string) {
-		this.toastr.success(message);
+		this.toast(message, 'toast-success', 3000);
 	}
 
 	public toastWarn(message: string) {
-		this.toastr.warning(message);
+		this.toast(message, 'toast-warn', 6000);
 	}
 
 	public toastError(message: string) {
-		console.log(message);
-		this.toastr.error(message);
+		this.toast(message, 'toast-error', 6000);
 	}
 
-	public printFilesize(bytes: number, decimals?: number) {
+	private toast(message: string, panelClass: string, duration: number) {
+		this.snackBar.open(message, 'OK', {
+			duration,
+			panelClass,
+			horizontalPosition: 'end'
+		});
+	}
+
+	public printFilesize(bytes: number | null | undefined, decimals?: number) {
 		if(bytes == null) return '';
 		if(bytes === 0) return '0 Bytes';
 		if(bytes === 1) return '1 Byte';
@@ -37,14 +44,14 @@ export class UtilsService {
 		return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 	}
 
-	public toDate(timestamp: string) {
+	public toDate(timestamp: string | null | undefined) {
 		if(timestamp) {
 			return new Date(timestamp);
 		}
 		return null;
 	}
 
-	public printTimestamp(timestamp: string) {
+	public printTimestamp(timestamp: string | null | undefined) {
 		let date = this.toDate(timestamp);
 		if(date) {
 			return date.toLocaleString("sv-SE");
@@ -52,10 +59,10 @@ export class UtilsService {
 		return null;
 	}
 
-	public getRelativeTime(timestamp: string) {
+	public getRelativeTime(timestamp: string | null | undefined) {
 		if(timestamp) {
-	        let time = Date.now() - new Date(timestamp).getTime();
-	        let futureDate = (time < 0);
+			let time = Date.now() - new Date(timestamp).getTime();
+			let futureDate = (time < 0);
 			time = Math.abs(time);
 			if(time < 1000) {
 				return "just now";
@@ -63,7 +70,7 @@ export class UtilsService {
 			return this.getDeltaTime(time) + " " + (futureDate ? "left" : "ago");
 		}
 		return "";
-    }
+	}
 
 	public getDeltaTime(milliseconds: number) {
 		let time = milliseconds;
@@ -78,6 +85,17 @@ export class UtilsService {
 			time /= multipliers[i];
 		}
 		return ""
-    }
+	}
+
+	/** A duration in seconds, where 0 means there is no limit (as for retention and token TTL). */
+	public printDuration(seconds: number | null | undefined, unlimitedText: string) {
+		if(seconds == null || isNaN(seconds)) {
+			return "";
+		}
+		if(seconds == 0) {
+			return unlimitedText;
+		}
+		return this.getDeltaTime(seconds * 1000);
+	}
 
 }

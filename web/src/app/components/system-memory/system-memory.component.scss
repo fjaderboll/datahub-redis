@@ -1,9 +1,10 @@
 
-#outerDiv {
-	height: 240px;
-	overflow: hidden;
+:host {
+	display: block;
+	width: 700px;
+	max-width: 100%;
 }
 
-#memoryChart {
-	width: 700px;
+.memory-chart {
+	height: 260px;
 }
