@@ -1,79 +1,91 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, inject } from '@angular/core';
+import { Component, DestroyRef, OnInit, ChangeDetectionStrategy, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { DecimalPipe } from '@angular/common';
 import { AuthenticationService } from '../../services/authentication.service';
+import { LiveReadingsService } from '../../services/live-readings.service';
 import { ServerService } from '../../services/server.service';
 import { UtilsService } from '../../services/utils.service';
-import { DecimalPipe } from '@angular/common';
 import { SystemMemoryComponent } from '../../components/system-memory/system-memory.component';
-import { MatButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
-import { Reading } from '../../models';
+import { MatTooltip } from '@angular/material/tooltip';
+import { NodeActivity, Overview, Reading } from '../../models';
+
+const RECENT_NODES = 10;
+const DAY = 24 * 3600 * 1000;
 
 @Component({
 	selector: 'app-dashboard',
 	templateUrl: './dashboard.component.html',
 	changeDetection: ChangeDetectionStrategy.Eager,
 	styleUrls: ['./dashboard.component.scss'],
-	imports: [SystemMemoryComponent, MatButton, MatIcon, RouterLink, DecimalPipe]
+	imports: [SystemMemoryComponent, RouterLink, DecimalPipe, MatIcon, MatTooltip]
 })
-export class DashboardComponent implements OnInit, OnDestroy {
+export class DashboardComponent implements OnInit {
 	auth = inject(AuthenticationService);
 	private server = inject(ServerService);
+	private liveReadings = inject(LiveReadingsService);
+	private destroyRef = inject(DestroyRef);
 	utils = inject(UtilsService);
 
-	private startTime = 0;
-	private streamSubscription?: Subscription;
-	public receivedReadings = 0;
-	public receivedReadingsPerSecond: number = 0.0;
-	public lastReadings: Reading[] = [];
-	public streamingReadings = false;
+	public overview?: Overview;
 
 	ngOnInit(): void {
-		this.streamReadings();
-	}
-
-	ngOnDestroy(): void {
-		this.streamSubscription?.unsubscribe(); // closes the connection
-	}
-
-	public streamReadings() {
-		const token = this.auth.getToken();
-		if(!token) {
-			return;
-		}
-
-		this.streamingReadings = true;
-		this.startTime = Date.now();
-		this.receivedReadings = 0;
-		this.receivedReadingsPerSecond = 0;
-
-		this.streamSubscription = this.server.streamReadings(token).subscribe({
-			next: (reading) => {
-				this.handleReading(reading);
+		this.server.getStateOverview().subscribe({
+			next: (overview) => {
+				this.overview = overview;
+				this.listenForReadings();
 			},
 			error: (e) => {
-				if(e.status === 401) {
-					this.auth.sessionExpired();
-				} else {
-					this.server.showHttpError(e);
-				}
-				this.streamingReadings = false;
-			},
-			complete: () => {
-				this.streamingReadings = false;
+				this.server.showHttpError(e);
 			}
 		});
 	}
 
-	private handleReading(reading: Reading) {
-		this.receivedReadings++;
-		this.receivedReadingsPerSecond = this.receivedReadings / ((Date.now() - this.startTime) / 1000);
+	public trackNode(node: NodeActivity) {
+		return node.datasetName + '/' + node.nodeName;
+	}
 
-		this.lastReadings.push(reading);
-		if(this.lastReadings.length > 10) {
-			this.lastReadings.shift();
+	/** Keeps the recently updated nodes up to date, the silent ones are only checked on load */
+	private listenForReadings() {
+		this.liveReadings.readings$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+			next: (reading) => {
+				this.handleReading(reading);
+			},
+			error: () => {} // the service has told the user
+		});
+	}
+
+	private handleReading(reading: Reading) {
+		const overview = this.overview!;
+		const time = new Date(reading.timestamp).getTime();
+		if(Date.now() - time < DAY) {
+			overview.readings24h++;
 		}
+
+		let node = overview.recentNodes.find(n => n.datasetName == reading.datasetName && n.nodeName == reading.nodeName);
+		if(!node) {
+			node = { datasetName: reading.datasetName, nodeName: reading.nodeName, lastTimestamp: reading.timestamp, sensors: [] };
+			overview.recentNodes.push(node);
+		}
+
+		let sensor = node.sensors.find(s => s.name == reading.sensorName);
+		if(!sensor) {
+			sensor = { name: reading.sensorName, unit: reading.unit, lastReading: null, interval: null, silent: false };
+			node.sensors.push(sensor);
+		}
+
+		// older readings, e.g. from an import, don't replace newer ones
+		if(!sensor.lastReading || time >= new Date(sensor.lastReading.timestamp).getTime()) {
+			sensor.lastReading = reading;
+		}
+		if(time > new Date(node.lastTimestamp).getTime()) {
+			node.lastTimestamp = reading.timestamp;
+		}
+
+		overview.recentNodes = overview.recentNodes
+			.sort((n1, n2) => new Date(n2.lastTimestamp).getTime() - new Date(n1.lastTimestamp).getTime())
+			.slice(0, RECENT_NODES);
 	}
 
 }

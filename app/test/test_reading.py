@@ -58,5 +58,35 @@ class TestReading(unittest.TestCase):
 		listener.join(10)
 		self.assertEqual(received, list(range(count)))
 
+	def test_overview(self):
+		# a sensor is silent when it has been quiet for much longer than it usually is
+		(datasetName, nodeName, quietSensorName) = self.names
+		newSensorName = helper.createSensor(self.headers, datasetName, nodeName)['name']
+		hourlyNodeName = helper.createNode(self.headers, datasetName)['name']
+		hourlySensorName = helper.createSensor(self.headers, datasetName, hourlyNodeName)['name']
+		helper.createNode(self.headers, datasetName) # without sensors
+
+		helper.createReadings(self.headers, datasetName, nodeName, quietSensorName, [{'time': str(-3600 - 60 * i)} for i in range(10)])
+		helper.createReadings(self.headers, datasetName, nodeName, newSensorName, [{'time': '-60'}, {'time': '-120'}])
+		helper.createReadings(self.headers, datasetName, hourlyNodeName, hourlySensorName, [{'time': str(-600 - 3600 * i)} for i in range(4)])
+
+		response = requests.get(helper.BASE_URL + 'state/overview', headers=self.headers)
+		self.assertEqual(response.status_code, 200, response.text)
+		overview = response.json()
+
+		self.assertEqual((overview['datasets'], overview['nodes'], overview['sensors']), (1, 3, 3))
+		self.assertEqual(overview['readings24h'], 16)
+		self.assertEqual(overview['silentSensors'], 1)
+		self.assertEqual([node['nodeName'] for node in overview['recentNodes']], [nodeName, hourlyNodeName])
+
+		sensors = {sensor['name']: sensor for node in overview['recentNodes'] for sensor in node['sensors']}
+		# relative times are resolved one reading at a time, so they can be a millisecond apart
+		self.assertAlmostEqual(sensors[quietSensorName]['interval'], 60, delta=0.01)
+		self.assertIsNone(sensors[newSensorName]['interval'])
+		self.assertAlmostEqual(sensors[hourlySensorName]['interval'], 3600, delta=0.01)
+		self.assertEqual([name for name, sensor in sensors.items() if sensor['silent']], [quietSensorName])
+
+		self.assertEqual([node['nodeName'] for node in overview['silentNodes']], [nodeName])
+
 if __name__ == '__main__':
 	unittest.main()

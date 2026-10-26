@@ -87,3 +87,32 @@ export interface Reading {
 	sensorName: string;
 	unit: string;
 }
+
+export interface Overview {
+	datasets: number;
+	nodes: number;
+	sensors: number;
+	readings24h: number;
+	silentSensors: number;
+	/** Newest last reading first */
+	recentNodes: NodeActivity[];
+	/** Nodes with at least one silent sensor, the most recently quiet first */
+	silentNodes: NodeActivity[];
+}
+
+export interface NodeActivity {
+	datasetName: string;
+	nodeName: string;
+	lastTimestamp: string;
+	sensors: SensorActivity[];
+}
+
+export interface SensorActivity {
+	name: string;
+	unit: string;
+	lastReading: Reading | null;
+	/** Usual seconds between readings, null until there are enough readings to tell */
+	interval: number | null;
+	/** Quiet for much longer than the usual interval */
+	silent: boolean;
+}

@@ -19,6 +19,14 @@ def getNodeByName(datasetId, name):
 def getDatasetNodes(datasetId):
 	return db.query('SELECT * FROM nodes WHERE dataset_id = ? ORDER BY name', (datasetId,))
 
+def countUserNodes(username):
+	return db.queryOne('''
+		SELECT COUNT(*) AS count FROM nodes n
+		JOIN dataset_users du ON du.dataset_id = n.dataset_id
+		JOIN users u ON u.id = du.user_id
+		WHERE u.username = ?
+	''', (username,))['count']
+
 def createNode(datasetId, name, desc=''):
 	with db.transaction():
 		verifyValidNodeName(datasetId, name)

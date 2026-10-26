@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 import json
+import statistics
 
 import dateutil.parser as dp
 import redis
@@ -10,6 +11,10 @@ from api import api
 import db
 import tsdb
 from services import cleaner, finder, global_vars
+
+PATTERN_READINGS = 21 # newest readings of a sensor that show how often it reports
+SILENT_FACTOR = 3 # a sensor is silent after this many usual intervals without a reading,
+SILENT_MIN_MSECS = 5 * 60 * 1000 # but never sooner than this
 
 def parseTime(time, defaultValue):
 	if time:
@@ -200,6 +205,28 @@ def runPerSensor(sensorIds, command):
 
 def getLastReadings(sensorIds):
 	return runPerSensor(sensorIds, lambda pipe, key: pipe.get(key))
+
+def getRecentReadingsMany(sensorIds, count):
+	"""The newest 'count' readings of each sensor, newest first."""
+	results = runPerSensor(sensorIds, lambda pipe, key: pipe.revrange(key, '-', '+', count=count))
+	return {sensorId: result or [] for sensorId, result in results.items()}
+
+def getReadingCountsSince(sensorIds, fromTime):
+	"""Number of readings of each sensor from 'fromTime' (milliseconds) and on."""
+	bucket = max(int(datetime.now().timestamp() * 1000) - fromTime, 1)
+	results = runPerSensor(sensorIds, lambda pipe, key: pipe.range(key, fromTime, '+', aggregation_type='count', bucket_size_msec=bucket))
+	return {sensorId: int(sum(count for _, count in result or [])) for sensorId, result in results.items()}
+
+def getUsualInterval(readings):
+	"""Median time in milliseconds between readings (newest first), None until there are enough of them to tell."""
+	if len(readings) < 3:
+		return None
+	return statistics.median(newer[0] - older[0] for newer, older in zip(readings, readings[1:]))
+
+def isSilent(readings, now):
+	"""Whether a sensor has gone quiet compared to how often it usually reports."""
+	interval = getUsualInterval(readings)
+	return interval is not None and now - readings[0][0] > max(SILENT_FACTOR * interval, SILENT_MIN_MSECS)
 
 def getReadingStatsMany(sensorIds):
 	infos = runPerSensor(sensorIds, lambda pipe, key: pipe.info(key))

@@ -4,13 +4,14 @@ import { DomSanitizer } from '@angular/platform-browser';
 import { HeaderComponent } from './components/header/header.component';
 import { RouterOutlet } from '@angular/router';
 import { FooterComponent } from './components/footer/footer.component';
+import { LiveReadingsButtonComponent } from './components/live-readings-button/live-readings-button.component';
 
 @Component({
 	selector: 'app-root',
 	templateUrl: './app.component.html',
 	changeDetection: ChangeDetectionStrategy.Eager,
 	styleUrls: ['./app.component.scss'],
-	imports: [HeaderComponent, RouterOutlet, FooterComponent]
+	imports: [HeaderComponent, RouterOutlet, FooterComponent, LiveReadingsButtonComponent]
 })
 export class AppComponent {
 	constructor() {

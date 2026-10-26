@@ -1,7 +1,7 @@
-
+// the bottom margin leaves room for the live readings button
 .content {
 	display: flex;
-	margin: 2em auto 2em;
+	margin: 2em auto 88px;
 	padding: 0 16px;
 	max-width: 960px;
 	flex-direction: column;
@@ -10,7 +10,7 @@
 
 @media (max-width: 599px) {
 	.content {
-		margin: 1em auto;
+		margin: 1em auto 88px;
 		padding: 0 8px;
 	}
 }

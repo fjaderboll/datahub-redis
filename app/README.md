@@ -63,8 +63,8 @@ From within Visual Studio Code you can use the `launch.json` file.
 Make sure the Redis database and NanoMQ is running.
 
 ```shell
-flask --app src/app.py --debug run --port 8080               # development
-gunicorn --workers 4 --bind 0.0.0.0:8080 -k gevent wsgi:app  # production
+flask --app src/app.py --debug run --port 8080 --host 0.0.0.0 # development
+gunicorn --workers 4 --bind 0.0.0.0:8080 -k gevent wsgi:app   # production
 ```
 
 The API is served under `/api` (Swagger doc at `/api/`) and, if built, the web frontend

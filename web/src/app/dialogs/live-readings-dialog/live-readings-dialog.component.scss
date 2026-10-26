@@ -1,0 +1,27 @@
+.stream {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.5em 1.5em;
+}
+
+.readings {
+	min-height: 200px;
+}
+
+.reading {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.25em 1.5em;
+	margin: 0.5em 0;
+	padding: 0.5em 1em;
+	background-color: #e3e3e9;
+	border-radius: 0.5em;
+	overflow-wrap: anywhere;
+
+	.property {
+		color: gray;
+		margin-right: 0.5em;
+	}
+}
