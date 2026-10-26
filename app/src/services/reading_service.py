@@ -1,7 +1,8 @@
-from datetime import datetime
+from datetime import datetime, timezone
 import json
 
 import dateutil.parser as dp
+import redis
 from flask_restx import abort
 from flask import request
 
@@ -53,6 +54,7 @@ def createReadings(auth, datasetName, nodeName, sensorName):
 			cache[key] = find()
 		return cache[key]
 
+	nextFree = {}
 	readings = []
 	for reading in api.payload:
 		value = reading['value']
@@ -68,20 +70,37 @@ def createReadings(auth, datasetName, nodeName, sensorName):
 			name = reading['sensorName']
 			sensor = cached(('sensor', node['id'], name), lambda: finder.findSensor(node['id'], name, create=True))
 
-		cleanedReading = createReading(dataset, node, sensor, value, time=time)
+		cleanedReading = createReading(dataset, node, sensor, value, time=time, nextFree=nextFree)
 		readings.append(cleanedReading)
 
 	return readings
 
-def createReading(dataset, node, sensor, value, time=None):
-	timestamp = parseTime(time, '*')
+def createReading(dataset, node, sensor, value, time=None, nextFree=None):
+	"""Store and publish a reading. 'nextFree' (sensor id -> millisecond) is shared by the readings of one request."""
+	key = tsdb.readingsKey(sensor['id'])
+	if time:
+		storedTimestamp = addReadingAt(key, parseTime(time, None), value, sensor)
+	else:
+		# readings of the same request continue after each other, so they rarely have to look for a free millisecond
+		if nextFree is None:
+			nextFree = {}
+		now = int(datetime.now().timestamp() * 1000)
+		storedTimestamp = tsdb.addAtFreeTimestamp(key, max(now, nextFree.get(sensor['id'], 0)), value)
+		nextFree[sensor['id']] = storedTimestamp + 1
 
-	storedTimestamp = tsdb.ts.add(tsdb.readingsKey(sensor['id']), timestamp, value)
 	cleanedReading = cleaner.cleanReading((storedTimestamp, float(value)), dataset['name'], node['name'], sensor)
 	message = json.dumps(cleanedReading)
 	tsdb.redisDb.publish(tsdb.READINGS_TOPIC, message)
 	global_vars.mqttClient.publish(message)
 	return cleanedReading
+
+def addReadingAt(key, timestamp, value, sensor):
+	try:
+		return tsdb.ts.add(key, timestamp, value)
+	except redis.ResponseError as e:
+		if not tsdb.isDuplicateError(e):
+			raise
+		abort(400, "Sensor '{}' already has a reading at {}".format(sensor['name'], datetime.fromtimestamp(timestamp / 1000, timezone.utc).isoformat()))
 
 def getReadings(auth, datasetName, nodeName, sensorName):
 	requestedSensors = findRequestedSensors(auth, datasetName, nodeName, sensorName)

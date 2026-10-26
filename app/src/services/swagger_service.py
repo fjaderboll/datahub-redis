@@ -84,22 +84,22 @@ updateSensorData = api.model('UpdateSensorData', {
 
 createSensorReadingData = api.model('CreateSensorReadingData', {
 	'value': fields.Float(description='The value', required=True),
-	'time': fields.String(description='An ISO timestamp or relative time in seconds. Defaults to now.')
+	'time': fields.String(description='An ISO timestamp or relative time in seconds. Defaults to now, or the next free millisecond as a sensor has one reading per millisecond.')
 })
 createNodeReadingData = api.model('CreateNodeReadingData', {
 	'value': fields.Float(description='The value', required=True),
-	'time': fields.String(description='An ISO timestamp or relative time in seconds. Defaults to now.'),
+	'time': fields.String(description='An ISO timestamp or relative time in seconds. Defaults to now, or the next free millisecond as a sensor has one reading per millisecond.'),
 	'sensorName': fields.String(description='Name of sensor', required=True)
 })
 createDatasetReadingData = api.model('CreateDatasetReadingData', {
 	'value': fields.Float(description='The value', required=True),
-	'time': fields.String(description='An ISO timestamp or relative time in seconds. Defaults to now.'),
+	'time': fields.String(description='An ISO timestamp or relative time in seconds. Defaults to now, or the next free millisecond as a sensor has one reading per millisecond.'),
 	'sensorName': fields.String(description='Name of sensor', required=True),
 	'nodeName': fields.String(description='Name of node', required=True)
 })
 createReadingData = api.model('CreateReadingData', {
 	'value': fields.Float(description='The value', required=True),
-	'time': fields.String(description='An ISO timestamp or relative time in seconds. Defaults to now.'),
+	'time': fields.String(description='An ISO timestamp or relative time in seconds. Defaults to now, or the next free millisecond as a sensor has one reading per millisecond.'),
 	'sensorName': fields.String(description='Name of sensor', required=True),
 	'nodeName': fields.String(description='Name of node', required=True),
 	'datasetName': fields.String(description='Name of dataset', required=True)
