@@ -47,6 +47,6 @@ class TokensView(Resource):
 	@auth_required
 	def delete(auth, self, id):
 		tokenInfo = token_service.findToken(auth, id)
-		token_service.deleteToken(tokenInfo['token'])
+		token_service.deleteToken(tokenInfo['id'])
 
 		return "Removed token with ID = " + str(id)

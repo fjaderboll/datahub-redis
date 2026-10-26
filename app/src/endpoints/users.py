@@ -92,7 +92,7 @@ class UsersLogout(Resource):
 	@auth_required
 	def post(auth, self, username):
 		util.verifyAdminOrUser(auth, username)
-		token_service.deleteToken(auth['token'])
+		token_service.deleteToken(auth['tokenId'])
 		return "Token invalidated"
 
 @ns.route('/<string:username>/impersonate')

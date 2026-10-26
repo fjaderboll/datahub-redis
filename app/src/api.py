@@ -36,7 +36,7 @@ def get_auth():
 				auth = {
 					'id': tokenInfo['user_id'],
 					'username': tokenInfo['username'],
-					'token': tokenInfo['token'],
+					'tokenId': tokenInfo['id'],
 					'isAdmin': bool(tokenInfo['is_admin'])
 				}
 	return auth

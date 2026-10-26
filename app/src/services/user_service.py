@@ -25,21 +25,21 @@ def createUser(username, password):
 	if username == settings_service.getMqttUsername():
 		abort(400, "Username '" + username + "' already exists")
 
-	salt = util.createPasswordSalt()
-	hash = util.createPasswordHash(password, salt)
+	hash = util.createPasswordHash(password)
 
 	with db.transaction():
 		if db.queryOne('SELECT 1 FROM users WHERE username = ?', (username,)):
 			abort(400, "Username '" + username + "' already exists")
 
 		isAdmin = getUserCount() == 0
-		db.execute('INSERT INTO users (username, password_hash, password_salt, email, is_admin) VALUES (?, ?, ?, ?, ?)',
-			(username, hash, salt, '', int(isAdmin)))
+		db.execute('INSERT INTO users (username, password_hash, email, is_admin) VALUES (?, ?, ?, ?)',
+			(username, hash, '', int(isAdmin)))
 
 	return findUser(username)
 
 def updateUser(username, email=None, isAdmin=None, password=None):
 	user = findUser(username)
+	hash = util.createPasswordHash(password) if password is not None else None # slow, so not while holding the write lock
 
 	with db.transaction():
 		if email is not None:
@@ -48,10 +48,8 @@ def updateUser(username, email=None, isAdmin=None, password=None):
 		if isAdmin is not None:
 			db.execute('UPDATE users SET is_admin = ? WHERE id = ?', (int(isAdmin), user['id']))
 
-		if password is not None:
-			salt = util.createPasswordSalt()
-			hash = util.createPasswordHash(password, salt)
-			db.execute('UPDATE users SET password_hash = ?, password_salt = ? WHERE id = ?', (hash, salt, user['id']))
+		if hash is not None:
+			db.execute('UPDATE users SET password_hash = ? WHERE id = ?', (hash, user['id']))
 
 	return findUser(username)
 
@@ -67,8 +65,12 @@ def authenticate(username, password):
 	if not settings_service.getAllowNonAdminLogin() and not user['is_admin']:
 		return None
 
-	if util.createPasswordHash(password, user['password_salt']) != user['password_hash']:
+	if not util.verifyPassword(password, user['password_hash']):
 		return None
+
+	# keeps the hashes up to date if the hash parameters are changed
+	if util.passwordNeedsRehash(user['password_hash']):
+		db.execute('UPDATE users SET password_hash = ? WHERE id = ?', (util.createPasswordHash(password), user['id']))
 
 	return user
 

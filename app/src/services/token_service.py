@@ -19,7 +19,7 @@ def getExpiresAt(ttl):
 	return now() + ttl if ttl else None
 
 def getAuth(token):
-	return db.queryOne(TOKEN_SELECT + ' WHERE t.token = ? AND t.enabled = 1 AND ' + NOT_EXPIRED, (token, now()))
+	return db.queryOne(TOKEN_SELECT + ' WHERE t.token_hash = ? AND t.enabled = 1 AND ' + NOT_EXPIRED, (util.createTokenHash(token), now()))
 
 def getUserTokens(username):
 	return db.query(TOKEN_SELECT + ' WHERE u.username = ? AND ' + NOT_EXPIRED + ' ORDER BY t.id', (username, now()))
@@ -31,12 +31,16 @@ def findToken(auth, id):
 	abort(404, "Unknown token with ID = " + str(id))
 
 def createToken(user, ttl=0, enabled=True, desc=''):
+	"""Only the token's hash is stored, so this is the only time the token itself is available."""
 	token = util.getRandomString(32)
+	label = token[0:2] + '...' + token[-2:]
 	with db.transaction():
 		db.execute('DELETE FROM tokens WHERE expires_at <= ?', (now(),))
-		cursor = db.execute('INSERT INTO tokens (token, user_id, description, enabled, expires_at) VALUES (?, ?, ?, ?, ?)',
-			(token, user['id'], desc or '', int(enabled), getExpiresAt(ttl)))
-	return db.queryOne(TOKEN_SELECT + ' WHERE t.id = ?', (cursor.lastrowid,))
+		cursor = db.execute('INSERT INTO tokens (token_hash, label, user_id, description, enabled, expires_at) VALUES (?, ?, ?, ?, ?, ?)',
+			(util.createTokenHash(token), label, user['id'], desc or '', int(enabled), getExpiresAt(ttl)))
+	tokenInfo = db.queryOne(TOKEN_SELECT + ' WHERE t.id = ?', (cursor.lastrowid,))
+	tokenInfo['token'] = token
+	return tokenInfo
 
 def updateToken(tokenInfo, desc=None, enabled=None, ttl=None):
 	with db.transaction():
@@ -51,8 +55,8 @@ def updateToken(tokenInfo, desc=None, enabled=None, ttl=None):
 
 	return db.queryOne(TOKEN_SELECT + ' WHERE t.id = ?', (tokenInfo['id'],))
 
-def deleteToken(token):
-	db.execute('DELETE FROM tokens WHERE token = ?', (token,))
+def deleteToken(id):
+	db.execute('DELETE FROM tokens WHERE id = ?', (id,))
 
 def formatToken(tokenInfo, hideToken=True):
 	expiresAt = tokenInfo['expires_at']
@@ -61,7 +65,7 @@ def formatToken(tokenInfo, hideToken=True):
 		'enabled': bool(tokenInfo['enabled']),
 		'expire': datetime.fromtimestamp(expiresAt, timezone.utc).isoformat() if expiresAt else None,
 		'desc': tokenInfo['description'] if tokenInfo['description'] else None,
-		'token': tokenInfo['token'][0:2] + '...' + tokenInfo['token'][-2:] if hideToken else tokenInfo['token'],
+		'token': tokenInfo['label'] if hideToken else tokenInfo['token'],
 		'username': tokenInfo['username'],
 		'isAdmin': bool(tokenInfo['is_admin'])
 	}

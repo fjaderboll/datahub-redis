@@ -92,3 +92,13 @@ Tests files must contain `test` to be discovered.
 ```shell
 BASE_URL=http://localhost:8080/api/ python3 -m unittest discover -s test -vv
 ```
+
+### Clean
+Do a clean start:
+
+```shell
+docker rm -f datahub-nanomq
+docker rm -f datahub-redis
+docker volume rm datahub-redis-data
+rm datahub.db
+```
