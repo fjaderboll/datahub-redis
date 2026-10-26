@@ -51,6 +51,13 @@ def createApp():
 	def closeDb(exception):
 		db.closeDb()
 
+	# never shown inside a frame on another page, so it can't be overlaid with decoys (clickjacking)
+	@app.after_request
+	def denyFraming(response):
+		response.headers['Content-Security-Policy'] = "frame-ancestors 'none'"
+		response.headers['X-Frame-Options'] = 'DENY' # for browsers without frame-ancestors
+		return response
+
 	app.config['MQTT_BROKER_URL'] = os.environ.get('MQTT_BROKER_URL', 'localhost')
 	app.config['MQTT_BROKER_PORT'] = int(os.environ.get('MQTT_BROKER_PORT', '1883'))
 	app.config['MQTT_USERNAME'] = settings_service.getMqttUsername()
