@@ -39,7 +39,7 @@ python3 maintenance.py repair              # create missing time series and dele
 
 ## MQ broker
 NanoMQ checks logins and topic permissions with the app (`/api/mqtt/authenticate` and `/api/mqtt/authorize`),
-here running on the host at port 2070:
+here running on the host at port 8080:
 
 ```shell
 docker run \
@@ -60,11 +60,11 @@ source .venv/bin/activate
 
 ### Run
 From within Visual Studio Code you can use the `launch.json` file.
+Make sure the Redis database and NanoMQ is running.
 
 ```shell
-flask --app src/app.py --debug run                           # development (preferred way)
-#./src/app.py 2070                                           # development
-gunicorn --workers 4 --bind 0.0.0.0:2070 -k gevent wsgi:app  # production
+flask --app src/app.py --debug run --port 8080               # development
+gunicorn --workers 4 --bind 0.0.0.0:8080 -k gevent wsgi:app  # production
 ```
 
 The API is served under `/api` (Swagger doc at `/api/`) and, if built, the web frontend
@@ -90,5 +90,5 @@ Tests are located in `test` folder.
 Tests files must contain `test` to be discovered.
 
 ```shell
-BASE_URL=http://localhost:2070/api/ python3 -m unittest discover -s test -vv
+BASE_URL=http://localhost:8080/api/ python3 -m unittest discover -s test -vv
 ```

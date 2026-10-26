@@ -5,7 +5,7 @@ A fast database with to hold your IoT data and a Web UI
 to view it, both in table form and graphs.
 Use the REST API to store and retrieve time series
 of numbers or use the built-in MQ broker to publish
-or subscribe to your data.
+or subscribe to your data over MQTT.
 
 ### Background
 I have many IoT devices generating data and need to store that
@@ -18,7 +18,7 @@ This is a re-design of my previous project [datahub](https://github.com/fjaderbo
 Check that out if you want something that can be deployed simply on a web server.
 
 ## Quick start
-Everything runs in a single container:
+Everything runs in a single Docker container:
 ```shell
 docker run \
 	-d \
@@ -52,14 +52,14 @@ Structure of entities with examples:
 
 ## File structure
 
-* [app](app/README.md) - The application backend (where it all happens)
-* [web](web/README.md) - The web frontend (administration and viewing data)
-* [docker](docker/README.md) building the image yourself.
+* [app](app/README.md) - Application backend (where it all happens)
+* [web](web/README.md) - Web frontend (administration and viewing data)
+* [docker](docker/README.md) - Building the Docker image
 
 ## Testing
 See [test](test/README.md) for a simple test script.
-This is also a good way to create an user and some example
-data and have a look in the UI.
+This is also one way to create an user and some example
+data if you just want to have a look around.
 
 ### Performance
 Inserting 1000 readings takes:

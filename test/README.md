@@ -1,4 +1,6 @@
 # Test
+
+## Simple test
 Whether you use HTTP or MQTT to insert new readings, they'll
 still be published on the MQTT.
 

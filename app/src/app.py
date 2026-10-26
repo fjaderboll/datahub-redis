@@ -83,7 +83,7 @@ def registerWeb(app):
 			return send_from_directory(WEB_PATH, 'index.html') # routes handled by the frontend
 
 if __name__ == '__main__': # running from command line
-	port = 2070
+	port = 8080
 	if len(sys.argv) == 2:
 		port = int(sys.argv[1])
 

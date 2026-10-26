@@ -3,7 +3,8 @@ An [Angular](https://angular.dev/) 22 application using [Angular Material](https
 and [Highcharts](https://www.highcharts.com/).
 
 ## Development setup
-Requires Node.js 22.22 or newer (or 24.15 or newer), the Docker image builds with Node.js 22.
+Requires Node.js 22.22.3+, 24.15+ or 26+ (odd-numbered and older 24.x releases are not supported),
+the Docker image builds with Node.js 22.
 
 ```shell
 sudo npm install -g n
