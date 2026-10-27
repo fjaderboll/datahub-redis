@@ -8,6 +8,7 @@ import logging
 from flask import Flask, Blueprint, abort, send_from_directory
 from flask_cors import CORS
 from werkzeug.exceptions import NotFound
+from werkzeug.serving import is_running_from_reloader
 
 from api import api
 import db
@@ -65,7 +66,10 @@ def createApp():
 	app.config['MQTT_CLIENT_ID'] = 'datahub-app_' + secrets.token_hex(4)
 	app.config['MQTT_TLS_ENABLED'] = False
 
-	global_vars.mqttClient = mqttclient.create(app)
+	# 'flask --debug run' also loads the app in the reloader's own process, which is never reloaded. Its MQTT
+	# client would get a share of the subscribed readings and handle them with code from when it was started.
+	if not isReloaderParent(app):
+		global_vars.mqttClient = mqttclient.create(app)
 
 	#if not (app.debug or os.environ.get('FLASK_ENV') == 'development') or os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
 	#	mqttPubThread = MqttPub(app.logger, mqttClient)
@@ -77,6 +81,11 @@ def createApp():
 	#	mqttPubThread.start()
 
 	return app
+
+def isReloaderParent(app):
+	"""Whether this is the 'flask run' process that only watches the files and runs the server in a child process."""
+	return (os.environ.get('FLASK_RUN_FROM_CLI') == 'true' and app.debug
+		and not is_running_from_reloader() and '--no-reload' not in sys.argv)
 
 def registerWeb(app):
 	@app.route('/', defaults={'path': ''})

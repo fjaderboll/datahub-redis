@@ -1,7 +1,7 @@
 from flask_restx import Resource
 
 from api import api, auth_required
-from services import util, finder, cleaner, swagger_service, dataset_service, node_service, user_service
+from services import util, finder, cleaner, swagger_service, dataset_service, node_service, sensor_service, user_service
 
 ns = api.namespace('datasets', description='List, view, create and delete datasets')
 
@@ -88,3 +88,14 @@ class DatasetsUsersUser(Resource):
 
 		dataset_service.removeDatasetUser(dataset['id'], username)
 		return "Removed user '" + username + "' from dataset"
+
+@ns.route('/<string:datasetName>/units')
+@ns.param('datasetName', 'Dataset name')
+class DatasetsUnits(Resource):
+	@ns.response(200, 'Success')
+	@ns.response(404, 'Unknown dataset')
+	@auth_required
+	def get(auth, self, datasetName):
+		dataset = finder.findDataset(auth, datasetName)
+
+		return sensor_service.getDatasetUnits(dataset['id'])

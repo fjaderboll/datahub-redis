@@ -35,6 +35,8 @@ export class SensorViewComponent implements OnInit, AfterViewInit {
 	public nodeName!: string;
 	public sensorName!: string;
 	public sensor?: Sensor;
+	/** Units of the dataset's sensors, offered when editing the unit */
+	public units: string[] = [];
 	public readings?: Reading[];
 	private readingsLimit = 1000;
 
@@ -50,6 +52,7 @@ export class SensorViewComponent implements OnInit, AfterViewInit {
 			this.nodeName = params.get('nodeName')!;
 			this.sensorName = params.get('sensorName')!;
 			this.loadSensor();
+			this.loadUnits();
 			this.loadReadings();
 		});
 	}
@@ -63,6 +66,17 @@ export class SensorViewComponent implements OnInit, AfterViewInit {
 		this.server.getSensor(this.datasetName, this.nodeName, this.sensorName).subscribe({
 			next: (sensor) => {
 				this.sensor = sensor;
+			},
+			error: (e) => {
+				this.server.showHttpError(e);
+			}
+		});
+	}
+
+	private loadUnits() {
+		this.server.getDatasetUnits(this.datasetName).subscribe({
+			next: (units) => {
+				this.units = units;
 			},
 			error: (e) => {
 				this.server.showHttpError(e);
@@ -97,6 +111,8 @@ export class SensorViewComponent implements OnInit, AfterViewInit {
 				this.sensor![property] = newValue;
 				if(property == "name") {
 					this.router.navigate(['/datasets', this.datasetName, 'nodes', this.nodeName, 'sensors', newValue], { replaceUrl: true });
+				} else if(property == "unit") {
+					this.loadUnits();
 				}
 			},
 			error: (e) => {

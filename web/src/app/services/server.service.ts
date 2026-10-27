@@ -199,6 +199,10 @@ export class ServerService {
 		return this.http.delete<string>(api`datasets/${datasetName}/users/${username}`);
 	}
 
+	public getDatasetUnits(datasetName: string) {
+		return this.http.get<string[]>(api`datasets/${datasetName}/units`);
+	}
+
 	// ----- Nodes -----
 
 	public createNode(datasetName: string, nodeName: string, description: string) {

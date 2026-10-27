@@ -4,13 +4,14 @@ import { MatInput } from '@angular/material/input';
 import { FormsModule } from '@angular/forms';
 import { MatRadioGroup, MatRadioButton } from '@angular/material/radio';
 import { CdkConnectedOverlay, CdkOverlayOrigin, ConnectedOverlayPositionChange, ConnectedPosition } from '@angular/cdk/overlay';
+import { MatAutocomplete, MatAutocompleteTrigger, MatOption } from '@angular/material/autocomplete';
 
 @Component({
 	selector: 'app-inline-edit',
 	templateUrl: './inline-edit.component.html',
 	changeDetection: ChangeDetectionStrategy.Eager,
 	styleUrls: ['./inline-edit.component.scss'],
-	imports: [MatFormField, MatHint, MatInput, FormsModule, MatRadioGroup, MatRadioButton, CdkConnectedOverlay, CdkOverlayOrigin]
+	imports: [MatFormField, MatHint, MatInput, FormsModule, MatRadioGroup, MatRadioButton, CdkConnectedOverlay, CdkOverlayOrigin, MatAutocomplete, MatAutocompleteTrigger, MatOption]
 })
 export class InlineEditComponent {
 	private injector = inject(Injector);
@@ -30,8 +31,11 @@ export class InlineEditComponent {
 	/** What to edit, when it differs from the displayed value */
 	@Input() editValue: any;
 	@Input() hint: string = "";
+	/** Suggestions for a text, which can still be anything */
+	@Input() options: string[] = [];
 	@Output() onChange = new EventEmitter<any>();
 	@ViewChild('edit') editElement?: ElementRef<HTMLElement>;
+	@ViewChild(MatAutocompleteTrigger) autocompleteTrigger?: MatAutocompleteTrigger;
 	public editMode: boolean = false;
 	public newValue: any;
 	private startValue: any;
@@ -67,6 +71,27 @@ export class InlineEditComponent {
 	setBoolean(value: boolean) {
 		this.newValue = value;
 		this.stopEdit(true);
+	}
+
+	// all options until something is typed, then those containing it
+	getOptions() {
+		if(this.newValue == this.startValue) {
+			return this.options;
+		}
+		const text = String(this.newValue ?? '').toLowerCase();
+		return this.options.filter(option => option.toLowerCase().includes(text));
+	}
+
+	selectOption(value: string) {
+		this.newValue = value;
+		this.stopEdit(true);
+	}
+
+	// an option picked with the arrow keys is saved by selectOption instead
+	enterPressed() {
+		if(!this.autocompleteTrigger?.activeOption) {
+			this.stopEdit(true);
+		}
 	}
 
 	// leaving the popup saves text, but cancels a boolean choice not yet made

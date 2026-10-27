@@ -13,7 +13,7 @@
 
 	<dt>Unit</dt>
 	<dd>
-		<app-inline-edit type="text" [value]="sensor?.unit" (onChange)="changedValue('unit', $event)" />
+		<app-inline-edit type="text" [value]="sensor?.unit" [options]="units" (onChange)="changedValue('unit', $event)" />
 	</dd>
 
 	<dt>Readings</dt>

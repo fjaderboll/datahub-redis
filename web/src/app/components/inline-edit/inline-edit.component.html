@@ -43,13 +43,21 @@
 			<mat-form-field subscriptSizing="dynamic">
 				<input
 					matInput
-					(keydown.enter)="stopEdit(true)"
+					(keydown.enter)="enterPressed()"
 					[(ngModel)]="newValue"
 					[type]="type"
+					[matAutocomplete]="auto"
+					[matAutocompleteDisabled]="!options.length"
 				/>
 				@if (hint) {
 					<mat-hint>{{ hint }}</mat-hint>
 				}
+				<mat-autocomplete #auto="matAutocomplete" (optionSelected)="selectOption($event.option.value)">
+					<!-- options can't take focus, so pressing one would blur the input and close the popup before the click selects it -->
+					@for (option of getOptions(); track option) {
+						<mat-option [value]="option" (mousedown)="$event.preventDefault()">{{ option }}</mat-option>
+					}
+				</mat-autocomplete>
 			</mat-form-field>
 		}
 	</div>

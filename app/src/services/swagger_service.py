@@ -74,7 +74,7 @@ updateNodeData = api.model('UpdateNodeData', {
 createSensorData = api.model('CreateSensorData', {
     'name': fields.String(description='Name of sensor', required=True),
     'desc': fields.String(description='Description of sensor'),
-    'unit': fields.String(description='Unit for sensor readings')
+    'unit': fields.String(description='Unit for sensor readings, if left out the one most used by sensors with the same name in the dataset')
 })
 updateSensorData = api.model('UpdateSensorData', {
     'name': fields.String(description='Name of sensor'),
