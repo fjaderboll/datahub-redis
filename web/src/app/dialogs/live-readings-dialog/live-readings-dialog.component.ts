@@ -33,11 +33,12 @@ export class LiveReadingsDialogComponent implements OnInit, OnDestroy {
 	public filter = { ...inject<LiveReadingsData>(MAT_DIALOG_DATA) };
 
 	private startTime = 0;
+	private streamedTime = 0; // milliseconds streamed before startTime, so pauses don't lower the average
 	private streamSubscription?: Subscription;
 	public receivedReadings = 0;
 	public receivedReadingsPerSecond: number = 0.0;
 	public lastReadings: Reading[] = [];
-	public streamingReadings = false;
+	public state: 'streaming' | 'paused' | 'interrupted' = 'streaming';
 
 	public static open(dialog: MatDialog, data: LiveReadingsData) {
 		return dialog.open(LiveReadingsDialogComponent, {
@@ -48,28 +49,43 @@ export class LiveReadingsDialogComponent implements OnInit, OnDestroy {
 	}
 
 	ngOnInit(): void {
-		this.streamReadings();
+		this.startStreaming();
 	}
 
 	ngOnDestroy(): void {
 		this.streamSubscription?.unsubscribe(); // closes the connection, unless the dashboard listens too
 	}
 
-	public streamReadings() {
-		this.streamingReadings = true;
-		this.resetReadings();
+	/** Pause when streaming, otherwise resume or reconnect. The readings so far are kept either way. */
+	public toggleStreaming() {
+		if(this.state == 'streaming') {
+			this.stopStreaming('paused');
+		} else {
+			this.startStreaming();
+		}
+	}
+
+	private startStreaming() {
+		this.state = 'streaming';
+		this.startTime = Date.now();
 
 		this.streamSubscription = this.liveReadings.readings$.subscribe({
 			next: (reading) => {
 				this.handleReading(reading);
 			},
 			error: () => {
-				this.streamingReadings = false; // the service has told the user
+				this.stopStreaming('interrupted'); // the service has told the user
 			},
 			complete: () => {
-				this.streamingReadings = false;
+				this.stopStreaming('interrupted');
 			}
 		});
+	}
+
+	private stopStreaming(state: 'paused' | 'interrupted') {
+		this.streamSubscription?.unsubscribe();
+		this.streamedTime += Date.now() - this.startTime;
+		this.state = state;
 	}
 
 	public getFilterTitle() {
@@ -83,6 +99,7 @@ export class LiveReadingsDialogComponent implements OnInit, OnDestroy {
 
 	private resetReadings() {
 		this.startTime = Date.now();
+		this.streamedTime = 0;
 		this.receivedReadings = 0;
 		this.receivedReadingsPerSecond = 0;
 		this.lastReadings = [];
@@ -100,7 +117,7 @@ export class LiveReadingsDialogComponent implements OnInit, OnDestroy {
 		}
 
 		this.receivedReadings++;
-		this.receivedReadingsPerSecond = this.receivedReadings / ((Date.now() - this.startTime) / 1000);
+		this.receivedReadingsPerSecond = this.receivedReadings / ((this.streamedTime + Date.now() - this.startTime) / 1000);
 
 		this.lastReadings.unshift(reading);
 		if(this.lastReadings.length > MAX_READINGS) {

@@ -75,7 +75,7 @@ export class UtilsService {
 	public getDeltaTime(milliseconds: number) {
 		let time = milliseconds;
 		let multipliers = [1000, 60, 60, 24, 7, 4.32, 12, Infinity];
-		let units = ["ms", "second", "minute", "hour", "day", "week", "month", "year"];
+		let units = ["millisecond", "second", "minute", "hour", "day", "week", "month", "year"];
 
 		for(let i = 0; i < multipliers.length; i++) {
 			let t = Math.floor(time);

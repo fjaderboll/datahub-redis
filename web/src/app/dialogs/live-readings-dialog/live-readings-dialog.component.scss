@@ -10,6 +10,11 @@
 	min-height: 200px;
 }
 
+// the spinner is drawn in blue, which disappears on the blue button
+.mat-icon.light {
+	filter: brightness(0) invert(1);
+}
+
 .reading {
 	display: flex;
 	flex-wrap: wrap;
