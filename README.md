@@ -72,3 +72,10 @@ Loading those 1000 readings takes 0.01 seconds, in a single request.
 
 Measured with [performance.py](test/performance.py) and the Docker image on an AMD Ryzen 7 5800X,
 with one client on the same machine sending one request at a time.
+
+### Memory footprint
+Storing 100 million readings takes about 600 MB of RAM (measured on an instance with
+170 sensors and a few years of real data). The exact figure depends slightly on the data;
+values that change little and arrive at regular intervals compress better.
+
+The snapshot on disk (`/data/redis/dump.rdb`) is about 90% of the RAM usage.
