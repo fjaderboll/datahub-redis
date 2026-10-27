@@ -55,6 +55,8 @@ export interface Token {
 export interface Dataset {
 	name: string;
 	desc: string;
+	/** Only in the list of datasets */
+	nodeCount?: number;
 	nodes?: DatasetNode[];
 }
 
@@ -62,6 +64,8 @@ export interface Dataset {
 export interface DatasetNode {
 	name: string;
 	desc: string;
+	/** Only in lists of nodes */
+	sensorCount?: number;
 	sensors?: Sensor[];
 }
 

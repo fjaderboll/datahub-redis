@@ -19,14 +19,14 @@ def cleanDataset(dataset):
 	return cleanDatasets([dataset])[0]
 
 def cleanDatasets(datasets):
-	fields = {'name': 'name', 'desc': 'description', 'nodes': 'nodes'}
+	fields = {'name': 'name', 'desc': 'description', 'nodeCount': 'node_count', 'nodes': 'nodes'}
 	return [util.cleanObject(dataset, fields) for dataset in datasets]
 
 def cleanNode(node):
 	return cleanNodes([node])[0]
 
 def cleanNodes(nodes):
-	fields = {'name': 'name', 'desc': 'description', 'sensors': 'sensors'}
+	fields = {'name': 'name', 'desc': 'description', 'sensorCount': 'sensor_count', 'sensors': 'sensors'}
 	return [util.cleanObject(node, fields) for node in nodes]
 
 def cleanSensor(sensor):

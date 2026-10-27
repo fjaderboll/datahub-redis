@@ -17,7 +17,11 @@ def getNodeByName(datasetId, name):
 	return db.queryOne('SELECT * FROM nodes WHERE dataset_id = ? AND name = ?', (datasetId, name))
 
 def getDatasetNodes(datasetId):
-	return db.query('SELECT * FROM nodes WHERE dataset_id = ? ORDER BY name', (datasetId,))
+	return db.query('''
+		SELECT n.*, (SELECT COUNT(*) FROM sensors s WHERE s.node_id = n.id) AS sensor_count FROM nodes n
+		WHERE n.dataset_id = ?
+		ORDER BY n.name
+	''', (datasetId,))
 
 def countUserNodes(username):
 	return db.queryOne('''

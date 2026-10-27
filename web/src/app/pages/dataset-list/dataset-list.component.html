@@ -22,6 +22,11 @@
 			</td>
 		</ng-container>
 
+		<ng-container matColumnDef="nodeCount">
+			<th mat-header-cell *matHeaderCellDef mat-sort-header>Nodes</th>
+			<td mat-cell *matCellDef="let dataset">{{ dataset.nodeCount }}</td>
+		</ng-container>
+
 		<ng-container matColumnDef="desc">
 			<th mat-header-cell *matHeaderCellDef mat-sort-header>Description</th>
 			<td mat-cell *matCellDef="let dataset" [class.not-set]="!dataset.desc">{{ dataset.desc || 'Not set' }}</td>

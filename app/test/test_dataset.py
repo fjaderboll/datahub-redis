@@ -22,6 +22,13 @@ class TestDataset(unittest.TestCase):
 		datasets = response.json()
 		self.assertEqual(len(datasets), 1)
 		self.assertEqual(datasets[0]['name'], datasetName)
+		self.assertEqual(datasets[0]['nodeCount'], 0)
+
+		# the list counts the dataset's nodes
+		helper.createNode(headers, datasetName)
+		response = requests.get(helper.BASE_URL + 'datasets', headers=headers)
+		self.assertEqual(response.status_code, 200, response.text)
+		self.assertEqual(response.json()[0]['nodeCount'], 1)
 
 		# get dataset
 		response = requests.get(helper.BASE_URL + 'datasets/' + datasetName, headers=headers)

@@ -15,7 +15,7 @@ def getDatasetById(datasetId):
 
 def getUserDatasets(username):
 	return db.query('''
-		SELECT d.* FROM datasets d
+		SELECT d.*, (SELECT COUNT(*) FROM nodes n WHERE n.dataset_id = d.id) AS node_count FROM datasets d
 		JOIN dataset_users du ON du.dataset_id = d.id
 		JOIN users u ON u.id = du.user_id
 		WHERE u.username = ?

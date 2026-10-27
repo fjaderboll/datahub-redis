@@ -23,6 +23,16 @@ class TestNode(unittest.TestCase):
 		nodes = response.json()
 		self.assertEqual(len(nodes), 1)
 		self.assertEqual(nodes[0]['name'], nodeName)
+		self.assertEqual(nodes[0]['sensorCount'], 0)
+
+		# the list counts the node's sensors, also in the dataset
+		helper.createSensor(headers, dataset['name'], nodeName)
+		response = requests.get(helper.BASE_URL + 'datasets/' + dataset['name'] + '/nodes', headers=headers)
+		self.assertEqual(response.status_code, 200, response.text)
+		self.assertEqual(response.json()[0]['sensorCount'], 1)
+		response = requests.get(helper.BASE_URL + 'datasets/' + dataset['name'], headers=headers)
+		self.assertEqual(response.status_code, 200, response.text)
+		self.assertEqual(response.json()['nodes'][0]['sensorCount'], 1)
 
 		# get node
 		response = requests.get(helper.BASE_URL + 'datasets/' + dataset['name'] + '/nodes/' + nodeName, headers=headers)

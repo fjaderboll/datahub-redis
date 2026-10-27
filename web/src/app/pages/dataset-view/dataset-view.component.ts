@@ -37,7 +37,7 @@ export class DatasetViewComponent implements OnInit, AfterViewInit {
 	public dataset?: Dataset;
 	public datasetUsers: string[] = [];
 
-	public displayedColumns: string[] = ['name', 'desc'];
+	public displayedColumns: string[] = ['name', 'sensorCount', 'desc'];
 	public dataSource = new MatTableDataSource<DatasetNode>();
 	@ViewChild(MatPaginator) paginator!: MatPaginator;
 	@ViewChild(MatSort) sort!: MatSort;

@@ -58,6 +58,11 @@
 			</td>
 		</ng-container>
 
+		<ng-container matColumnDef="sensorCount">
+			<th mat-header-cell *matHeaderCellDef mat-sort-header>Sensors</th>
+			<td mat-cell *matCellDef="let node">{{ node.sensorCount }}</td>
+		</ng-container>
+
 		<ng-container matColumnDef="desc">
 			<th mat-header-cell *matHeaderCellDef mat-sort-header>Description</th>
 			<td mat-cell *matCellDef="let node" [class.not-set]="!node.desc">{{ node.desc || 'Not set' }}</td>

@@ -23,7 +23,7 @@ export class DatasetListComponent implements OnInit, AfterViewInit {
 	private server = inject(ServerService);
 	private dialog = inject(MatDialog);
 
-	public displayedColumns: string[] = ['name', 'desc'];
+	public displayedColumns: string[] = ['name', 'nodeCount', 'desc'];
 	public dataSource = new MatTableDataSource<Dataset>();
 
 	@ViewChild(MatPaginator) paginator!: MatPaginator;
