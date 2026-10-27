@@ -49,7 +49,7 @@
 </div>
 
 <div class="table-container margin-top">
-	<table mat-table [dataSource]="dataSource" matSort matSortActive="name" matSortDisableClear matSortDirection="asc">
+	<table mat-table [dataSource]="dataSource" matSort matSortActive="lastTimestamp" matSortDisableClear matSortDirection="desc">
 
 		<ng-container matColumnDef="name">
 			<th mat-header-cell *matHeaderCellDef mat-sort-header>Node</th>
@@ -61,6 +61,18 @@
 		<ng-container matColumnDef="sensorCount">
 			<th mat-header-cell *matHeaderCellDef mat-sort-header>Sensors</th>
 			<td mat-cell *matCellDef="let node">{{ node.sensorCount }}</td>
+		</ng-container>
+
+		<ng-container matColumnDef="lastTimestamp">
+			<th mat-header-cell *matHeaderCellDef mat-sort-header start="desc">Last Reading Timestamp</th>
+			<td mat-cell *matCellDef="let node">
+				@if (node.lastTimestamp) {
+					<span>{{ utils.printTimestamp(node.lastTimestamp) }}</span>
+					<span class="relative-time">{{ utils.getRelativeTime(node.lastTimestamp) }}</span>
+				} @else {
+					<span class="not-set">No readings</span>
+				}
+			</td>
 		</ng-container>
 
 		<ng-container matColumnDef="desc">

@@ -11,6 +11,7 @@ import { ShareDatasetDialogComponent } from '../../dialogs/share-dataset-dialog/
 import { VisualizeReadingsDialogComponent } from '../../dialogs/visualize-readings-dialog/visualize-readings-dialog.component';
 import { AuthenticationService } from '../../services/authentication.service';
 import { ServerService } from '../../services/server.service';
+import { UtilsService } from '../../services/utils.service';
 import { BreadcrumbComponent } from '../../components/breadcrumb/breadcrumb.component';
 import { InlineEditComponent } from '../../components/inline-edit/inline-edit.component';
 import { MatButton } from '@angular/material/button';
@@ -27,6 +28,7 @@ import { Dataset, DatasetNode } from '../../models';
 })
 export class DatasetViewComponent implements OnInit, AfterViewInit {
 	auth = inject(AuthenticationService);
+	utils = inject(UtilsService);
 	private server = inject(ServerService);
 	private route = inject(ActivatedRoute);
 	private dialog = inject(MatDialog);
@@ -37,7 +39,7 @@ export class DatasetViewComponent implements OnInit, AfterViewInit {
 	public dataset?: Dataset;
 	public datasetUsers: string[] = [];
 
-	public displayedColumns: string[] = ['name', 'sensorCount', 'desc'];
+	public displayedColumns: string[] = ['name', 'sensorCount', 'lastTimestamp', 'desc'];
 	public dataSource = new MatTableDataSource<DatasetNode>();
 	@ViewChild(MatPaginator) paginator!: MatPaginator;
 	@ViewChild(MatSort) sort!: MatSort;

@@ -2,7 +2,7 @@ from flask_restx import abort
 
 import db
 import tsdb
-from services import util
+from services import util, cleaner, reading_service
 
 def verifyValidNodeName(datasetId, nodeName):
 	util.verifyValidName(nodeName, "Name")
@@ -17,11 +17,29 @@ def getNodeByName(datasetId, name):
 	return db.queryOne('SELECT * FROM nodes WHERE dataset_id = ? AND name = ?', (datasetId, name))
 
 def getDatasetNodes(datasetId):
-	return db.query('''
+	nodes = db.query('''
 		SELECT n.*, (SELECT COUNT(*) FROM sensors s WHERE s.node_id = n.id) AS sensor_count FROM nodes n
 		WHERE n.dataset_id = ?
 		ORDER BY n.name
 	''', (datasetId,))
+
+	sensors = db.query('''
+		SELECT s.id, s.node_id FROM sensors s
+		JOIN nodes n ON n.id = s.node_id
+		WHERE n.dataset_id = ?
+	''', (datasetId,))
+	lastReadings = reading_service.getLastReadings([sensor['id'] for sensor in sensors])
+
+	lastTimes = {} # node id -> newest reading of its sensors, in milliseconds
+	for sensor in sensors:
+		reading = lastReadings[sensor['id']]
+		if reading:
+			lastTimes[sensor['node_id']] = max(reading[0], lastTimes.get(sensor['node_id'], reading[0]))
+
+	for node in nodes:
+		lastTime = lastTimes.get(node['id'])
+		node['last_timestamp'] = cleaner.cleanTimestamp(lastTime) if lastTime is not None else None
+	return nodes
 
 def countUserNodes(username):
 	return db.queryOne('''

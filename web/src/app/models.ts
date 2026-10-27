@@ -66,6 +66,8 @@ export interface DatasetNode {
 	desc: string;
 	/** Only in lists of nodes */
 	sensorCount?: number;
+	/** Only in lists of nodes, newest reading of all its sensors */
+	lastTimestamp?: string | null;
 	sensors?: Sensor[];
 }
 

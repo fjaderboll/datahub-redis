@@ -26,7 +26,7 @@ def cleanNode(node):
 	return cleanNodes([node])[0]
 
 def cleanNodes(nodes):
-	fields = {'name': 'name', 'desc': 'description', 'sensorCount': 'sensor_count', 'sensors': 'sensors'}
+	fields = {'name': 'name', 'desc': 'description', 'sensorCount': 'sensor_count', 'lastTimestamp': 'last_timestamp', 'sensors': 'sensors'}
 	return [util.cleanObject(node, fields) for node in nodes]
 
 def cleanSensor(sensor):
@@ -45,7 +45,7 @@ def cleanReadings(readings, datasetName, nodeName, sensor):
 	cleanedReadings = []
 	for reading in readings:
 		cleanedReadings.append({
-			'timestamp': datetime.fromtimestamp(reading[0] / 1000, timezone.utc).isoformat(),
+			'timestamp': cleanTimestamp(reading[0]),
 			'value': reading[1],
 			'datasetName': datasetName,
 			'nodeName': nodeName,
@@ -53,3 +53,6 @@ def cleanReadings(readings, datasetName, nodeName, sensor):
 			'unit': sensor['unit']
 		})
 	return cleanedReadings
+
+def cleanTimestamp(msecs):
+	return datetime.fromtimestamp(msecs / 1000, timezone.utc).isoformat()

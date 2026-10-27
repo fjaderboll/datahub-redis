@@ -1,7 +1,7 @@
 # datahub (Redis version)
 
 ## About
-A fast database with to hold your IoT data and a Web UI
+A very fast database with to hold your IoT data and a Web UI
 to view it, both in table form and graphs.
 Use the REST API to store and retrieve time series
 of numbers or use the built-in MQ broker to publish
