@@ -1,11 +1,13 @@
-<div class="breadcrumb row">
-	<span class="breadcrumb-link row align-vertically">
+<nav class="breadcrumb" aria-label="Breadcrumb">
+	<span class="breadcrumb-link">
 		<mat-icon>home</mat-icon>
 		<a routerLink="/">Start</a>
 	</span>
 
-	<span class="breadcrumb-link row align-vertically" *ngFor="let link of links; index as i">
-		<mat-icon>navigate_next</mat-icon>
-		<a [routerLink]="link">{{ names[i] }}</a>
-	</span>
-</div>
+	@for (link of links; track $index) {
+		<span class="breadcrumb-link">
+			<mat-icon>navigate_next</mat-icon>
+			<a [routerLink]="link">{{ names[$index] }}</a>
+		</span>
+	}
+</nav>

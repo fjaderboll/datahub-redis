@@ -1,73 +1,65 @@
-<app-breadcrumb [links]="['/datasets', '/datasets/' + datasetName, '/datasets/' + datasetName + '/nodes/' + nodeName, '/datasets/' + datasetName + '/nodes/' + nodeName + '/sensors/' + sensorName]" [names]="['Datasets', datasetName, nodeName, sensorName]"></app-breadcrumb>
+<app-breadcrumb [links]="['/datasets', '/datasets/' + datasetName, '/datasets/' + datasetName + '/nodes/' + nodeName, '/datasets/' + datasetName + '/nodes/' + nodeName + '/sensors/' + sensorName]" [names]="['Datasets', datasetName, nodeName, sensorName]" />
 
 <dl class="list">
-    <dt>Name</dt>
-    <dd>
-        <app-inline-edit type="text" [value]="sensor?.name" (onChange)="changedValue('name', $event)"></app-inline-edit>
-    </dd>
+	<dt>Name</dt>
+	<dd>
+		<app-inline-edit type="text" [value]="sensor?.name" (onChange)="changedValue('name', $event)" />
+	</dd>
 
-    <dt>Description</dt>
-    <dd>
-        <app-inline-edit type="text" [value]="sensor?.desc" (onChange)="changedValue('desc', $event)"></app-inline-edit>
-    </dd>
+	<dt>Description</dt>
+	<dd>
+		<app-inline-edit type="text" [value]="sensor?.desc" (onChange)="changedValue('desc', $event)" />
+	</dd>
 
 	<dt>Unit</dt>
-    <dd>
-        <app-inline-edit type="text" [value]="sensor?.unit" (onChange)="changedValue('unit', $event)"></app-inline-edit>
-    </dd>
+	<dd>
+		<app-inline-edit type="text" [value]="sensor?.unit" [options]="units" (onChange)="changedValue('unit', $event)" />
+	</dd>
 
 	<dt>Readings</dt>
-    <dd>
-        Loaded {{ readings?.length }} of {{ sensor?.readingStats.count }} readings, retention {{ utils.getDeltaTime(sensor?.readingStats.retention*1000) }}
-    </dd>
+	<dd>
+		@if (sensor?.readingStats; as stats) {
+			Loaded {{ readings?.length ?? 0 }} of {{ stats.count }} readings, retention {{ utils.printDuration(stats.retention, 'forever') }}
+		}
+	</dd>
 </dl>
 
-<div class="row margin-top align-right">
-	<div>
-		<button mat-raised-button color="warn" (click)="deleteSensor()">
-			<mat-icon>delete</mat-icon>
-			<span>Delete Sensor</span>
-		</button>
-	</div>
+<div class="actions margin-top">
+	<button mat-raised-button color="warn" (click)="deleteSensor()">
+		<mat-icon>delete</mat-icon>
+		<span>Delete Sensor</span>
+	</button>
 
-	<div class="margin-left">
-		<button mat-raised-button color="warn" (click)="deleteReadings()">
-			<mat-icon>delete</mat-icon>
-			<span>Delete Readings</span>
-		</button>
-	</div>
+	<button mat-raised-button color="warn" (click)="deleteReadings()">
+		<mat-icon>delete</mat-icon>
+		<span>Delete Readings</span>
+	</button>
 </div>
 
-<div class="row margin-top align-right">
-	<div>
-		<button mat-raised-button color="primary" (click)="loadMore()" [disabled]="readings?.length >= sensor?.readingStats.count">
-			<mat-icon>downloading</mat-icon>
-			<span>Load More</span>
-		</button>
-	</div>
+<div class="actions margin-top">
+	<button mat-raised-button color="primary" (click)="loadMore()" [disabled]="!hasMoreReadings()">
+		<mat-icon>downloading</mat-icon>
+		<span>Load More</span>
+	</button>
 
-	<div class="margin-left">
-		<button mat-raised-button color="primary" (click)="visualizeReadings()">
-			<mat-icon>show_chart</mat-icon>
-			<span>Visualize</span>
-		</button>
-	</div>
+	<button mat-raised-button color="primary" (click)="visualizeReadings()">
+		<mat-icon>show_chart</mat-icon>
+		<span>Visualize</span>
+	</button>
 
-	<div class="margin-left">
-		<button mat-raised-button color="primary" (click)="createReading()">
-			<mat-icon>add</mat-icon>
-			<span>Create Reading</span>
-		</button>
-	</div>
+	<button mat-raised-button color="primary" (click)="createReading()">
+		<mat-icon>add</mat-icon>
+		<span>Create Reading</span>
+	</button>
 </div>
 
-<div class="mat-elevation-z8 margin-top">
+<div class="table-container margin-top">
 	<table mat-table [dataSource]="dataSource" matSort matSortActive="timestamp" matSortDisableClear matSortDirection="desc">
 
 		<ng-container matColumnDef="timestamp">
 			<th mat-header-cell *matHeaderCellDef mat-sort-header>Timestamp</th>
 			<td mat-cell *matCellDef="let reading">
-				<span>{{ utils.printTimestamp(reading.timestamp) }}</span>
+				<span class="timestamp">{{ utils.printTimestamp(reading.timestamp) }}</span>
 				<span class="relative-time">{{ utils.getRelativeTime(reading.timestamp) }}</span>
 			</td>
 		</ng-container>
@@ -82,6 +74,6 @@
 	</table>
 
 	<div [hidden]="dataSource.data.length <= 10">
-		<mat-paginator [pageSizeOptions]="[10, 100]"></mat-paginator>
+		<mat-paginator [pageSizeOptions]="[10, 100]" />
 	</div>
 </div>

@@ -68,5 +68,43 @@ class TestSensor(unittest.TestCase):
 		sensors = response.json()
 		self.assertEqual(len(sensors), 0)
 
+	def test_units(self):
+		# each unit once and sorted, without empty ones or those of other datasets
+		headers = helper.createUserAndLogin()
+		dataset = helper.createDataset(headers)
+		node = helper.createNode(headers, dataset['name'])
+		for unit in ['V', '°C', '%', 'V', '']:
+			helper.createSensor(headers, dataset['name'], node['name'], unit=unit)
+		otherDataset = helper.createDataset(headers)
+		helper.createSensor(headers, otherDataset['name'], helper.createNode(headers, otherDataset['name'])['name'], unit='K')
+
+		response = requests.get(helper.BASE_URL + 'datasets/' + dataset['name'] + '/units', headers=headers)
+		self.assertEqual(response.status_code, 200, response.text)
+		self.assertEqual(response.json(), ['%', 'V', '°C'])
+
+	def test_guess_unit(self):
+		# without a unit, a sensor gets the one most used by sensors with the same name in the dataset
+		headers = helper.createUserAndLogin()
+		dataset = helper.createDataset(headers)
+		nodeNames = [helper.createNode(headers, dataset['name'])['name'] for _ in range(5)]
+		for nodeName, unit in zip(nodeNames, ['°C', '°C', 'K']):
+			helper.createSensor(headers, dataset['name'], nodeName, name='temperature', unit=unit)
+		otherDataset = helper.createDataset(headers)
+		for _ in range(3):
+			helper.createSensor(headers, otherDataset['name'], helper.createNode(headers, otherDataset['name'])['name'], name='temperature', unit='F')
+
+		sensor = helper.createSensor(headers, dataset['name'], nodeNames[3], name='temperature', unit='')
+		self.assertEqual(sensor['unit'], '°C')
+
+		# also when created by its first reading
+		helper.createReading(headers, dataset['name'], nodeNames[4], 'temperature')
+		response = requests.get(helper.BASE_URL + 'datasets/' + dataset['name'] + '/nodes/' + nodeNames[4] + '/sensors/temperature', headers=headers)
+		self.assertEqual(response.status_code, 200, response.text)
+		self.assertEqual(response.json()['unit'], '°C')
+
+		# a given unit is kept, and without sensors of the same name there is nothing to guess from
+		self.assertEqual(helper.createSensor(headers, dataset['name'], nodeNames[3], name='temperature2', unit='K')['unit'], 'K')
+		self.assertEqual(helper.createSensor(headers, dataset['name'], nodeNames[3], name='humidity', unit='')['unit'], '')
+
 if __name__ == '__main__':
 	unittest.main()

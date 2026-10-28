@@ -1,8 +1,7 @@
 from functools import wraps
-from flask import request
+from flask import request, current_app
 from flask_restx import Api, abort
 
-from db import db, Keys
 
 authorizations = {
 	'default': {
@@ -21,22 +20,24 @@ api = Api(version='2.0',
 
 @api.errorhandler
 def default_error_handler(e):
+	current_app.logger.exception('Unhandled exception in %s %s', request.method, request.path)
 	message = 'An unhandled exception occurred.'
 	return {'message': message}, 500
 
 def get_auth():
+	from services import token_service # services import this module
+
 	auth = None
 	if "Authorization" in request.headers:
 		parts = request.headers["Authorization"].split(" ")
 		if len(parts) == 2:
-			token = parts[1]
-			tokenInfo = db.hgetall(Keys.getToken(token))
-			if tokenInfo and int(tokenInfo['enabled']):
-				isAdmin = db.hget(Keys.getUser(tokenInfo['username']), 'isAdmin')
+			tokenInfo = token_service.getAuth(parts[1])
+			if tokenInfo:
 				auth = {
+					'id': tokenInfo['user_id'],
 					'username': tokenInfo['username'],
-					'token': tokenInfo['token'],
-					'isAdmin': bool(int(isAdmin))
+					'tokenId': tokenInfo['id'],
+					'isAdmin': bool(tokenInfo['is_admin'])
 				}
 	return auth
 

@@ -1,0 +1,7 @@
+// the page content keeps a bottom margin so this never hides its last row
+:host {
+	position: fixed;
+	right: 16px;
+	bottom: 16px;
+	z-index: 10;
+}

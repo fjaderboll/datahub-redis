@@ -1,7 +1,6 @@
 from flask_restx import Resource
 
 from api import api, auth_required
-from db import db, Keys
 from services import util, cleaner, finder, swagger_service, sensor_service, reading_service
 
 from endpoints.datasets_nodes import ns
@@ -15,7 +14,7 @@ class SensorsList(Resource):
 	def get(auth, self, datasetName, nodeName):
 		dataset = finder.findDataset(auth, datasetName)
 		node = finder.findNode(dataset['id'], nodeName)
-		sensors = sensor_service.getNodeSensors(node['id'], dataset, node)
+		sensors = sensor_service.getNodeSensors(dataset['name'], node)
 		return cleaner.cleanSensors(sensors)
 
 	@ns.response(200, 'Success')
@@ -45,7 +44,7 @@ class SensorsView(Resource):
 		dataset = finder.findDataset(auth, datasetName)
 		node = finder.findNode(dataset['id'], nodeName)
 		sensor = finder.findSensor(node['id'], sensorName)
-		sensor['lastReading'] = cleaner.cleanReading(reading_service.getLastReading(sensor['id']), dataset, node, sensor)
+		sensor['lastReading'] = cleaner.cleanReading(reading_service.getLastReadings([sensor['id']])[sensor['id']], dataset['name'], node['name'], sensor)
 		sensor['readingStats'] = reading_service.getReadingStats(sensor['id'])
 
 		return cleaner.cleanSensor(sensor)
@@ -58,23 +57,7 @@ class SensorsView(Resource):
 		dataset = finder.findDataset(auth, datasetName)
 		node = finder.findNode(dataset['id'], nodeName)
 		sensor = finder.findSensor(node['id'], sensorName)
-
-		sKey = Keys.getSensorById(sensor['id'])
-
-		if 'name' in api.payload:
-			newName = api.payload['name']
-			sensor_service.verifyValidSensorName(node['id'], newName)
-			util.verifyValidName(newName, "Name")
-			db.hset(sKey, 'name', newName)
-			db.rename(Keys.getSensorIdByName(node['id'], sensorName), Keys.getSensorIdByName(node['id'], newName))
-
-		if 'desc' in api.payload:
-			db.hset(sKey, 'desc', api.payload['desc'])
-
-		if 'unit' in api.payload:
-			db.hset(sKey, 'unit', api.payload['unit'])
-
-		sensor = db.hgetall(sKey)
+		sensor = sensor_service.updateSensor(sensor, name=util.getPayload('name'), desc=util.getPayload('desc'), unit=util.getPayload('unit'))
 		return cleaner.cleanSensor(sensor)
 
 	@ns.response(200, 'Success')
@@ -85,6 +68,6 @@ class SensorsView(Resource):
 		node = finder.findNode(dataset['id'], nodeName)
 		sensor = finder.findSensor(node['id'], sensorName)
 
-		sensor_service.deleteSensor(sensor['id'])
+		sensor_service.deleteSensor(sensor)
 
 		return "Removed sensor '" + sensorName + "'"

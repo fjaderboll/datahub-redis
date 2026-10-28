@@ -2,11 +2,12 @@
 
 ## Doc
 
-* https://redis.io/docs/getting-started/
-* https://redis.io/docs/stack/timeseries/
+* https://redis.io/docs/latest/develop/data-types/timeseries/
 * https://redis-py.readthedocs.io/en/stable/examples/timeseries_examples.html
+* https://www.sqlite.org/lang.html
 
 ## Setup
+Requires Python 3.10 or newer (the Docker image uses Python 3.15).
 
 ```shell
 sudo apt install python3-venv python3-pip docker.io
@@ -16,27 +17,39 @@ pip3 install -r requirements.txt
 ```
 
 ## Database
+Data is split between two databases:
+* **SQLite** holds users, tokens, settings, datasets, nodes and sensors.
+  The file is `app/datahub.db` by default, set `SQLITE_PATH` to change it.
+  It is created on first start.
+* **Redis** (with its built-in time series support) holds the readings,
+  one time series per sensor with the key `sensor-readings:<sensor id>`.
 
 ```shell
-docker run -d --rm --name datahub-redis -p 6379:6379 -v datahub-redis-data:/data redislabs/redistimeseries:1.10.11
-docker exec -it datahub-redis redis-cli   # interact with database
+docker run -d --rm --name datahub-redis -p 6379:6379 -v datahub-redis-data:/data redis:8.10.2
+docker exec -it datahub-redis redis-cli   # interact with Redis
+sqlite3 datahub.db                        # interact with SQLite
+```
+
+### Maintenance
+Run from the `src` folder (or `docker exec -u datahub datahub python3 maintenance.py ...`):
+```shell
+python3 maintenance.py check               # compare sensors in SQLite with time series in Redis
+python3 maintenance.py repair              # create missing time series and delete orphaned ones
 ```
 
 ## MQ broker
+NanoMQ checks logins and topic permissions with the app (`/api/mqtt/authenticate` and `/api/mqtt/authorize`),
+here running on the host at port 8080:
 
 ```shell
 docker run \
 	-d \
 	--rm \
-	--name datahub-emqx \
-	-p 18083:18083 \
+	--name datahub-nanomq \
 	-p 1883:1883 \
-	-v $PWD/../docker/emqx/cluster.hocon.local:/opt/emqx/data/configs/cluster.hocon \
-	-e "EMQX_dashboard__default_username=admin" \
-    -e "EMQX_dashboard__default_password=admin123" \
-	emqx:5.5.0
-	#-e "EMQX_AUTHENTICATION__1__URL=http://172.16.1.5:2070/mqtt/authenticate" \
-    #-e "EMQX_AUTHORIZATION__SOURCES__1__URL=http://172.16.1.5:2070/mqtt/authorize" \
+	--add-host=host.docker.internal:host-gateway \
+	-v $PWD/../docker/nanomq.dev.conf:/etc/nanomq.conf \
+	emqx/nanomq:0.25.6-slim
 ```
 
 ## Application
@@ -47,12 +60,15 @@ source .venv/bin/activate
 
 ### Run
 From within Visual Studio Code you can use the `launch.json` file.
+Make sure the Redis database and NanoMQ is running.
 
 ```shell
-flask --app src/app.py --debug run                           # development (preferred way)
-#./src/app.py 2070                                           # development
-gunicorn --workers 4 --bind 0.0.0.0:2070 -k gevent wsgi:app  # production
+flask --app src/app.py --debug run --port 8080 --host 0.0.0.0 # development
+gunicorn --workers 4 --bind 0.0.0.0:8080 -k gevent wsgi:app   # production
 ```
+
+The API is served under `/api` (Swagger doc at `/api/`) and, if built, the web frontend
+from `web/dist/web` (set `WEB_PATH` to change it) at `/`.
 
 ### Add new dependency
 
@@ -74,5 +90,15 @@ Tests are located in `test` folder.
 Tests files must contain `test` to be discovered.
 
 ```shell
-BASE_URL=http://localhost:2070/ python3 -m unittest discover -s test -vv
+BASE_URL=http://localhost:8080/api/ python3 -m unittest discover -s test -vv
+```
+
+### Clean
+Do a clean start:
+
+```shell
+docker rm -f datahub-nanomq
+docker rm -f datahub-redis
+docker volume rm datahub-redis-data
+rm datahub.db
 ```

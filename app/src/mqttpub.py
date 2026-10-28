@@ -1,7 +1,7 @@
 
 import threading
 import time
-from db import db, Keys
+import tsdb
 
 class MqttPub(threading.Thread):
 	def __init__(self, logger, mqttClient):
@@ -12,8 +12,8 @@ class MqttPub(threading.Thread):
 
 	def startup(self):
 		self.logger.info('Started')
-		self.pubsub = db.pubsub()
-		self.pubsub.subscribe(Keys.getReadingsTopic())
+		self.pubsub = tsdb.redisDb.pubsub()
+		self.pubsub.subscribe(tsdb.READINGS_TOPIC)
 
 	def stop(self):
 		self.stopEvent.set()

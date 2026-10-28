@@ -1,0 +1,36 @@
+.stream {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.5em 1.5em;
+}
+
+.readings {
+	min-height: 200px;
+}
+
+// the spinner is drawn in blue, which disappears on the blue button
+.mat-icon.light {
+	filter: brightness(0) invert(1);
+}
+
+.reading {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.25em 1.5em;
+	margin: 0.5em 0;
+	padding: 0.5em 1em;
+	background-color: #e3e3e9;
+	border-radius: 0.5em;
+	overflow-wrap: anywhere;
+
+	.property {
+		color: gray;
+		margin-right: 0.5em;
+	}
+	// the dialog's text is gray by default
+	.value {
+		color: black;
+	}
+}

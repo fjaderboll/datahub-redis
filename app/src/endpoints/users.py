@@ -1,7 +1,6 @@
-from flask_restx import Resource, abort
+from flask_restx import Resource
 
 from api import api, auth_required, auth_optional
-from db import db, Keys
 from services import util, cleaner, swagger_service, user_service, token_service, settings_service
 
 ns = api.namespace('users', description='Login and get user information')
@@ -28,26 +27,8 @@ class UsersList(Resource):
 		username = util.getPayload('username')
 		password = util.getPayload('password')
 
-		util.verifyValidName(username, "Username")
-		util.verifyNoneEmpty(password, 'Password')
-
-		if username == settings_service.getMqttUsername() or db.sismember(Keys.getUsers(), username):
-			abort(400, "Username '" + username + "' already exists")
-
-		salt = util.createPasswordSalt()
-		hash = util.createPasswordHash(password, salt)
-		userCount = db.scard(Keys.getUsers())
-
-		user = {
-			'username': username,
-			'passwordHash': hash,
-			'passwordSalt': salt,
-			'email': "",
-			'isAdmin': int(userCount == 0)
-		}
-		db.hset(Keys.getUser(username), mapping=user)
-		db.sadd(Keys.getUsers(), username)
-		return cleaner.cleanUser(user_service.findUser(username))
+		user = user_service.createUser(username, password)
+		return cleaner.cleanUser(user)
 
 @ns.route('/<string:username>')
 @ns.param('username', 'Username')
@@ -68,20 +49,14 @@ class UsersGet(Resource):
 		util.verifyAdminOrUser(auth, username)
 		user_service.findUser(username)
 
-		if 'email' in api.payload:
-			db.hset(Keys.getUser(username), 'email', api.payload['email'])
-
 		if 'isAdmin' in api.payload:
 			util.verifyAdmin(auth)
-			db.hset(Keys.getUser(username), 'isAdmin', int(api.payload['isAdmin']))
 
 		if 'password' in api.payload:
-			newPassword = api.payload['password']
-			salt = util.createPasswordSalt()
-			hash = util.createPasswordHash(newPassword, salt)
-			db.hset(Keys.getUser(username), 'passwordHash', hash, 'passwordSalt', salt)
+			util.verifyNoneEmpty(api.payload['password'], 'Password')
 
-		return cleaner.cleanUser(user_service.findUser(username))
+		user = user_service.updateUser(username, email=util.getPayload('email'), isAdmin=util.getPayload('isAdmin'), password=util.getPayload('password'))
+		return cleaner.cleanUser(user)
 
 	@ns.response(200, 'Success')
 	@ns.response(404, 'Unknown user')
@@ -117,8 +92,7 @@ class UsersLogout(Resource):
 	@auth_required
 	def post(auth, self, username):
 		util.verifyAdminOrUser(auth, username)
-		tKey = Keys.getToken(auth['token'])
-		db.delete(tKey)
+		token_service.deleteToken(auth['tokenId'])
 		return "Token invalidated"
 
 @ns.route('/<string:username>/impersonate')
@@ -130,5 +104,5 @@ class UsersImpersonate(Resource):
 	def post(auth, self, username):
 		util.verifyAdmin(auth)
 		user = user_service.findUser(username)
-		tokenInfo = token_service.createToken(username, user['isAdmin'], ttl=settings_service.getTokenTTL(), desc='Impersonate')
+		tokenInfo = token_service.createToken(user, ttl=settings_service.getTokenTTL(), desc='Impersonate')
 		return token_service.formatToken(tokenInfo, hideToken=False)

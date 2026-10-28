@@ -1,25 +1,50 @@
 
 .toolbar {
-    background: linear-gradient(120deg, #001970 170px, #303f9f 170px);
-    color: white;
+	--mat-toolbar-container-text-color: white;
+	background: linear-gradient(120deg, #001970 170px, #303f9f 170px);
+	color: white;
+	padding: 0 8px;
 }
 .toolbar .title {
-    margin-left: 0.5em;
-    margin-right: 1em;
+	margin-left: 0.5em;
+	margin-right: 1em;
 
-    font-size: 20px;
-    font-weight: 500;
-    line-height: 32px;
+	font-size: 20px;
+	font-weight: 500;
+	line-height: 32px;
 }
 .toolbar .logo {
-    width: 32px;
-    height: 32px;
+	width: 32px;
+	height: 32px;
+}
+
+nav {
+	display: flex;
 }
 
 .spacer {
-    flex: 1 1 auto;
+	flex: 1 1 auto;
 }
 
-.mat-button span {
-    margin-left: 0.5em;
+.active {
+	background-color: rgba(255, 255, 255, 0.12);
+}
+
+.username span {
+	max-width: 160px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.narrow-only {
+	display: none;
+}
+
+@media (max-width: 839px) {
+	.wide-only {
+		display: none;
+	}
+	.narrow-only {
+		display: inline-flex;
+	}
 }

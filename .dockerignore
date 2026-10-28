@@ -1,0 +1,10 @@
+# only send what docker/Dockerfile uses
+*
+!app/requirements.txt
+!app/src
+!web
+!docker/rootfs
+**/__pycache__
+web/node_modules
+web/dist
+web/.angular

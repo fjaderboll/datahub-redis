@@ -1,47 +1,62 @@
-import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, DestroyRef, OnInit, ViewChild, ChangeDetectionStrategy, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatDialog } from '@angular/material/dialog';
 import { MatPaginator } from '@angular/material/paginator';
-import { MatSort } from '@angular/material/sort';
-import { MatTableDataSource } from '@angular/material/table';
-import { ActivatedRoute, Router } from '@angular/router';
-import { Observable } from 'rxjs';
-import { ConfirmDialogComponent } from 'src/app/dialogs/confirm-dialog/confirm-dialog.component';
-import { CreateNodeDialogComponent } from 'src/app/dialogs/create-node-dialog/create-node-dialog.component';
-import { CreateSensorDialogComponent } from 'src/app/dialogs/create-sensor-dialog/create-sensor-dialog.component';
-import { VisualizeReadingsDialogComponent } from 'src/app/dialogs/visualize-readings-dialog/visualize-readings-dialog.component';
-import { AuthenticationService } from 'src/app/services/authentication.service';
-import { ServerService } from 'src/app/services/server.service';
-import { UtilsService } from 'src/app/services/utils.service';
+import { MatSort, MatSortHeader } from '@angular/material/sort';
+import { MatTableDataSource, MatTable, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow } from '@angular/material/table';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ConfirmDialogComponent } from '../../dialogs/confirm-dialog/confirm-dialog.component';
+import { CreateSensorDialogComponent } from '../../dialogs/create-sensor-dialog/create-sensor-dialog.component';
+import { VisualizeReadingsDialogComponent } from '../../dialogs/visualize-readings-dialog/visualize-readings-dialog.component';
+import { ServerService } from '../../services/server.service';
+import { UtilsService } from '../../services/utils.service';
+import { BreadcrumbComponent } from '../../components/breadcrumb/breadcrumb.component';
+import { InlineEditComponent } from '../../components/inline-edit/inline-edit.component';
+import { MatButton } from '@angular/material/button';
+import { MatIcon } from '@angular/material/icon';
+import { DatasetNode, Sensor } from '../../models';
 
 @Component({
 	selector: 'app-node-view',
 	templateUrl: './node-view.component.html',
-	styleUrls: ['./node-view.component.scss']
+	changeDetection: ChangeDetectionStrategy.Eager,
+	styleUrls: ['./node-view.component.scss'],
+	imports: [BreadcrumbComponent, InlineEditComponent, MatButton, MatIcon, MatTable, MatSort, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatSortHeader, MatCellDef, MatCell, RouterLink, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, MatPaginator]
 })
 export class NodeViewComponent implements OnInit, AfterViewInit {
+	utils = inject(UtilsService);
+	private server = inject(ServerService);
+	private route = inject(ActivatedRoute);
+	private dialog = inject(MatDialog);
+	private router = inject(Router);
+	private destroyRef = inject(DestroyRef);
+
 	public datasetName!: string;
-	public nodeName: any;
-	public node: any;
+	public nodeName!: string;
+	public node?: DatasetNode;
 
 	public displayedColumns: string[] = ['name', 'lastReading', 'desc'];
-	public dataSource = new MatTableDataSource<any>();
+	public dataSource = new MatTableDataSource<Sensor>();
 	@ViewChild(MatPaginator) paginator!: MatPaginator;
 	@ViewChild(MatSort) sort!: MatSort;
 
-	constructor(
-		public auth: AuthenticationService,
-		public utils: UtilsService,
-		private server: ServerService,
-		private route: ActivatedRoute,
-		private dialog: MatDialog,
-		private router: Router
-	) { }
+	constructor() {
+		// sort on time of the last reading, not the reading object
+		this.dataSource.sortingDataAccessor = (sensor, column) => {
+			if(column == 'lastReading') {
+				return sensor.lastReading?.timestamp ?? '';
+			}
+			return (sensor as any)[column];
+		};
+	}
 
 	ngOnInit(): void {
-		this.datasetName = this.route.snapshot.paramMap.get('datasetName') || 'this should never happen';
-		this.nodeName = this.route.snapshot.paramMap.get('nodeName') || 'this should never happen';
-
-		this.loadNode();
+		// the component is reused when only the URL changes, e.g. after a rename
+		this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(params => {
+			this.datasetName = params.get('datasetName')!;
+			this.nodeName = params.get('nodeName')!;
+			this.loadNode();
+		});
 	}
 
 	ngAfterViewInit() {
@@ -51,9 +66,9 @@ export class NodeViewComponent implements OnInit, AfterViewInit {
 
 	private loadNode() {
 		this.server.getNode(this.datasetName, this.nodeName).subscribe({
-			next: (node: any) => {
+			next: (node) => {
 				this.node = node;
-				this.dataSource.data = node.sensors;
+				this.dataSource.data = node.sensors ?? [];
 			},
 			error: (e) => {
 				this.server.showHttpError(e);
@@ -61,12 +76,12 @@ export class NodeViewComponent implements OnInit, AfterViewInit {
 		});
 	}
 
-	public changedValue(property: string, newValue: any) {
-		this.server.updateNode(this.datasetName, this.node.name, property, newValue).subscribe({
-			next: (response: any) => {
-				this.node[property] = newValue;
+	public changedValue(property: 'name' | 'desc', newValue: string) {
+		this.server.updateNode(this.datasetName, this.nodeName, property, newValue).subscribe({
+			next: () => {
+				this.node![property] = newValue;
 				if(property == "name") {
-					this.router.navigate(['/datasets/' + this.datasetName + '/nodes/' + this.node.name]);
+					this.router.navigate(['/datasets', this.datasetName, 'nodes', newValue], { replaceUrl: true });
 				}
 			},
 			error: (e) => {
@@ -80,26 +95,12 @@ export class NodeViewComponent implements OnInit, AfterViewInit {
 			data: {
 				title: "Delete Node",
 				text: "This will remove this node and all its sensors and readings. Are you sure?",
-				action: new Observable(
-					observer => {
-						this.server.deleteNode(this.datasetName, this.node.name).subscribe({
-							next: (v: any) => {
-								observer.next(v);
-							},
-							error: (e) => {
-								observer.error(e);
-							},
-							complete: () => {
-								observer.complete();
-							}
-						});
-					}
-				)
+				action: this.server.deleteNode(this.datasetName, this.nodeName)
 			}
 		});
 		dialog.afterClosed().subscribe(confirmed => {
 			if(confirmed) {
-				this.router.navigate(['/datasets/' + this.datasetName]);
+				this.router.navigate(['/datasets', this.datasetName]);
 			}
 		});
 	}
@@ -108,7 +109,7 @@ export class NodeViewComponent implements OnInit, AfterViewInit {
 		const dialog = this.dialog.open(CreateSensorDialogComponent, {
 			data: {
 				datasetName: this.datasetName,
-                nodeName: this.node.name
+				nodeName: this.nodeName
 			}
 		});
 		dialog.afterClosed().subscribe(sensor => {
@@ -119,11 +120,9 @@ export class NodeViewComponent implements OnInit, AfterViewInit {
 	}
 
 	public visualizeReadings() {
-		this.dialog.open(VisualizeReadingsDialogComponent, {
-			data: {
-				datasetName: this.datasetName,
-                nodeName: this.nodeName
-			}
+		VisualizeReadingsDialogComponent.open(this.dialog, {
+			datasetName: this.datasetName,
+			nodeName: this.nodeName
 		});
 	}
 

@@ -4,7 +4,7 @@ import json
 import random
 import string
 
-BASE_URL = os.environ.get('BASE_URL', 'http://localhost:2070/')
+BASE_URL = os.environ.get('BASE_URL', 'http://localhost:8080/api/')
 
 def getRandomName(prefix='', length=5):
 	return prefix + ''.join(random.choice(string.ascii_lowercase) for _ in range(length))

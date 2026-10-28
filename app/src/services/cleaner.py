@@ -1,5 +1,4 @@
-import datetime
-import pytz
+from datetime import datetime, timezone
 
 from services import util
 
@@ -9,55 +8,51 @@ def cleanUser(user):
 def cleanUsers(users):
 	cleanedUsers = []
 	for user in users:
-		cleanedUser = util.copy(user, ['username', 'email', 'isAdmin'])
-		cleanedUsers.append(cleanedUser)
+		cleanedUsers.append({
+			'username': user['username'],
+			'email': user['email'],
+			'isAdmin': bool(user['is_admin'])
+		})
 	return cleanedUsers
 
 def cleanDataset(dataset):
 	return cleanDatasets([dataset])[0]
 
 def cleanDatasets(datasets):
-	cleanedDatasets = []
-	for dataset in datasets:
-		cleanedDataset = util.cleanObject(dataset, ['name', 'desc', 'nodes'])
-		cleanedDatasets.append(cleanedDataset)
-	return cleanedDatasets
+	fields = {'name': 'name', 'desc': 'description', 'nodeCount': 'node_count', 'nodes': 'nodes'}
+	return [util.cleanObject(dataset, fields) for dataset in datasets]
 
 def cleanNode(node):
 	return cleanNodes([node])[0]
 
 def cleanNodes(nodes):
-	cleanedNodes = []
-	for node in nodes:
-		cleanedNode = util.cleanObject(node, ['name', 'desc', 'sensors'])
-		cleanedNodes.append(cleanedNode)
-	return cleanedNodes
+	fields = {'name': 'name', 'desc': 'description', 'sensorCount': 'sensor_count', 'lastTimestamp': 'last_timestamp', 'sensors': 'sensors'}
+	return [util.cleanObject(node, fields) for node in nodes]
 
 def cleanSensor(sensor):
 	return cleanSensors([sensor])[0]
 
 def cleanSensors(sensors):
-	cleanedSensors = []
-	for sensor in sensors:
-		cleanedSensor = util.cleanObject(sensor, ['name', 'desc', 'unit', 'lastReading', 'readingStats'])
-		cleanedSensors.append(cleanedSensor)
-	return cleanedSensors
+	fields = {'name': 'name', 'desc': 'description', 'unit': 'unit', 'lastReading': 'lastReading', 'readingStats': 'readingStats'}
+	return [util.cleanObject(sensor, fields) for sensor in sensors]
 
-def cleanReading(reading, dataset, node, sensor):
+def cleanReading(reading, datasetName, nodeName, sensor):
 	if reading:
-		return cleanReadings([reading], dataset, node, sensor)[0]
+		return cleanReadings([reading], datasetName, nodeName, sensor)[0]
 	return None
 
-def cleanReadings(readings, dataset, node, sensor):
+def cleanReadings(readings, datasetName, nodeName, sensor):
 	cleanedReadings = []
 	for reading in readings:
-		cleanedReading = {
-			'timestamp': datetime.datetime.fromtimestamp(reading[0] / 1000).astimezone(pytz.UTC).isoformat(),
+		cleanedReadings.append({
+			'timestamp': cleanTimestamp(reading[0]),
 			'value': reading[1],
-			'datasetName': dataset['name'],
-			'nodeName': node['name'],
+			'datasetName': datasetName,
+			'nodeName': nodeName,
 			'sensorName': sensor['name'],
 			'unit': sensor['unit']
-		}
-		cleanedReadings.append(cleanedReading)
+		})
 	return cleanedReadings
+
+def cleanTimestamp(msecs):
+	return datetime.fromtimestamp(msecs / 1000, timezone.utc).isoformat()

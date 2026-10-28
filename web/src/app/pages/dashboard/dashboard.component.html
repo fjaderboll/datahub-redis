@@ -1,39 +1,79 @@
+@if (auth.isAdmin()) {
+	<app-system-memory />
+}
 
-<div *ngIf="auth.isAdmin()">
-	<div>
-		<app-system-memory></app-system-memory>
+@if (overview) {
+	<div class="tiles">
+		<a class="tile" routerLink="/datasets">
+			<span class="count">{{ overview.datasets | number }}</span>
+			<span class="label">Datasets</span>
+		</a>
+		<div class="tile">
+			<span class="count">{{ overview.nodes | number }}</span>
+			<span class="label">Nodes</span>
+		</div>
+		<div class="tile">
+			<span class="count">{{ overview.sensors | number }}</span>
+			<span class="label">Sensors</span>
+		</div>
+		<div class="tile">
+			<span class="count">{{ overview.readings24h | number }}</span>
+			<span class="label">Readings last 24 h</span>
+		</div>
+		<div class="tile" [class.warn]="overview.silentSensors > 0">
+			<span class="count">{{ overview.silentSensors | number }}</span>
+			<span class="label">Silent sensors</span>
+		</div>
 	</div>
-</div>
 
-<div class="row align-vertically">
-	<dl class="list">
-		<dt>Received readings</dt>
-		<dd>{{ receivedReadings }}</dd>
+	<h2>Recently updated</h2>
+	@for (node of overview.recentNodes; track trackNode(node)) {
+		<div class="node">
+			<div class="title">
+				<a [routerLink]="['/datasets', node.datasetName]">{{ node.datasetName }}</a>
+				<span class="divider">/</span>
+				<a [routerLink]="['/datasets', node.datasetName, 'nodes', node.nodeName]">{{ node.nodeName }}</a>
+				<span class="relative-time">{{ utils.getRelativeTime(node.lastTimestamp) }}</span>
+			</div>
+			<div class="sensors">
+				@for (sensor of node.sensors; track sensor.name) {
+					@if (sensor.lastReading) {
+						<span class="sensor">
+							<a [routerLink]="['/datasets', node.datasetName, 'nodes', node.nodeName, 'sensors', sensor.name]">{{ sensor.name }}</a>
+							<span class="value">{{ sensor.lastReading.value }} {{ sensor.unit }}</span>
+						</span>
+					}
+				}
+			</div>
+		</div>
+	} @empty {
+		<p class="not-set">No readings yet</p>
+	}
 
-		<dt>Average per second</dt>
-		<dd>{{ receivedReadingsPerSecond | number: '1.1-1' }}</dd>
-	</dl>
-	<div class="margin-left">
-		<button mat-raised-button color="primary" (click)="streamReadings()" [disabled]="streamingReadings">
-			<mat-icon *ngIf="!streamingReadings">play_arrow</mat-icon>
-			<mat-icon *ngIf="streamingReadings" svgIcon="loading"></mat-icon>
-			<span>Stream readings</span>
-		</button>
-	</div>
-</div>
-
-<div>
-	<div *ngFor="let reading of lastReadings" class="reading">
-		<span class="property">Dataset</span>
-		<span class="value"><a routerLink="/datasets/{{ reading.datasetName }}">{{ reading.datasetName }}</a></span>
-
-		<span class="property">Node</span>
-		<span class="value"><a routerLink="/datasets/{{ reading.datasetName }}/nodes/{{ reading.nodeName }}">{{ reading.nodeName }}</a></span>
-
-		<span class="property">Sensor</span>
-		<span class="value"><a routerLink="/datasets/{{ reading.datasetName }}/nodes/{{ reading.nodeName }}/sensors/{{ reading.sensorName }}">{{ reading.sensorName }}</a></span>
-
-		<span class="property">Value</span>
-		<span class="value">{{ reading.value }} {{ reading.unit }}</span>
-	</div>
-</div>
+	<h2>
+		Silent
+		<mat-icon class="help" matTooltip="Sensors that have been quiet for much longer than they usually are" aria-label="Sensors that have been quiet for much longer than they usually are" tabindex="0">help_outline</mat-icon>
+	</h2>
+	@for (node of overview.silentNodes; track trackNode(node)) {
+		<div class="node silent">
+			<div class="title">
+				<a [routerLink]="['/datasets', node.datasetName]">{{ node.datasetName }}</a>
+				<span class="divider">/</span>
+				<a [routerLink]="['/datasets', node.datasetName, 'nodes', node.nodeName]">{{ node.nodeName }}</a>
+			</div>
+			<ul class="silent-sensors">
+				@for (sensor of node.sensors; track sensor.name) {
+					@if (sensor.silent) {
+						<li>
+							<a [routerLink]="['/datasets', node.datasetName, 'nodes', node.nodeName, 'sensors', sensor.name]">{{ sensor.name }}</a>
+							last reading {{ utils.getRelativeTime(sensor.lastReading?.timestamp) }},
+							usually every {{ utils.getDeltaTime(sensor.interval! * 1000) }}
+						</li>
+					}
+				}
+			</ul>
+		</div>
+	} @empty {
+		<p class="not-set">All sensors are reporting as usual</p>
+	}
+}

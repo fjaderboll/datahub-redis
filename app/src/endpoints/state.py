@@ -1,13 +1,15 @@
 from flask import Response, stream_with_context
 from flask_restx import Resource
 
+from datetime import datetime
 import os
 import psutil
 import json
 
 from api import api, auth_required
-from db import db, ts, Keys
-from services import util, swagger_service, settings_service, node_service, sensor_service, reading_service
+import db
+import tsdb
+from services import util, cleaner, swagger_service, settings_service, user_service, dataset_service, node_service, reading_service
 
 ns = api.namespace('state', description='Get application state')
 
@@ -16,16 +18,16 @@ class StateHealth(Resource):
 	@api.doc(security=None)
 	@ns.response(200, 'Success')
 	def get(self):
-		return db.info()['uptime_in_seconds']
+		db.queryOne('SELECT 1')
+		return tsdb.redisDb.info()['uptime_in_seconds']
 
 @ns.route('/users')
 class StateLogin(Resource):
 	@api.doc(security=None)
 	@ns.response(200, 'Success')
 	def get(self):
-		userCount = db.scard(Keys.getUsers())
 		return {
-			'createFirstUserRequired': (userCount == 0),
+			'createFirstUserRequired': (user_service.getUserCount() == 0),
 			'allowPublicCreateUser': settings_service.getAllowPublicCreateUser()
 		}
 
@@ -49,7 +51,7 @@ class StateSystem(Resource):
 				'available': psutil.virtual_memory().available,
 				'percent': psutil.virtual_memory().percent,
 				'application': process.memory_info().rss,
-				'database': db.info()['used_memory']
+				'database': tsdb.redisDb.info()['used_memory']
 			}
 		}
 
@@ -83,9 +85,9 @@ class StateSettings(Resource):
 			applyRetention = api.payload['applyRetention']
 			if applyRetention:
 				retention_msecs = settings_service.getReadingsRetention()
-				for tsKey in db.scan_iter(match='sensor-readings:*'):
-					ts.alter(tsKey, retention_msecs=retention_msecs)
-					n += 1
+				sensorIds = [row['id'] for row in db.query('SELECT id FROM sensors')]
+				results = reading_service.runPerSensor(sensorIds, lambda pipe, key: pipe.alter(key, retention_msecs=retention_msecs))
+				n += sum(1 for result in results.values() if result)
 
 		if 'allowPublicCreateUser' in api.payload:
 			allowPublicCreateUser = api.payload['allowPublicCreateUser']
@@ -111,25 +113,81 @@ class StateTimeseries(Resource):
 	def get(auth, self):
 		util.verifyAdmin(auth)
 
+		sensors = db.query('''
+			SELECT s.id, s.name, n.name AS node_name, d.name AS dataset_name
+			FROM sensors s
+			JOIN nodes n ON n.id = s.node_id
+			JOIN datasets d ON d.id = n.dataset_id
+			ORDER BY d.name, n.name, s.name
+		''')
+		statsBySensorId = reading_service.getReadingStatsMany([sensor['id'] for sensor in sensors])
+
 		timeseries = []
-		for dKey in db.scan_iter(match='dataset:*'):
-			dataset = db.hgetall(dKey)
-			for node in node_service.getDatasetNodes(dataset['id']):
-				for sensor in sensor_service.getNodeSensors(node['id'], dataset, node):
-					stats = reading_service.getReadingStats(sensor['id'])
-
-					timeserie = {
-						'datasetName': dataset['name'],
-						'nodeName': node['name'],
-						'sensorName': sensor['name'],
-						'memory': stats['memory'],
-						'samples': stats['count'],
-						'retention': stats['retention']
-					}
-
-					timeseries.append(timeserie)
+		for sensor in sensors:
+			stats = statsBySensorId[sensor['id']]
+			timeseries.append({
+				'datasetName': sensor['dataset_name'],
+				'nodeName': sensor['node_name'],
+				'sensorName': sensor['name'],
+				'memory': stats['memory'],
+				'samples': stats['count'],
+				'retention': stats['retention']
+			})
 
 		return timeseries
+
+RECENT_NODES = 10
+
+@ns.route('/overview')
+class StateOverview(Resource):
+	@ns.response(200, 'Success')
+	@auth_required
+	def get(auth, self):
+		sensors = reading_service.findRequestedSensors(auth, None, None, None)
+		sensorIds = [sensor['id'] for sensor in sensors]
+		now = int(datetime.now().timestamp() * 1000)
+		readingsBySensorId = reading_service.getRecentReadingsMany(sensorIds, reading_service.PATTERN_READINGS)
+		countBySensorId = reading_service.getReadingCountsSince(sensorIds, now - 24 * 3600 * 1000)
+
+		nodes = {}
+		for sensor in sensors:
+			readings = readingsBySensorId[sensor['id']]
+			interval = reading_service.getUsualInterval(readings)
+			node = nodes.setdefault((sensor['dataset_name'], sensor['node_name']), {
+				'datasetName': sensor['dataset_name'],
+				'nodeName': sensor['node_name'],
+				'lastTimestamp': None,
+				'sensors': [],
+				'lastTime': 0, # in milliseconds, for sorting
+				'silentTime': 0 # last reading of its newest silent sensor
+			})
+			node['sensors'].append({
+				'name': sensor['name'],
+				'unit': sensor['unit'],
+				'lastReading': cleaner.cleanReading(readings[0] if readings else None, sensor['dataset_name'], sensor['node_name'], sensor),
+				'interval': interval / 1000 if interval is not None else None,
+				'silent': reading_service.isSilent(readings, now)
+			})
+			if readings and readings[0][0] > node['lastTime']:
+				node['lastTime'] = readings[0][0]
+				node['lastTimestamp'] = node['sensors'][-1]['lastReading']['timestamp']
+			if node['sensors'][-1]['silent']:
+				node['silentTime'] = max(node['silentTime'], readings[0][0])
+
+		activeNodes = [node for node in nodes.values() if node['lastTime']]
+		recentNodes = sorted(activeNodes, key=lambda node: node['lastTime'], reverse=True)[:RECENT_NODES]
+		silentNodes = sorted([node for node in activeNodes if node['silentTime']], key=lambda node: node['silentTime'], reverse=True)
+		clean = lambda node: {key: value for key, value in node.items() if key not in ('lastTime', 'silentTime')}
+
+		return {
+			'datasets': len(dataset_service.getUserDatasets(auth['username'])),
+			'nodes': node_service.countUserNodes(auth['username']),
+			'sensors': len(sensors),
+			'readings24h': sum(countBySensorId.values()),
+			'silentSensors': sum(1 for node in nodes.values() for sensor in node['sensors'] if sensor['silent']),
+			'recentNodes': [clean(node) for node in recentNodes],
+			'silentNodes': [clean(node) for node in silentNodes]
+		}
 
 @ns.route('/readings')
 class StateReadings(Resource):
@@ -141,9 +199,9 @@ class StateReadings(Resource):
 
 class ReadingSubscriber:
 	def __init__(self, username):
-		self.datasetIds = db.smembers(Keys.getUserDatasetIds(username))
-		self.pubsub = db.pubsub()
-		self.pubsub.subscribe(Keys.getReadingsTopic())
+		self.datasetIds = {dataset['id'] for dataset in dataset_service.getUserDatasets(username)}
+		self.pubsub = tsdb.redisDb.pubsub()
+		self.pubsub.subscribe(tsdb.READINGS_TOPIC)
 
 	def __iter__(self):
 		return self
@@ -152,7 +210,7 @@ class ReadingSubscriber:
 		for message in self.pubsub.listen():
 			if message['type'] == 'message':
 				reading = json.loads(message['data'])
-				datasetId = db.get(Keys.getDatasetIdByName(reading['datasetName']))
-				if datasetId in self.datasetIds:
+				dataset = db.queryOne('SELECT id FROM datasets WHERE name = ?', (reading['datasetName'],))
+				if dataset and dataset['id'] in self.datasetIds:
 					return message['data'] + '\n'
 		raise StopIteration

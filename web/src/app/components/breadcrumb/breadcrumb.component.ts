@@ -1,17 +1,15 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
+import { MatIcon } from '@angular/material/icon';
+import { RouterLink } from '@angular/router';
 
 @Component({
-  selector: 'app-breadcrumb',
-  templateUrl: './breadcrumb.component.html',
-  styleUrls: ['./breadcrumb.component.scss']
+	selector: 'app-breadcrumb',
+	templateUrl: './breadcrumb.component.html',
+	changeDetection: ChangeDetectionStrategy.Eager,
+	styleUrls: ['./breadcrumb.component.scss'],
+	imports: [MatIcon, RouterLink]
 })
-export class BreadcrumbComponent implements OnInit {
+export class BreadcrumbComponent {
 	@Input() links!: string[];
-	@Input() names!: string[];
-
-	constructor() { }
-
-	ngOnInit(): void {
-	}
-
+	@Input() names!: (string | null | undefined)[];
 }

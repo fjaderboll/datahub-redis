@@ -1,41 +1,62 @@
-
 # Datahub - Web frontend
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 16.2.7.
+An [Angular](https://angular.dev/) 22 application using [Angular Material](https://material.angular.dev/)
+and [Highcharts](https://www.highcharts.com/).
 
 ## Development setup
+Requires Node.js 22.22.3+, 24.15+ or 26+ (odd-numbered and older 24.x releases are not supported),
+the Docker image builds with Node.js 22.
+
 ```shell
-npm install    # install dependencies
-
-# update stuff
-sudo npm uninstall -g @angular/cli
-sudo npm install -g @angular/cli@latest
-ng version
-
 sudo npm install -g n
-sudo n 20.8.1
+sudo n 24      # install Node.js 24 LTS
 node -v
+
+npm install    # install dependencies
 ```
 
+The Angular CLI is installed as a dependency, use it with `npx ng` (or `npm run ng --`).
+
 ## Run locally
-Make sure `apiUrl` in `environments/environment.ts` points to your setup of the backend.
+Make sure `apiUrl` in `src/environments/environment.ts` points to your setup of the backend.
 
 ```shell
 npm start      # start server at http://localhost:4200
-ng serve
 ```
+
+## Build and test
+```shell
+npm run build  # production build to dist/web, served by the backend
+npm test       # unit tests with Vitest
+```
+
+## Upgrading
+```shell
+npx ng update                                              # list available updates
+npx ng update @angular/core @angular/cli @angular/material # update Angular, runs migrations
+npm outdated                                               # other dependencies
+npm audit
+```
+
+`package.json` overrides the version of `vite` (only used by the development server) to get
+security fixes before `@angular/build` updates it, remove the override when it does.
 
 ## Development cheat sheet
 ```shell
-ng generate component components/InlineEdit    # create new component
-ng generate component pages/SensorView         # create new page
-ng generate component dialogs/CreateUserDialog # create new dialog
-ng generate service services/Authentication    # create new service
-ng add @angular/material                       # add Angular Material
-ng build                                       # build for production
+npx ng generate component components/InlineEdit    # create new component
+npx ng generate component pages/SensorView         # create new page (and add it to app.routes.ts)
+npx ng generate component dialogs/CreateUserDialog # create new dialog
+npx ng generate service services/Authentication    # create new service
 ```
 
-You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+You can also use `ng generate directive|pipe|service|class|guard|interface|enum`.
 
-* Material Components: https://material.angular.io/components/
-* Icon library: https://fonts.google.com/icons?selected=Material+Icons
+### Layout
+* Pages are loaded on demand, see `src/app/app.routes.ts`.
+* All REST calls are in `ServerService`. Use the `` api`...` `` helper for URLs, it encodes names taken from the page URL.
+* Narrow screens: tables go in a `.table-container` (scrolls sideways), button rows in `.actions` (wraps).
+  The header switches to a menu below 840 pixels.
+
+### Links
+* Material Components: https://material.angular.dev/components/
+* Icon library: https://fonts.google.com/icons?selected=Material+Icons (self hosted via `@fontsource/material-icons`)
 * Animated SVGs: https://www.svgbackgrounds.com/elements/animated-svg-preloaders/

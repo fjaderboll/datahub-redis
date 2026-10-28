@@ -1,0 +1,77 @@
+<h1 mat-dialog-title>Live readings</h1>
+<mat-dialog-content>
+	<div class="stream">
+		@if (filter.datasetName) {
+			<mat-chip-set aria-label="Filter">
+				<mat-chip (removed)="clearFilter()">
+					<mat-icon matChipAvatar>filter_alt</mat-icon>
+					{{ getFilterTitle() }}
+					<button matChipRemove aria-label="Show readings of all datasets">
+						<mat-icon>cancel</mat-icon>
+					</button>
+				</mat-chip>
+			</mat-chip-set>
+		} @else {
+			<span class="not-set">All datasets</span>
+		}
+
+		<dl class="list">
+			<dt>Received readings</dt>
+			<dd>{{ receivedReadings }}</dd>
+
+			<dt>Average per second</dt>
+			<dd>{{ receivedReadingsPerSecond | number: '1.1-1' }}</dd>
+		</dl>
+	</div>
+
+	<!-- the dialog only closes by itself on back/forward, not when following a router link -->
+	<div class="readings">
+		@for (reading of lastReadings; track reading) {
+			<div class="reading">
+				<span class="field">
+					<span class="property">Time</span>
+					<span class="value">{{ utils.printTimestamp(reading.timestamp) }}</span>
+				</span>
+
+				<span class="field">
+					<span class="property">Dataset</span>
+					<a [routerLink]="['/datasets', reading.datasetName]" (click)="dialogRef.close()">{{ reading.datasetName }}</a>
+				</span>
+
+				<span class="field">
+					<span class="property">Node</span>
+					<a [routerLink]="['/datasets', reading.datasetName, 'nodes', reading.nodeName]" (click)="dialogRef.close()">{{ reading.nodeName }}</a>
+				</span>
+
+				<span class="field">
+					<span class="property">Sensor</span>
+					<a [routerLink]="['/datasets', reading.datasetName, 'nodes', reading.nodeName, 'sensors', reading.sensorName]" (click)="dialogRef.close()">{{ reading.sensorName }}</a>
+				</span>
+
+				<span class="field">
+					<span class="property">Value</span>
+					<span class="value">{{ reading.value }} {{ reading.unit }}</span>
+				</span>
+			</div>
+		} @empty {
+			<p class="not-set">{{ state == 'streaming' ? 'Waiting for readings…' : state == 'paused' ? 'Paused' : 'The stream was interrupted' }}</p>
+		}
+	</div>
+</mat-dialog-content>
+<mat-dialog-actions>
+	<button mat-stroked-button color="primary" [mat-dialog-close]="false">
+		<mat-icon>close</mat-icon>
+		<span>Close</span>
+	</button>
+	<button mat-flat-button color="primary" (click)="toggleStreaming()">
+		<!-- the icon alone in its block, or the button doesn't place it in its icon slot -->
+		@if (state == 'streaming') {
+			<mat-icon svgIcon="loading" class="light" />
+		} @else if (state == 'paused') {
+			<mat-icon>play_arrow</mat-icon>
+		} @else {
+			<mat-icon>refresh</mat-icon>
+		}
+		<span>{{ state == 'streaming' ? 'Pause' : state == 'paused' ? 'Resume' : 'Reconnect' }}</span>
+	</button>
+</mat-dialog-actions>

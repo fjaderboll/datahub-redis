@@ -1,76 +1,65 @@
-<app-breadcrumb [links]="['/timeseries']" [names]="['Timeseries']"></app-breadcrumb>
+<app-breadcrumb [links]="['/timeseries']" [names]="['Timeseries']" />
 
-<app-system-memory></app-system-memory>
+<app-system-memory />
 
 <dl class="list">
 	<dt>Total sensors</dt>
-    <dd>
-        {{ totalTimeseries }}
-    </dd>
+	<dd>{{ totalTimeseries }}</dd>
 
-    <dt>Total readings</dt>
-    <dd>
-        {{ totalSamples }}
-    </dd>
+	<dt>Total readings</dt>
+	<dd>{{ totalSamples }}</dd>
 
-    <dt>Total memory</dt>
-    <dd>
-        {{ utils.printFilesize(totalMemory) }}
-    </dd>
+	<dt>Total memory</dt>
+	<dd>{{ utils.printFilesize(totalMemory) }}</dd>
 
 	<dt>Default retention</dt>
-    <dd>
-		<app-inline-edit type="number" [value]="settings?.retention" (onChange)="updateSetting('retention', $event)"></app-inline-edit>
-        seconds
-		<span class="relative-time">{{ utils.getDeltaTime(settings?.retention*1000) }}</span>
-    </dd>
+	<dd>
+		<app-inline-edit type="number" [value]="settings?.retention" (onChange)="updateSetting('retention', $event)" />
+		seconds
+		<span class="relative-time">{{ utils.printDuration(settings?.retention, 'forever') }}</span>
+	</dd>
 </dl>
 
-<div class="row margin-top align-right">
-	<div>
-		<button mat-raised-button color="primary" (click)="applyRetention()">
-			<mat-icon>timer</mat-icon>
-			<span>Apply retention for all</span>
-		</button>
-	</div>
+<div class="actions margin-top">
+	<button mat-raised-button color="primary" (click)="applyRetention()">
+		<mat-icon>timer</mat-icon>
+		<span>Apply retention for all</span>
+	</button>
 </div>
 
-<div class="mat-elevation-z8 margin-top">
+<div class="table-container margin-top">
 	<table mat-table [dataSource]="dataSource" matSort matSortActive="memory" matSortDisableClear matSortDirection="desc">
 
 		<ng-container matColumnDef="datasetName">
 			<th mat-header-cell *matHeaderCellDef mat-sort-header>Dataset</th>
 			<td mat-cell *matCellDef="let timeserie">
-				<a *ngIf="hasAccess(timeserie)" routerLink="/datasets/{{ timeserie.datasetName }}">
-					{{ timeserie.datasetName }}
-				</a>
-				<span *ngIf="!hasAccess(timeserie)">
-					{{ timeserie.datasetName }}
-				</span>
+				@if (hasAccess(timeserie)) {
+					<a [routerLink]="['/datasets', timeserie.datasetName]">{{ timeserie.datasetName }}</a>
+				} @else {
+					<span>{{ timeserie.datasetName }}</span>
+				}
 			</td>
 		</ng-container>
 
 		<ng-container matColumnDef="nodeName">
 			<th mat-header-cell *matHeaderCellDef mat-sort-header>Node</th>
 			<td mat-cell *matCellDef="let timeserie">
-				<a *ngIf="hasAccess(timeserie)" routerLink="/datasets/{{ timeserie.datasetName }}/nodes/{{ timeserie.nodeName }}">
-					{{ timeserie.nodeName }}
-				</a>
-				<span *ngIf="!hasAccess(timeserie)">
-					{{ timeserie.nodeName }}
-				</span>
+				@if (hasAccess(timeserie)) {
+					<a [routerLink]="['/datasets', timeserie.datasetName, 'nodes', timeserie.nodeName]">{{ timeserie.nodeName }}</a>
+				} @else {
+					<span>{{ timeserie.nodeName }}</span>
+				}
 			</td>
 		</ng-container>
 
 		<ng-container matColumnDef="sensorName">
 			<th mat-header-cell *matHeaderCellDef mat-sort-header>Sensor</th>
 			<td mat-cell *matCellDef="let timeserie">
-				<a *ngIf="hasAccess(timeserie)" routerLink="/datasets/{{ timeserie.datasetName }}/nodes/{{ timeserie.nodeName }}/sensors/{{ timeserie.sensorName }}">
-					{{ timeserie.sensorName }}
-				</a>
-				<span *ngIf="!hasAccess(timeserie)">
-					{{ timeserie.sensorName }}
-				</span>
+				@if (hasAccess(timeserie)) {
+					<a [routerLink]="['/datasets', timeserie.datasetName, 'nodes', timeserie.nodeName, 'sensors', timeserie.sensorName]">{{ timeserie.sensorName }}</a>
+				} @else {
+					<span>{{ timeserie.sensorName }}</span>
+				}
 			</td>
 		</ng-container>
 
@@ -81,12 +70,12 @@
 
 		<ng-container matColumnDef="memory">
 			<th mat-header-cell *matHeaderCellDef mat-sort-header>Memory</th>
-			<td mat-cell *matCellDef="let timeserie">{{ utils.printFilesize(timeserie.memory) }}</td>
+			<td mat-cell *matCellDef="let timeserie" class="nowrap">{{ utils.printFilesize(timeserie.memory) }}</td>
 		</ng-container>
 
 		<ng-container matColumnDef="retention">
 			<th mat-header-cell *matHeaderCellDef mat-sort-header>Retention</th>
-			<td mat-cell *matCellDef="let timeserie">{{ utils.getDeltaTime(timeserie.retention*1000) }}</td>
+			<td mat-cell *matCellDef="let timeserie" class="nowrap">{{ utils.printDuration(timeserie.retention, 'forever') }}</td>
 		</ng-container>
 
 		<tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
@@ -94,6 +83,6 @@
 	</table>
 
 	<div [hidden]="dataSource.data.length <= 10">
-		<mat-paginator [pageSizeOptions]="[10, 100]"></mat-paginator>
+		<mat-paginator [pageSizeOptions]="[10, 100]" />
 	</div>
 </div>

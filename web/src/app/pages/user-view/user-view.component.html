@@ -1,5 +1,8 @@
-<app-breadcrumb *ngIf="auth.isAdmin()" [links]="['/users', '/users/' + user?.username]" [names]="['Users', user?.username]"></app-breadcrumb>
-<app-breadcrumb *ngIf="!auth.isAdmin()" [links]="['/users/' + user?.username]" [names]="[user?.username]"></app-breadcrumb>
+@if (auth.isAdmin()) {
+	<app-breadcrumb [links]="['/users', '/users/' + username]" [names]="['Users', username]" />
+} @else {
+	<app-breadcrumb [links]="['/users/' + username]" [names]="[username]" />
+}
 
 <dl class="list">
 	<dt>Username</dt>
@@ -7,27 +10,30 @@
 
 	<dt>E-mail</dt>
 	<dd>
-		<app-inline-edit type="text" [value]="user?.email" (onChange)="changedValue('email', $event)"></app-inline-edit>
+		<app-inline-edit type="text" [value]="user?.email" (onChange)="changedValue('email', $event)" />
 	</dd>
 
 	<dt>Administrator</dt>
 	<dd>
-		<app-inline-edit type="boolean" [value]="user?.isAdmin" (onChange)="changedValue('isAdmin', $event)" [disabled]="!auth.isAdmin()"></app-inline-edit>
+		<app-inline-edit type="boolean" [value]="user?.isAdmin" (onChange)="changedValue('isAdmin', $event)" [disabled]="!auth.isAdmin()" />
 	</dd>
 </dl>
 
-<div class="row margin-top">
-	<div>
-		<button mat-raised-button color="warn" (click)="deleteUser()">
-			<mat-icon>delete</mat-icon>
-			<span>Delete User</span>
-		</button>
-	</div>
+<div class="actions align-left margin-top">
+	<button mat-raised-button color="primary" (click)="changePassword()">
+		<mat-icon>password</mat-icon>
+		<span>Change Password</span>
+	</button>
 
-	<div *ngIf="auth.isAdmin() && auth.getUsername() !== user?.username" class="margin-left">
+	@if (auth.isAdmin() && !isSelf()) {
 		<button mat-raised-button color="primary" (click)="impersonate()">
 			<mat-icon>person</mat-icon>
 			<span>Impersonate</span>
 		</button>
-	</div>
+	}
+
+	<button mat-raised-button color="warn" (click)="deleteUser()">
+		<mat-icon>delete</mat-icon>
+		<span>Delete User</span>
+	</button>
 </div>

@@ -1,36 +1,37 @@
-import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, OnInit, ViewChild, ChangeDetectionStrategy, inject } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatPaginator } from '@angular/material/paginator';
-import { MatSort } from '@angular/material/sort';
-import { MatTableDataSource } from '@angular/material/table';
-import { CreateDatasetDialogComponent } from 'src/app/dialogs/create-dataset-dialog/create-dataset-dialog.component';
-import { VisualizeReadingsDialogComponent } from 'src/app/dialogs/visualize-readings-dialog/visualize-readings-dialog.component';
-import { AuthenticationService } from 'src/app/services/authentication.service';
-import { ServerService } from 'src/app/services/server.service';
-import { UtilsService } from 'src/app/services/utils.service';
+import { MatSort, MatSortHeader } from '@angular/material/sort';
+import { MatTableDataSource, MatTable, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow } from '@angular/material/table';
+import { CreateDatasetDialogComponent } from '../../dialogs/create-dataset-dialog/create-dataset-dialog.component';
+import { VisualizeReadingsDialogComponent } from '../../dialogs/visualize-readings-dialog/visualize-readings-dialog.component';
+import { ServerService } from '../../services/server.service';
+import { BreadcrumbComponent } from '../../components/breadcrumb/breadcrumb.component';
+import { MatButton } from '@angular/material/button';
+import { MatIcon } from '@angular/material/icon';
+import { RouterLink } from '@angular/router';
+import { Dataset } from '../../models';
 
 @Component({
-  selector: 'app-dataset-list',
-  templateUrl: './dataset-list.component.html',
-  styleUrls: ['./dataset-list.component.scss']
+	selector: 'app-dataset-list',
+	templateUrl: './dataset-list.component.html',
+	changeDetection: ChangeDetectionStrategy.Eager,
+	styleUrls: ['./dataset-list.component.scss'],
+	imports: [BreadcrumbComponent, MatButton, MatIcon, MatTable, MatSort, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatSortHeader, MatCellDef, MatCell, RouterLink, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, MatPaginator]
 })
 export class DatasetListComponent implements OnInit, AfterViewInit {
-	public displayedColumns: string[] = ['name', 'desc'];
-	public dataSource = new MatTableDataSource<any>();
+	private server = inject(ServerService);
+	private dialog = inject(MatDialog);
+
+	public displayedColumns: string[] = ['name', 'nodeCount', 'desc'];
+	public dataSource = new MatTableDataSource<Dataset>();
 
 	@ViewChild(MatPaginator) paginator!: MatPaginator;
 	@ViewChild(MatSort) sort!: MatSort;
 
-  	constructor(
-		public auth: AuthenticationService,
-		private server: ServerService,
-		public utils: UtilsService,
-		private dialog: MatDialog
-	) { }
-
-  	ngOnInit(): void {
+	ngOnInit(): void {
 		this.loadDatasets();
-  	}
+	}
 
 	ngAfterViewInit() {
 		this.dataSource.paginator = this.paginator;
@@ -39,13 +40,8 @@ export class DatasetListComponent implements OnInit, AfterViewInit {
 
 	private loadDatasets() {
 		this.server.getDatasets().subscribe({
-			next: (v: any) => {
-				/*this.totalReadingCount = 0;
-				v.forEach((node: any) => {
-					this.totalReadingCount += node.readingCount;
-					node.lastReadingTimestamp = node.lastReading?.timestamp;
-				});*/
-				this.dataSource.data = v;
+			next: (datasets) => {
+				this.dataSource.data = datasets;
 			},
 			error: (e) => {
 				this.server.showHttpError(e);
@@ -54,9 +50,7 @@ export class DatasetListComponent implements OnInit, AfterViewInit {
 	}
 
 	public visualizeReadings() {
-		this.dialog.open(VisualizeReadingsDialogComponent, {
-			data: {}
-		});
+		VisualizeReadingsDialogComponent.open(this.dialog, {});
 	}
 
 	public createDataset() {

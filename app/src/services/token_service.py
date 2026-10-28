@@ -1,49 +1,71 @@
+import time
+from datetime import datetime, timezone
+
 from flask_restx import abort
 
-from datetime import datetime, timedelta
-import pytz
-
-from db import db, Keys
+import db
 from services import util
 
+TOKEN_SELECT = '''
+	SELECT t.*, u.username, u.is_admin
+	FROM tokens t JOIN users u ON u.id = t.user_id
+'''
+NOT_EXPIRED = '(t.expires_at IS NULL OR t.expires_at > ?)'
+
+def now():
+	return int(time.time())
+
+def getExpiresAt(ttl):
+	return now() + ttl if ttl else None
+
+def getAuth(token):
+	return db.queryOne(TOKEN_SELECT + ' WHERE t.token_hash = ? AND t.enabled = 1 AND ' + NOT_EXPIRED, (util.createTokenHash(token), now()))
+
+def getUserTokens(username):
+	return db.query(TOKEN_SELECT + ' WHERE u.username = ? AND ' + NOT_EXPIRED + ' ORDER BY t.id', (username, now()))
+
 def findToken(auth, id):
-	for tokenInfo in db.scan_iter(match='token:*'):
-		tokenInfo = db.hgetall(tokenInfo)
-		if tokenInfo['username'] == auth['username'] and tokenInfo['id'] == str(id):
-			return tokenInfo
+	tokenInfo = db.queryOne(TOKEN_SELECT + ' WHERE t.id = ? AND u.username = ? AND ' + NOT_EXPIRED, (id, auth['username'], now()))
+	if tokenInfo:
+		return tokenInfo
 	abort(404, "Unknown token with ID = " + str(id))
 
-def createToken(username, isAdmin, ttl=0, enabled=True, desc=''):
-	while True:
-		token = util.getRandomString(32)
-		tKey = Keys.getToken(token)
-		if not db.exists(tKey):
-			tokenId = db.incr(Keys.getTokenIdCounter())
-			tokenInfo = {
-				'id': str(tokenId),
-				'token': token,
-				'username': username,
-				'enabled': int(enabled), # need to store as int
-				'desc': desc if desc else '',
-				'expire': '',
-				'isAdmin': int(isAdmin)
-			}
-			if ttl:
-				tokenInfo['expire'] = (datetime.now() + timedelta(seconds=ttl)).replace(microsecond=0).astimezone(pytz.UTC).isoformat()
+def createToken(user, ttl=0, enabled=True, desc=''):
+	"""Only the token's hash is stored, so this is the only time the token itself is available."""
+	token = util.getRandomString(32)
+	label = token[0:2] + '...' + token[-2:]
+	with db.transaction():
+		db.execute('DELETE FROM tokens WHERE expires_at <= ?', (now(),))
+		cursor = db.execute('INSERT INTO tokens (token_hash, label, user_id, description, enabled, expires_at) VALUES (?, ?, ?, ?, ?, ?)',
+			(util.createTokenHash(token), label, user['id'], desc or '', int(enabled), getExpiresAt(ttl)))
+	tokenInfo = db.queryOne(TOKEN_SELECT + ' WHERE t.id = ?', (cursor.lastrowid,))
+	tokenInfo['token'] = token
+	return tokenInfo
 
-			db.hset(tKey, mapping=tokenInfo)
-			if ttl:
-				db.expire(tKey, ttl)
+def updateToken(tokenInfo, desc=None, enabled=None, ttl=None):
+	with db.transaction():
+		if desc is not None:
+			db.execute('UPDATE tokens SET description = ? WHERE id = ?', (desc, tokenInfo['id']))
 
-			return tokenInfo
+		if enabled is not None:
+			db.execute('UPDATE tokens SET enabled = ? WHERE id = ?', (int(enabled), tokenInfo['id']))
+
+		if ttl is not None:
+			db.execute('UPDATE tokens SET expires_at = ? WHERE id = ?', (getExpiresAt(ttl), tokenInfo['id']))
+
+	return db.queryOne(TOKEN_SELECT + ' WHERE t.id = ?', (tokenInfo['id'],))
+
+def deleteToken(id):
+	db.execute('DELETE FROM tokens WHERE id = ?', (id,))
 
 def formatToken(tokenInfo, hideToken=True):
+	expiresAt = tokenInfo['expires_at']
 	return {
-		'id': tokenInfo['id'],
-		'enabled': bool(int(tokenInfo['enabled'])),
-		'expire': tokenInfo['expire'] if tokenInfo['expire'] else None,
-		'desc': tokenInfo['desc'] if tokenInfo['desc'] else None,
-		'token': tokenInfo['token'][0:2] + '...' + tokenInfo['token'][-2:] if hideToken else tokenInfo['token'],
+		'id': str(tokenInfo['id']),
+		'enabled': bool(tokenInfo['enabled']),
+		'expire': datetime.fromtimestamp(expiresAt, timezone.utc).isoformat() if expiresAt else None,
+		'desc': tokenInfo['description'] if tokenInfo['description'] else None,
+		'token': tokenInfo['label'] if hideToken else tokenInfo['token'],
 		'username': tokenInfo['username'],
-		'isAdmin': bool(int(tokenInfo['isAdmin']))
+		'isAdmin': bool(tokenInfo['is_admin'])
 	}

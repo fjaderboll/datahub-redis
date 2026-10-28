@@ -1,27 +1,30 @@
-import { Component } from '@angular/core';
-import { ServerService } from 'src/app/services/server.service';
-import { UtilsService } from 'src/app/services/utils.service';
+import { Component, OnInit, ChangeDetectionStrategy, inject } from '@angular/core';
+import { ServerService } from '../../services/server.service';
+import { UtilsService } from '../../services/utils.service';
+import { BreadcrumbComponent } from '../../components/breadcrumb/breadcrumb.component';
+import { InlineEditComponent } from '../../components/inline-edit/inline-edit.component';
+import { Settings } from '../../models';
 
 @Component({
 	selector: 'app-settings-view',
 	templateUrl: './settings-view.component.html',
-	styleUrls: ['./settings-view.component.scss']
+	changeDetection: ChangeDetectionStrategy.Eager,
+	styleUrls: ['./settings-view.component.scss'],
+	imports: [BreadcrumbComponent, InlineEditComponent]
 })
-export class SettingsViewComponent {
-	public settings: any;
+export class SettingsViewComponent implements OnInit {
+	private server = inject(ServerService);
+	utils = inject(UtilsService);
 
-	constructor(
-		private server: ServerService,
-		public utils: UtilsService
-	) { }
+	public settings?: Settings;
 
 	ngOnInit(): void {
 		this.loadSettings();
-  	}
+	}
 
 	private loadSettings() {
 		this.server.getStateSettings().subscribe({
-			next: (settings: any) => {
+			next: (settings) => {
 				this.settings = settings;
 			},
 			error: (e) => {
@@ -32,9 +35,9 @@ export class SettingsViewComponent {
 
 	public updateSetting(setting: string, newValue: any) {
 		this.server.updateStateSettings(setting, newValue).subscribe({
-			next: (response: any) => {
+			next: (message) => {
 				this.loadSettings();
-				this.utils.toastSuccess(response);
+				this.utils.toastSuccess(message);
 			},
 			error: (e) => {
 				this.server.showHttpError(e);

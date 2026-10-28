@@ -1,60 +1,53 @@
-<app-breadcrumb [links]="['/datasets', '/datasets/' + datasetName, '/datasets/' + datasetName + '/nodes/' + node?.name]" [names]="['Datasets', datasetName, node?.name]"></app-breadcrumb>
+<app-breadcrumb [links]="['/datasets', '/datasets/' + datasetName, '/datasets/' + datasetName + '/nodes/' + nodeName]" [names]="['Datasets', datasetName, nodeName]" />
 
 <dl class="list">
-    <dt>Name</dt>
-    <dd>
-        <app-inline-edit type="text" [value]="node?.name" (onChange)="changedValue('name', $event)"></app-inline-edit>
-    </dd>
+	<dt>Name</dt>
+	<dd>
+		<app-inline-edit type="text" [value]="node?.name" (onChange)="changedValue('name', $event)" />
+	</dd>
 
-    <dt>Description</dt>
-    <dd>
-        <app-inline-edit type="text" [value]="node?.desc" (onChange)="changedValue('desc', $event)"></app-inline-edit>
-    </dd>
+	<dt>Description</dt>
+	<dd>
+		<app-inline-edit type="text" [value]="node?.desc" (onChange)="changedValue('desc', $event)" />
+	</dd>
 </dl>
 
-<div class="row margin-top align-right">
-	<div>
-		<button mat-raised-button color="warn" (click)="deleteNode()">
-			<mat-icon>delete</mat-icon>
-			<span>Delete Node</span>
-		</button>
-	</div>
+<div class="actions margin-top">
+	<button mat-raised-button color="warn" (click)="deleteNode()">
+		<mat-icon>delete</mat-icon>
+		<span>Delete Node</span>
+	</button>
 
-	<div class="margin-left">
-		<button mat-raised-button color="primary" (click)="visualizeReadings()">
-			<mat-icon>show_chart</mat-icon>
-			<span>Visualize</span>
-		</button>
-	</div>
+	<button mat-raised-button color="primary" (click)="visualizeReadings()">
+		<mat-icon>show_chart</mat-icon>
+		<span>Visualize</span>
+	</button>
 
-	<div class="margin-left">
-		<button mat-raised-button color="primary" (click)="createSensor()">
-			<mat-icon>add</mat-icon>
-			<span>Create Sensor</span>
-		</button>
-	</div>
+	<button mat-raised-button color="primary" (click)="createSensor()">
+		<mat-icon>add</mat-icon>
+		<span>Create Sensor</span>
+	</button>
 </div>
 
-<div class="mat-elevation-z8 margin-top">
+<div class="table-container margin-top">
 	<table mat-table [dataSource]="dataSource" matSort matSortActive="name" matSortDisableClear matSortDirection="asc">
 
 		<ng-container matColumnDef="name">
 			<th mat-header-cell *matHeaderCellDef mat-sort-header>Sensor</th>
 			<td mat-cell *matCellDef="let sensor">
-				<a routerLink="/datasets/{{ datasetName }}/nodes/{{ node.name }}/sensors/{{ sensor.name }}">
-					{{ sensor.name }}
-				</a>
+				<a [routerLink]="['/datasets', datasetName, 'nodes', nodeName, 'sensors', sensor.name]">{{ sensor.name }}</a>
 			</td>
 		</ng-container>
 
 		<ng-container matColumnDef="lastReading">
 			<th mat-header-cell *matHeaderCellDef mat-sort-header>Last Reading</th>
-			<td mat-cell *matCellDef="let sensor" [class.not-set]="!sensor.lastReading">
-				<span *ngIf="sensor.lastReading">
+			<td mat-cell *matCellDef="let sensor">
+				@if (sensor.lastReading) {
 					<span>{{ sensor.lastReading.value }} {{ sensor.lastReading.unit }}</span>
 					<span class="relative-time">{{ utils.getRelativeTime(sensor.lastReading.timestamp) }}</span>
-				</span>
-				<span *ngIf="!sensor.lastReading" class="not-set">No readings</span>
+				} @else {
+					<span class="not-set">No readings</span>
+				}
 			</td>
 		</ng-container>
 
@@ -68,6 +61,6 @@
 	</table>
 
 	<div [hidden]="dataSource.data.length <= 10">
-		<mat-paginator [pageSizeOptions]="[10, 100]"></mat-paginator>
+		<mat-paginator [pageSizeOptions]="[10, 100]" />
 	</div>
 </div>

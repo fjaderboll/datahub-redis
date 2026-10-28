@@ -1,7 +1,9 @@
 import re
-import random
+import secrets
 import string
 import hashlib
+from argon2 import PasswordHasher
+from argon2.exceptions import InvalidHashError, VerificationError
 from flask_restx import abort
 
 from api import api
@@ -20,7 +22,7 @@ def verifyAdminOrUser(auth, username):
 		abort(403, "Forbidden")
 
 def verifyValidName(name, attributeName="Attribute", fail=True):
-	regex = "^[a-z0-9][a-z0-9_\-@.]*[a-z0-9]$"
+	regex = r"^[a-z0-9][a-z0-9_\-@.]*[a-z0-9]$"
 	if re.search(regex, name) is None:
 		if fail:
 			abort(400, attributeName + " '" + name + "' does not match pattern " + regex)
@@ -31,31 +33,36 @@ def verifyNoneEmpty(value, attributeName):
 	if value is None or len(value) == 0:
 		abort(400, attributeName + " cannot be empty")
 
-def createPasswordSalt():
-	return random.randint(1000, 9999)
+# Argon2id with OWASP's recommended minimum (19 MiB, 2 passes). Every MQTT connect also checks a
+# password, and hashing blocks the gunicorn worker while it runs, so the cost is kept modest.
+# The salt and these parameters are stored in the hash itself.
+passwordHasher = PasswordHasher(time_cost=2, memory_cost=19 * 1024, parallelism=1)
 
-def createPasswordHash(password, salt):
-	s = str(password) + str(salt)
-	return hashlib.md5(s.encode('utf-8')).hexdigest()
+def createPasswordHash(password):
+	return passwordHasher.hash(password)
+
+def verifyPassword(password, passwordHash):
+	try:
+		return passwordHasher.verify(passwordHash, password)
+	except (VerificationError, InvalidHashError):
+		return False
+
+def passwordNeedsRehash(passwordHash):
+	"""True when the hash was made with other parameters than the current ones."""
+	return passwordHasher.check_needs_rehash(passwordHash)
+
+def createTokenHash(token):
+	# tokens are long and random, so a fast hash protects them as well as a slow one, and can be looked up
+	return hashlib.sha256(token.encode('utf-8')).hexdigest()
 
 def getRandomString(length):
-	return ''.join(random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(length))
+	alphabet = string.ascii_uppercase + string.ascii_lowercase + string.digits
+	return ''.join(secrets.choice(alphabet) for _ in range(length))
 
-def copy(obj, attributes):
+def cleanObject(obj, fields):
+	"""Copy 'fields' (API name -> internal name) that are present in 'obj'."""
 	newObj = {}
-	for attr in attributes:
-		if attr in obj:
-			if len(attr) >= 3 and attr[0:2] == 'is' and attr[2:3].isupper():
-				newObj[attr] = int(obj[attr]) != 0
-			else:
-				newObj[attr] = obj[attr]
-		else:
-			newObj[attr] = None
-	return newObj
-
-def cleanObject(obj, fieldsToKeep):
-	newObj = {}
-	for field in fieldsToKeep:
-		if field in obj:
-			newObj[field] = obj[field]
+	for apiName, internalName in fields.items():
+		if internalName in obj:
+			newObj[apiName] = obj[internalName]
 	return newObj
