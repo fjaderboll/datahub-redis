@@ -40,7 +40,12 @@ app-system-memory {
 		}
 	}
 }
-a.tile:hover {
+button.tile {
+	border: none;
+	font: inherit;
+	cursor: pointer;
+}
+a.tile:hover, button.tile:hover {
 	text-decoration: none;
 	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
@@ -83,17 +88,6 @@ h2 {
 }
 
 .sensors {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 0.25em 1.5em;
-	margin-top: 0.25em;
-
-	.value {
-		margin-left: 0.5em;
-	}
-}
-
-.silent-sensors {
 	margin: 0.25em 0 0;
 	padding-left: 1.25em;
 }

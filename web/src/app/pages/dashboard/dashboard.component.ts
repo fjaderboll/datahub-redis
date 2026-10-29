@@ -12,8 +12,8 @@ import { MatIcon } from '@angular/material/icon';
 import { MatTooltip } from '@angular/material/tooltip';
 import { NodeActivity, Overview, Reading } from '../../models';
 
-const RECENT_NODES = 10;
 const DAY = 24 * 3600 * 1000;
+const OVERVIEW_REFRESH = 60 * 1000;
 
 @Component({
 	selector: 'app-dashboard',
@@ -35,13 +35,24 @@ export class DashboardComponent implements OnInit {
 	private loadTime = 0;
 
 	ngOnInit(): void {
-		this.server.getStateOverview().subscribe({
+		this.loadOverview();
+		interval(OVERVIEW_REFRESH).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.loadOverview());
+	}
+
+	/** The node lists are only refreshed now and then, so they stay put long enough to be clicked */
+	private loadOverview() {
+		this.server.getStateOverview().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
 			next: (overview) => {
+				const first = !this.overview;
 				this.overview = overview;
-				this.listenForReadings();
+				if(first) {
+					this.listenForReadings();
+				}
 			},
 			error: (e) => {
-				this.server.showHttpError(e);
+				if(!this.overview) { // stale lists are better than a toast every minute
+					this.server.showHttpError(e);
+				}
 			}
 		});
 	}
@@ -50,7 +61,7 @@ export class DashboardComponent implements OnInit {
 		return node.datasetName + '/' + node.nodeName;
 	}
 
-	/** Keeps the recently updated nodes up to date, the silent ones are only checked on load */
+	/** Keeps the reading counts up to date between the overview refreshes */
 	private listenForReadings() {
 		this.loadTime = Date.now();
 		this.updateSinceLoadLabel();
@@ -76,36 +87,10 @@ export class DashboardComponent implements OnInit {
 	}
 
 	private handleReading(reading: Reading) {
-		const overview = this.overview!;
 		this.readingsSinceLoad++;
-		const time = new Date(reading.timestamp).getTime();
-		if(Date.now() - time < DAY) {
-			overview.readings24h++;
+		if(Date.now() - new Date(reading.timestamp).getTime() < DAY) {
+			this.overview!.readings24h++;
 		}
-
-		let node = overview.recentNodes.find(n => n.datasetName == reading.datasetName && n.nodeName == reading.nodeName);
-		if(!node) {
-			node = { datasetName: reading.datasetName, nodeName: reading.nodeName, lastTimestamp: reading.timestamp, sensors: [] };
-			overview.recentNodes.push(node);
-		}
-
-		let sensor = node.sensors.find(s => s.name == reading.sensorName);
-		if(!sensor) {
-			sensor = { name: reading.sensorName, unit: reading.unit, lastReading: null, interval: null, silent: false };
-			node.sensors.push(sensor);
-		}
-
-		// older readings, e.g. from an import, don't replace newer ones
-		if(!sensor.lastReading || time >= new Date(sensor.lastReading.timestamp).getTime()) {
-			sensor.lastReading = reading;
-		}
-		if(time > new Date(node.lastTimestamp).getTime()) {
-			node.lastTimestamp = reading.timestamp;
-		}
-
-		overview.recentNodes = overview.recentNodes
-			.sort((n1, n2) => new Date(n2.lastTimestamp).getTime() - new Date(n1.lastTimestamp).getTime())
-			.slice(0, RECENT_NODES);
 	}
 
 }
