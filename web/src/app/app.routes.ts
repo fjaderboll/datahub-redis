@@ -12,6 +12,7 @@ export const routes: Routes = [
 	{ path: 'users', canActivate: [adminGuard], loadComponent: () => import('./pages/user-list/user-list.component').then(m => m.UserListComponent) },
 	{ path: 'users/:username', canActivate: [authGuard], loadComponent: () => import('./pages/user-view/user-view.component').then(m => m.UserViewComponent) },
 	{ path: 'timeseries', canActivate: [adminGuard], loadComponent: () => import('./pages/timeserie-list/timeserie-list.component').then(m => m.TimeserieListComponent) },
+	{ path: 'broker', canActivate: [adminGuard], loadComponent: () => import('./pages/broker-view/broker-view.component').then(m => m.BrokerViewComponent) },
 	{ path: 'settings', canActivate: [adminGuard], loadComponent: () => import('./pages/settings-view/settings-view.component').then(m => m.SettingsViewComponent) },
 	{ path: '', canActivate: [authGuard], loadComponent: () => import('./pages/dashboard/dashboard.component').then(m => m.DashboardComponent) },
 	{ path: '**', redirectTo: '' }

@@ -2,3 +2,9 @@
 # /data can be a new volume, a host directory or volumes from the old multi-container setup
 mkdir -p /data/redis
 chown -R datahub:datahub /data
+
+# NanoMQ's REST API is only for the app, both get this password from the container environment (with-contenv)
+password_file=/run/s6/container_environment/NANOMQ_HTTP_SERVER_PASSWORD
+if [ ! -s $password_file ]; then
+	python3 -c 'import secrets; print(secrets.token_hex(16), end="")' > $password_file
+fi

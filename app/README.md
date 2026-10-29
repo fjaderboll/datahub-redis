@@ -39,7 +39,7 @@ python3 maintenance.py repair              # create missing time series and dele
 
 ## MQ broker
 NanoMQ checks logins and topic permissions with the app (`/api/mqtt/authenticate` and `/api/mqtt/authorize`),
-here running on the host at port 8080:
+here running on the host at port 8080. The app reads NanoMQ's REST API at port 8081 for the MQ-broker page:
 
 ```shell
 docker run \
@@ -47,6 +47,7 @@ docker run \
 	--rm \
 	--name datahub-nanomq \
 	-p 1883:1883 \
+	-p 127.0.0.1:8081:8081 \
 	--add-host=host.docker.internal:host-gateway \
 	-v $PWD/../docker/nanomq.dev.conf:/etc/nanomq.conf \
 	emqx/nanomq:0.25.6-slim

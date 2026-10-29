@@ -1,0 +1,102 @@
+<app-breadcrumb [links]="['/broker']" [names]="['MQ-broker']" />
+
+@if (refreshFailed) {
+	<p class="refresh-failed">Unable to reach the MQ broker, showing what it was at the last refresh.</p>
+}
+
+<dl class="list">
+	<dt>Version</dt>
+	<dd>NanoMQ {{ broker?.version }}</dd>
+
+	<dt>Status</dt>
+	<dd>{{ broker?.status }}</dd>
+
+	<dt>Uptime</dt>
+	<dd>{{ utils.printDuration(broker?.uptime, 'just started') }}</dd>
+
+	<dt>Connections</dt>
+	<dd>{{ broker?.connections }}</dd>
+
+	<dt>Subscriptions</dt>
+	<dd>{{ broker?.subscriptions }}</dd>
+
+	<dt>Messages received</dt>
+	<dd>{{ broker?.messagesReceived }}</dd>
+
+	<dt>Messages sent</dt>
+	<dd>{{ broker?.messagesSent }}</dd>
+
+	<dt>Messages without subscriber</dt>
+	<dd>{{ broker?.messagesDropped }}</dd>
+
+	<dt>Memory</dt>
+	<dd>{{ utils.printFilesize(broker?.memory) }}</dd>
+
+	<dt>CPU</dt>
+	<dd>{{ broker?.cpu }} %</dd>
+</dl>
+
+<div class="table-container margin-top">
+	<table mat-table [dataSource]="dataSource" matSort matSortActive="clientId" matSortDisableClear matSortDirection="asc">
+
+		<ng-container matColumnDef="clientId">
+			<th mat-header-cell *matHeaderCellDef mat-sort-header>Client ID</th>
+			<td mat-cell *matCellDef="let client" class="nowrap">{{ client.clientId }}</td>
+		</ng-container>
+
+		<ng-container matColumnDef="username">
+			<th mat-header-cell *matHeaderCellDef mat-sort-header>Username</th>
+			<td mat-cell *matCellDef="let client" class="nowrap">
+				@if (client.isApp) {
+					<span>{{ client.username }} (datahub)</span>
+				} @else {
+					<a [routerLink]="['/users', client.username]">{{ client.username }}</a>
+				}
+			</td>
+		</ng-container>
+
+		<ng-container matColumnDef="address">
+			<th mat-header-cell *matHeaderCellDef mat-sort-header>Address</th>
+			<td mat-cell *matCellDef="let client">{{ client.address }}</td>
+		</ng-container>
+
+		<ng-container matColumnDef="connectedAt">
+			<th mat-header-cell *matHeaderCellDef mat-sort-header>Connected</th>
+			<td mat-cell *matCellDef="let client">
+				@if (!client.connected) {
+					<span>No, the session is kept</span>
+				} @else if (client.connectedAt) {
+					<div class="nowrap">{{ utils.printTimestamp(client.connectedAt) }}</div>
+					<div class="relative-time">{{ utils.getRelativeTime(client.connectedAt) }}</div>
+				}
+			</td>
+		</ng-container>
+
+		<ng-container matColumnDef="protocolVersion">
+			<th mat-header-cell *matHeaderCellDef mat-sort-header>MQTT</th>
+			<td mat-cell *matCellDef="let client">{{ client.protocolVersion }}</td>
+		</ng-container>
+
+		<ng-container matColumnDef="subscriptions">
+			<th mat-header-cell *matHeaderCellDef mat-sort-header>Subscriptions</th>
+			<td mat-cell *matCellDef="let client">
+				@for (subscription of client.subscriptions; track subscription.topic) {
+					<div class="subscription">
+						<!-- long topics wrap after a slash rather than widen the table -->
+						<code>@for (level of topicLevels(subscription.topic); track $index) {<span>{{ level }}</span><wbr />}</code>
+						@if (subscription.qos) {
+							<span class="relative-time">QoS {{ subscription.qos }}</span>
+						}
+					</div>
+				}
+			</td>
+		</ng-container>
+
+		<tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+		<tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+	</table>
+
+	<div [hidden]="dataSource.data.length <= 10">
+		<mat-paginator [pageSizeOptions]="[10, 100]" />
+	</div>
+</div>

@@ -43,7 +43,8 @@ loginUserData = api.model('LoginUserData', {
 mqttAuthenticateData = api.model('MqttAuthenticateData', {
 	'username': fields.String(description='Username', required=True),
 	'password': fields.String(description='One of the user\'s tokens', required=True),
-	'clientid': fields.String(description='Client ID', required=True)
+	'clientid': fields.String(description='Client ID', required=True),
+	'ipaddress': fields.String(description='Address of the client')
 })
 mqttAuthorizeData = api.model('MqttAuthorizeData', {
 	'username': fields.String(description='Username', required=True),

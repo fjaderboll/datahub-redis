@@ -9,7 +9,7 @@ import json
 from api import api, auth_required
 import db
 import tsdb
-from services import util, cleaner, swagger_service, settings_service, user_service, dataset_service, node_service, reading_service
+from services import util, cleaner, swagger_service, settings_service, user_service, dataset_service, node_service, reading_service, broker_service
 
 ns = api.namespace('state', description='Get application state')
 
@@ -54,6 +54,16 @@ class StateSystem(Resource):
 				'database': tsdb.redisDb.info()['used_memory']
 			}
 		}
+
+@ns.route('/broker')
+class StateBroker(Resource):
+	@ns.response(200, 'Success')
+	@ns.response(503, 'The MQ broker is not reachable')
+	@auth_required
+	def get(auth, self):
+		util.verifyAdmin(auth)
+
+		return broker_service.getState()
 
 @ns.route('/settings')
 class StateSettings(Resource):

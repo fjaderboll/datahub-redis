@@ -1,0 +1,15 @@
+.nowrap {
+	white-space: nowrap;
+}
+
+// a topic that wraps is indented on its following lines, and the column isn't squeezed narrower than
+// this on small screens (the table scrolls instead)
+.subscription {
+	min-width: 16em;
+	padding-left: 1em;
+	text-indent: -1em;
+}
+
+.refresh-failed {
+	color: #b26a00;
+}

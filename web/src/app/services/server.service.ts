@@ -3,7 +3,7 @@ import { UtilsService } from './utils.service';
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { Dataset, DatasetNode, Overview, Reading, Sensor, Settings, SystemState, Timeserie, Token, User, UsersState } from '../models';
+import { BrokerState, Dataset, DatasetNode, Overview, Reading, Sensor, Settings, SystemState, Timeserie, Token, User, UsersState } from '../models';
 
 /**
  * Builds an API URL where every interpolated value is encoded as one path segment,
@@ -69,6 +69,10 @@ export class ServerService {
 
 	public getStateOverview() {
 		return this.http.get<Overview>(api`state/overview`);
+	}
+
+	public getStateBroker() {
+		return this.http.get<BrokerState>(api`state/broker`);
 	}
 
 	/**

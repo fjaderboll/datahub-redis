@@ -20,6 +20,32 @@ export interface SystemState {
 	};
 }
 
+export interface BrokerState {
+	version: string;
+	status: string;
+	uptime: number | null;
+	connections: number | null;
+	subscriptions: number;
+	messagesReceived: number | null;
+	messagesSent: number | null;
+	messagesDropped: number | null;
+	memory: number | null;
+	cpu: number | null;
+	clients: BrokerClient[];
+}
+
+export interface BrokerClient {
+	clientId: string;
+	username: string;
+	isApp: boolean;
+	connected: boolean;
+	address: string | null;
+	connectedAt: string | null;
+	protocolVersion: string;
+	keepAlive: number;
+	subscriptions: { topic: string; qos: number }[];
+}
+
 export interface Settings {
 	retention: number;
 	allowPublicCreateUser: boolean;

@@ -27,6 +27,9 @@ docker run -d --name datahub -p 8080:8080 -p 1883:1883 -v datahub-data:/data dat
 | `TZ` | Time zone, default `Europe/Stockholm` |
 | `MQTT_USERNAME`, `MQTT_PASSWORD` | The app's own MQTT account, default `mqtt` with a random password. Set the password to use the account from elsewhere, it may subscribe to all `in/...` topics and publish to all `out/...` topics |
 
+NanoMQ's REST API, which the app reads for the MQ-broker page, only listens inside the container (`127.0.0.1:8081`)
+and has a random password, created when the container starts.
+
 Everything is stored in `/data`:
 * `datahub.db` - SQLite database with users, datasets, nodes and sensors
 * `redis/dump.rdb` - Redis snapshot with the readings, saved once a day (every 6 hours with many changes) and when the container is stopped

@@ -44,3 +44,10 @@ def getMqttUsername():
 
 def getMqttPassword():
 	return os.environ.get('MQTT_PASSWORD', 'mqtt123')
+
+def getBrokerApiUrl():
+	return os.environ.get('NANOMQ_API_URL', 'http://127.0.0.1:8081/api/v4/')
+
+def getBrokerApiLogin():
+	# the same environment variables as NanoMQ reads, with NanoMQ's defaults
+	return (os.environ.get('NANOMQ_HTTP_SERVER_USERNAME', 'admin'), os.environ.get('NANOMQ_HTTP_SERVER_PASSWORD', 'public'))

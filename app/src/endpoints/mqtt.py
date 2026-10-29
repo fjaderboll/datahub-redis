@@ -4,7 +4,7 @@ from flask_restx import abort
 import re
 
 from api import api
-from services import finder, swagger_service, settings_service, token_service, user_service
+from services import finder, swagger_service, settings_service, token_service, user_service, broker_service
 
 ns = api.namespace('mqtt', description='MQ broker endpoints')
 
@@ -31,6 +31,8 @@ class Authenticate(Resource):
 
 		if not allow:
 			abort(403, 'Denied')
+
+		broker_service.recordLogin(api.payload['clientid'], username, api.payload.get('ipaddress'))
 		return 'Allowed'
 
 @ns.route('/authorize')
