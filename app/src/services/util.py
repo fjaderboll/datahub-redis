@@ -33,8 +33,8 @@ def verifyNoneEmpty(value, attributeName):
 	if value is None or len(value) == 0:
 		abort(400, attributeName + " cannot be empty")
 
-# Argon2id with OWASP's recommended minimum (19 MiB, 2 passes). Every MQTT connect also checks a
-# password, and hashing blocks the gunicorn worker while it runs, so the cost is kept modest.
+# Argon2id with OWASP's recommended minimum (19 MiB, 2 passes). Hashing blocks the gunicorn
+# worker while it runs, so the cost is kept modest.
 # The salt and these parameters are stored in the hash itself.
 passwordHasher = PasswordHasher(time_cost=2, memory_cost=19 * 1024, parallelism=1)
 

@@ -45,6 +45,7 @@ export interface User {
 export interface Token {
 	id: string;
 	enabled: boolean;
+	mqttOnly: boolean;
 	expire: string | null;
 	desc: string | null;
 	token: string;

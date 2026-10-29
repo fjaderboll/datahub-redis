@@ -35,6 +35,10 @@ def getAllowNonAdminLogin():
 def setAllowNonAdminLogin(allow):
 	setProperty('allow-non-admin-login', int(allow))
 
+def isLoginAllowed(isAdmin):
+	"""Turning off non-admin login locks out non-admins completely: their passwords, their tokens, and MQTT."""
+	return bool(isAdmin) or getAllowNonAdminLogin()
+
 def getMqttUsername():
 	return os.environ.get('MQTT_USERNAME', 'mqtt')
 

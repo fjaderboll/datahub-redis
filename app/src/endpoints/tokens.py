@@ -19,8 +19,9 @@ class TokensList(Resource):
 	def post(auth, self):
 		ttl = util.getPayload('ttl', settings_service.getTokenTTL())
 		desc = util.getPayload('desc')
+		mqttOnly = util.getPayload('mqttOnly', False)
 
-		tokenInfo = token_service.createToken(auth, ttl=ttl, desc=desc)
+		tokenInfo = token_service.createToken(auth, ttl=ttl, desc=desc, mqttOnly=mqttOnly)
 		return token_service.formatToken(tokenInfo, hideToken=False)
 
 @ns.route('/<int:id>')
@@ -39,7 +40,7 @@ class TokensView(Resource):
 	@api.expect(swagger_service.createUpdateTokenData)
 	def put(auth, self, id):
 		tokenInfo = token_service.findToken(auth, id)
-		tokenInfo = token_service.updateToken(tokenInfo, desc=util.getPayload('desc'), enabled=util.getPayload('enabled'), ttl=util.getPayload('ttl'))
+		tokenInfo = token_service.updateToken(tokenInfo, desc=util.getPayload('desc'), enabled=util.getPayload('enabled'), ttl=util.getPayload('ttl'), mqttOnly=util.getPayload('mqttOnly'))
 		return token_service.formatToken(tokenInfo)
 
 	@ns.response(200, 'Success')

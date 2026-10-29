@@ -68,12 +68,15 @@ post users/ "$(jq -nc --arg u "$user" --arg p "$pass" '{username: $u, password: 
 echo "Logging in"
 token=$(post "users/$user/login" "$(jq -nc --arg p "$pass" '{password: $p}')" | jq -r .token)
 
+echo "Creating MQTT only token"
+mqtt_token=$(post tokens/ '{"desc": "test.sh", "ttl": 600, "mqttOnly": true}' | jq -r .token)
+
 echo "Creating dataset '$dataset'"
 post datasets/ "$(jq -nc --arg n "$dataset" '{name: $n}')" > /dev/null || true
 
 topic="out/datasets/$dataset/#"
 echo "Subscribing to '$topic'"
-mosquitto_sub -h $host -p $mqtt_port -u "$user" -P "$pass" -v -C $count -t "$topic" &
+mosquitto_sub -h $host -p $mqtt_port -u "$user" -P "$mqtt_token" -v -C $count -t "$topic" &
 sub_pid=$!
 trap 'kill $sub_pid 2>/dev/null || true' EXIT
 sleep 1 # give it time to connect and subscribe
@@ -90,7 +93,7 @@ for ((i = 0; i < count; i++)); do
 	path="datasets/$dataset/nodes/$node/sensors/$sensor/readings"
 
 	if ((i % 2 == 0)); then
-		mosquitto_pub -h $host -p $mqtt_port -u "$user" -P "$pass" -t "in/$path" -m "{\"value\": $value}"
+		mosquitto_pub -h $host -p $mqtt_port -u "$user" -P "$mqtt_token" -t "in/$path" -m "{\"value\": $value}"
 	else
 		post "$path" "[{\"value\": $value}]" > /dev/null
 	fi

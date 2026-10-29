@@ -149,8 +149,8 @@ export class ServerService {
 
 	// ----- Token -----
 
-	public createToken(description: string, ttl: number | null) {
-		return this.http.post<Token>(api`tokens/`, { desc: description, ttl });
+	public createToken(description: string, ttl: number | null, mqttOnly: boolean) {
+		return this.http.post<Token>(api`tokens/`, { desc: description, ttl, mqttOnly });
 	}
 
 	public getTokens() {

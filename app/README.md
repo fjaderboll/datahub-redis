@@ -93,6 +93,11 @@ Tests files must contain `test` to be discovered.
 BASE_URL=http://localhost:8080/api/ python3 -m unittest discover -s test -vv
 ```
 
+Tests that change system settings need an administrator, and are skipped otherwise:
+```shell
+BASE_URL=http://localhost:8080/api/ ADMIN_USERNAME=admin ADMIN_PASSWORD=secret python3 -m unittest discover -s test -vv
+```
+
 ### Clean
 Do a clean start:
 

@@ -12,6 +12,7 @@
 		<div class="created-token-text">
 			<strong>New token{{ createdToken.desc ? ' for ' + createdToken.desc : '' }}</strong><br/>
 			Copy it now, it will not be shown again.
+			For MQTT, log in with your username and the token as password.
 			<div class="full-token">
 				<code>{{ createdToken.token }}</code>
 				<button mat-icon-button [cdkCopyToClipboard]="createdToken.token" (cdkCopyToClipboardCopied)="copied()" aria-label="Copy token">
@@ -39,6 +40,13 @@
 			<th mat-header-cell *matHeaderCellDef mat-sort-header>Enabled</th>
 			<td mat-cell *matCellDef="let token">
 				<app-inline-edit type="boolean" [value]="token.enabled" (onChange)="changedValue(token, 'enabled', $event)" />
+			</td>
+		</ng-container>
+
+		<ng-container matColumnDef="mqttOnly">
+			<th mat-header-cell *matHeaderCellDef mat-sort-header>MQTT only</th>
+			<td mat-cell *matCellDef="let token">
+				<app-inline-edit type="boolean" [value]="token.mqttOnly" (onChange)="changedValue(token, 'mqttOnly', $event)" />
 			</td>
 		</ng-container>
 

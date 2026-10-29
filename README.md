@@ -1,10 +1,10 @@
 # datahub (Redis version)
 
 ## About
-A very fast database with to hold your IoT data and a Web UI
-to view it, both in table form and graphs.
+A very fast database to hold your IoT data and a Web UI
+to view it; both in table form and graphs.
 Use the REST API to store and retrieve time series
-of numbers or use the built-in MQ broker to publish
+of numbers or use the built-in MQ-broker to publish
 or subscribe to your data over MQTT.
 
 ### Background
@@ -32,7 +32,8 @@ docker run \
 
 * Navigate to [http://localhost:8080/](http://localhost:8080/) and create the first user, which becomes administrator.
 * REST API documentation (Swagger) is at [http://localhost:8080/api/](http://localhost:8080/api/).
-* The MQTT broker is at `localhost:1883`, log in with your datahub username and password.
+* The MQTT broker is at `localhost:1883`, log in with your datahub username and one of your tokens as password.
+  Create a token in the web UI under Integration → Tokens, and mark it MQTT only if it shouldn't work for the REST API.
 	- Publish readings to a dataset you have created, for example
   `in/datasets/home/nodes/kitchen/sensors/temperature/readings` with `{"value": 21.5}`,
 	- Subscribe to `out/datasets/home/#` to get them pushed to you.

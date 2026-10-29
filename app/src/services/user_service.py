@@ -62,7 +62,7 @@ def authenticate(username, password):
 	if not user:
 		return None
 
-	if not settings_service.getAllowNonAdminLogin() and not user['is_admin']:
+	if not settings_service.isLoginAllowed(user['is_admin']):
 		return None
 
 	if not util.verifyPassword(password, user['password_hash']):

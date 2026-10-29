@@ -24,6 +24,7 @@ $ ./test.sh -c 4
 Registering user 'admin'
   Username 'admin' already exists
 Logging in
+Creating MQTT only token
 Creating dataset 'test'
   Dataset 'test' already exists
 Subscribing to 'out/datasets/test/#'

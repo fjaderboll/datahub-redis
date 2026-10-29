@@ -26,7 +26,7 @@ export class TokenListComponent implements OnInit, AfterViewInit {
 	utils = inject(UtilsService);
 	private dialog = inject(MatDialog);
 
-	public displayedColumns: string[] = ['desc', 'enabled', 'token', 'expire', 'actions'];
+	public displayedColumns: string[] = ['desc', 'enabled', 'mqttOnly', 'token', 'expire', 'actions'];
 	public dataSource = new MatTableDataSource<Token>();
 
 	@ViewChild(MatPaginator) paginator!: MatPaginator;

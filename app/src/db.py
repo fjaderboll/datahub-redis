@@ -57,6 +57,9 @@ MIGRATIONS = [
 			unit TEXT NOT NULL DEFAULT '',
 			UNIQUE (node_id, name)
 		)"""
+	],
+	[
+		"ALTER TABLE tokens ADD COLUMN mqtt_only INTEGER NOT NULL DEFAULT 0"
 	]
 ]
 

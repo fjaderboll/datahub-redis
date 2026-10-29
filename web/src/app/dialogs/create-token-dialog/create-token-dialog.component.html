@@ -17,6 +17,8 @@
 			}
 			<mat-error>Cannot be negative</mat-error>
 		</mat-form-field>
+
+		<mat-checkbox name="mqttOnly" [(ngModel)]="mqttOnly">MQTT only (not for the REST API)</mat-checkbox>
 	</mat-dialog-content>
 	<mat-dialog-actions>
 		<button type="button" mat-stroked-button color="primary" [mat-dialog-close]="false">

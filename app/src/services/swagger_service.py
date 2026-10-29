@@ -14,14 +14,15 @@ updateSystemSettingsData = api.model('UpdateSystemSettingsData', {
     'retention': fields.Integer(description='Set default retention policy in seconds'),
     'applyRetention': fields.Boolean(description='Apply given or previously set retention to existing timeseries'),
 	'allowPublicCreateUser': fields.Boolean(description='Allow anyone to create user (otherwise only administrator can do it)'),
-	'allowNonAdminLogin': fields.Boolean(description='Allow anyone to login (otherwise only administrator can do it)'),
+	'allowNonAdminLogin': fields.Boolean(description='Allow anyone to login and use their tokens, also for MQTT (otherwise only administrator can do it)'),
 	'tokenTTL': fields.Integer(description='Default time-to-live value in seconds for newly created tokens')
 })
 
 createUpdateTokenData = api.model('CreateUpdateTokenData', {
     'desc': fields.String(description='Description of token'),
     'ttl': fields.Integer(description='Time-to-live in seconds. Use 0 for infinite time.', min=0, default=0),
-    'enabled': fields.Boolean(description='If the token should be enabled', default=True)
+    'enabled': fields.Boolean(description='If the token should be enabled', default=True),
+    'mqttOnly': fields.Boolean(description='If the token may only be used to log in to the MQTT broker, not for the REST API', default=False)
 })
 
 createUserData = api.model('CreateUserData', {
@@ -41,7 +42,7 @@ loginUserData = api.model('LoginUserData', {
 
 mqttAuthenticateData = api.model('MqttAuthenticateData', {
 	'username': fields.String(description='Username', required=True),
-	'password': fields.String(description='Password', required=True),
+	'password': fields.String(description='One of the user\'s tokens', required=True),
 	'clientid': fields.String(description='Client ID', required=True)
 })
 mqttAuthorizeData = api.model('MqttAuthorizeData', {

@@ -4,6 +4,7 @@ import { ServerService } from '../../services/server.service';
 import { UtilsService } from '../../services/utils.service';
 import { MatFormField, MatLabel, MatHint, MatError, MatSuffix } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
+import { MatCheckbox } from '@angular/material/checkbox';
 import { FormsModule } from '@angular/forms';
 import { MatButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
@@ -13,7 +14,7 @@ import { MatIcon } from '@angular/material/icon';
 	templateUrl: './create-token-dialog.component.html',
 	changeDetection: ChangeDetectionStrategy.Eager,
 	styleUrls: ['./create-token-dialog.component.scss'],
-	imports: [MatDialogTitle, MatDialogContent, MatFormField, MatLabel, MatHint, MatError, MatSuffix, MatInput, FormsModule, MatDialogActions, MatButton, MatDialogClose, MatIcon]
+	imports: [MatDialogTitle, MatDialogContent, MatFormField, MatLabel, MatHint, MatError, MatSuffix, MatInput, MatCheckbox, FormsModule, MatDialogActions, MatButton, MatDialogClose, MatIcon]
 })
 export class CreateTokenDialogComponent {
 	dialogRef = inject<MatDialogRef<CreateTokenDialogComponent>>(MatDialogRef);
@@ -22,11 +23,12 @@ export class CreateTokenDialogComponent {
 
 	public description: string = "";
 	public ttl: number | null = null;
+	public mqttOnly = false;
 	public busy = false;
 
 	public create() {
 		this.busy = true;
-		this.server.createToken(this.description, this.ttl || 0).subscribe({
+		this.server.createToken(this.description, this.ttl || 0, this.mqttOnly).subscribe({
 			next: (v) => {
 				this.utils.toastSuccess('Token created');
 				this.dialogRef.close(v);

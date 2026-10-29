@@ -24,6 +24,7 @@ class ApiError(Exception):
 	pass
 
 session = requests.Session()
+mqttToken = None # the password for MQTT, created in run()
 
 def call(method, path, data=None, params=None):
 	response = session.request(method, apiUrl + path, json=data, params=params)
@@ -57,7 +58,7 @@ def insertHttpBatch(sensorName, readings):
 def insertMqtt(sensorName, readings):
 	"""Publishes all readings over one connection and waits until all are published back out."""
 	topic = readingsPath(sensorName)
-	login = ['-h', host, '-p', str(mqttPort), '-u', args.user, '-P', args.password]
+	login = ['-h', host, '-p', str(mqttPort), '-u', args.user, '-P', mqttToken]
 	timeout = 30 + len(readings) // 100
 
 	subscriber = subprocess.Popen(['mosquitto_sub', *login, '-C', str(len(readings)), '-W', str(timeout), '-t', 'out/' + topic],
@@ -92,6 +93,8 @@ def report(text, seconds, count):
 	print('  {:36} {:7.3f} seconds ({:.0f} readings/s)'.format(text, seconds, count / seconds))
 
 def run():
+	global mqttToken
+
 	print("Registering user '{}'".format(args.user))
 	try:
 		call('POST', 'users/', {'username': args.user, 'password': args.password})
@@ -101,6 +104,9 @@ def run():
 	print('Logging in')
 	token = call('POST', 'users/{}/login'.format(args.user), {'password': args.password})['token']
 	session.headers['Authorization'] = 'Bearer ' + token
+
+	print('Creating MQTT only token')
+	mqttToken = call('POST', 'tokens/', {'desc': 'performance.py', 'ttl': 3600, 'mqttOnly': True})['token']
 
 	print("Creating dataset '{}'".format(args.dataset))
 	try:

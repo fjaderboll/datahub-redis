@@ -5,6 +5,9 @@ import random
 import string
 
 BASE_URL = os.environ.get('BASE_URL', 'http://localhost:8080/api/')
+# an administrator, for the tests that change system settings, which are skipped without it
+ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME')
+ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD')
 
 def getRandomName(prefix='', length=5):
 	return prefix + ''.join(random.choice(string.ascii_lowercase) for _ in range(length))

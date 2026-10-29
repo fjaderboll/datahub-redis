@@ -4,7 +4,7 @@ from flask_restx import abort
 import re
 
 from api import api
-from services import finder, swagger_service, settings_service, user_service
+from services import finder, swagger_service, settings_service, token_service, user_service
 
 ns = api.namespace('mqtt', description='MQ broker endpoints')
 
@@ -25,7 +25,8 @@ class Authenticate(Resource):
 		if username == settings_service.getMqttUsername():
 			if password == settings_service.getMqttPassword():
 				allow = True
-		elif user_service.authenticate(username, password):
+		elif token_service.getMqttAuth(username, password):
+			# users log in with a token as password, which must be their own since topic permissions are checked by username alone
 			allow = True
 
 		if not allow:
@@ -58,8 +59,9 @@ def isTopicAllowed(username, topic, action):
 		userOk = True
 	else:
 		try:
-			user_service.findUser(username)
-			userOk = True
+			user = user_service.findUser(username)
+			# also stops clients that are already connected, when non-admin login is turned off
+			userOk = settings_service.isLoginAllowed(user['is_admin'])
 		except:
 			pass
 
