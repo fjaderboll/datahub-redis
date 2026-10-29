@@ -17,6 +17,10 @@
 			<span class="label">Sensors</span>
 		</div>
 		<div class="tile">
+			<span class="count">{{ readingsSinceLoad | number }}</span>
+			<span class="label">Readings last {{ sinceLoadLabel }}</span>
+		</div>
+		<div class="tile">
 			<span class="count">{{ overview.readings24h | number }}</span>
 			<span class="label">Readings last 24 h</span>
 		</div>

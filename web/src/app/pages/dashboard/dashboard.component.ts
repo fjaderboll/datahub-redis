@@ -1,5 +1,6 @@
 import { Component, DestroyRef, OnInit, ChangeDetectionStrategy, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { interval } from 'rxjs';
 import { RouterLink } from '@angular/router';
 import { DecimalPipe } from '@angular/common';
 import { AuthenticationService } from '../../services/authentication.service';
@@ -29,6 +30,9 @@ export class DashboardComponent implements OnInit {
 	utils = inject(UtilsService);
 
 	public overview?: Overview;
+	public readingsSinceLoad = 0;
+	public sinceLoadLabel = '';
+	private loadTime = 0;
 
 	ngOnInit(): void {
 		this.server.getStateOverview().subscribe({
@@ -48,6 +52,10 @@ export class DashboardComponent implements OnInit {
 
 	/** Keeps the recently updated nodes up to date, the silent ones are only checked on load */
 	private listenForReadings() {
+		this.loadTime = Date.now();
+		this.updateSinceLoadLabel();
+		interval(1000).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.updateSinceLoadLabel());
+
 		this.liveReadings.readings$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
 			next: (reading) => {
 				this.handleReading(reading);
@@ -56,8 +64,20 @@ export class DashboardComponent implements OnInit {
 		});
 	}
 
+	private updateSinceLoadLabel() {
+		const seconds = Math.floor((Date.now() - this.loadTime) / 1000);
+		if(seconds < 60) {
+			this.sinceLoadLabel = seconds + ' s';
+		} else if(seconds < 3600) {
+			this.sinceLoadLabel = Math.floor(seconds / 60) + ' min';
+		} else {
+			this.sinceLoadLabel = Math.floor(seconds / 3600) + ' h';
+		}
+	}
+
 	private handleReading(reading: Reading) {
 		const overview = this.overview!;
+		this.readingsSinceLoad++;
 		const time = new Date(reading.timestamp).getTime();
 		if(Date.now() - time < DAY) {
 			overview.readings24h++;
